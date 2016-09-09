@@ -36,15 +36,35 @@ class Metadata
 			switch (true)
 			{
 				case ($annotation instanceof Annotation\Consumer):
-					$this->consumers[] = $annotation;
+					$index = self::generateNewIndex(count($this->consumers), $annotation->priority);
+					$this->consumers[$index] = $annotation;
 					break;
 				case ($annotation instanceof Annotation\Attribute):
-					$this->attributes[] = $annotation;
+					$index = self::generateNewIndex(count($this->attributes), $annotation->priority);
+					$this->attributes[$index] = $annotation;
 					break;
 				case ($annotation instanceof Annotation\Producer):
-					$this->producers[] = $annotation;
+					$index = self::generateNewIndex(count($this->producers), $annotation->priority);
+					$this->producers[$index] = $annotation;
 					break;
 			}
 		}
+	}
+
+	/**
+	 * Generate index for lists of consumers, attributes and producers in a way that will allow to sort them by key.
+	 * Initially sorting was done only by priority, but PHP 5.6 and PHP 7 order equal values differently.
+	 * That is why this is workaround was made to ensure identical behaviour.
+	 * @param int $count
+	 * @param int $priority
+	 */
+	public static function generateNewIndex($count, $priority = 1)
+	{
+		$maxCount = 1000;
+		if ($count >= $maxCount)
+		{
+			throw new \LogicException('Impossibly huge number of elements in list.');
+		}
+		return -($priority * $maxCount + $count);
 	}
 }

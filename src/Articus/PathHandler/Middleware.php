@@ -518,19 +518,7 @@ class Middleware implements MiddlewareInterface
 	protected function getProducers(Metadata $metadata)
 	{
 		$producers = new \ArrayObject($metadata->producers);
-		$producers->uasort(function (Annotation\Producer $a, Annotation\Producer $b)
-		{
-			$result = 0;
-			if ($a->priority < $b->priority)
-			{
-				$result = 1;
-			}
-			elseif ($a->priority > $b->priority)
-			{
-				$result = -1;
-			}
-			return $result;
-		});
+		$producers->ksort();
 		foreach ($producers as $producer)
 		{
 			yield $producer->mediaType => [$producer->name, $producer->options];
@@ -572,20 +560,7 @@ class Middleware implements MiddlewareInterface
 	protected function getConsumers(Metadata $metadata)
 	{
 		$consumers = new \ArrayObject($metadata->consumers);
-
-		$consumers->uasort(function (Annotation\Consumer $a, Annotation\Consumer $b)
-		{
-			$result = 0;
-			if ($a->priority < $b->priority)
-			{
-				$result = 1;
-			}
-			elseif ($a->priority > $b->priority)
-			{
-				$result = -1;
-			}
-			return $result;
-		});
+		$consumers->ksort();
 		foreach ($consumers as $consumer)
 		{
 			yield $consumer->mediaType => [$consumer->name, $consumer->options];
@@ -600,19 +575,7 @@ class Middleware implements MiddlewareInterface
 	protected function getAttributes(Metadata $metadata)
 	{
 		$attributes = new \ArrayObject($metadata->attributes);
-		$attributes->uasort(function (Annotation\Attribute $a, Annotation\Attribute $b)
-		{
-			$result = 0;
-			if ($a->priority < $b->priority)
-			{
-				$result = 1;
-			}
-			elseif ($a->priority > $b->priority)
-			{
-				$result = -1;
-			}
-			return $result;
-		});
+		$attributes->ksort();
 		foreach ($attributes as $attribute)
 		{
 			yield [$attribute->name, $attribute->options];
