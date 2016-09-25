@@ -2,6 +2,7 @@
 
 [![Travis](https://travis-ci.org/Articus/PathHandler.svg?branch=master)](https://travis-ci.org/Articus/PathHandler)
 [![Coveralls](https://coveralls.io/repos/github/Articus/PathHandler/badge.svg?branch=master)](https://coveralls.io/github/Articus/PathHandler?branch=master)
+[![Codacy](https://api.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://www.codacy.com/app/articusw/PathHandler?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Articus/PathHandler&amp;utm_campaign=Badge_Grade)
 
 This library provides a replacement for default routing and dispatch middleware from [Zend Expressive](http://zendframework.github.io/zend-expressive/) and should considerably simplify creating APIs with this nice framework. The idea is to split request processing into phases that should be familiar to anyone who used to write [Swagger](http://swagger.io/) specs:
    
