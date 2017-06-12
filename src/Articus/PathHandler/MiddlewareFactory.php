@@ -28,7 +28,7 @@ class MiddlewareFactory implements FactoryInterface
 			case empty($options->getRoutes()):
 				throw new \LogicException('PathHandler router is not configured.');
 			case is_array($options->getRoutes()):
-				$router = new ZendRouter(TreeRouteStack::factory($options->getRoutes()));
+				$router = new SimpleRouter(TreeRouteStack::factory($options->getRoutes()));
 				break;
 			case (is_string($options->getRoutes()) && $container->has($options->getRoutes())):
 				$router = $container->get($options->getRoutes());

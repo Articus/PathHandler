@@ -5,6 +5,7 @@ use Articus\PathHandler as PH;
 use Articus\DataTransfer as DT;
 use Interop\Container\ContainerInterface;
 use Prophecy\Argument;
+use Zend\Expressive\Router\Route;
 use Zend\Expressive\Router\RouteResult;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -37,7 +38,10 @@ class AttributeTest extends \Codeception\Test\Unit
 				PH\Attribute\Transfer::SOURCE_ROUTE,
 				$request->withAttribute(
 					RouteResult::class,
-					RouteResult::fromRouteMatch('test', '', ['test' => PH\Attribute\Transfer::SOURCE_ROUTE])
+					RouteResult::fromRoute(
+						new Route('test', '', Route::HTTP_METHOD_ANY,'test'),
+						['test' => PH\Attribute\Transfer::SOURCE_ROUTE]
+					)
 				),
 			],
 			'from headers' => [

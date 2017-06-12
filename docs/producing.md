@@ -1,4 +1,4 @@
-### Producing
+# Producing
 
 To produce response body you need a **producer** - class that implements `Articus\PathHandler\Producer\ProducerInterface` and is registered in configuration:
  

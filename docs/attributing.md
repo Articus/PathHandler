@@ -1,4 +1,4 @@
-### Attributing
+# Attributing
 
 To attribute request you need an **attribute** - class that implements `Articus\PathHandler\Attribute\AttributeInterface`:
 
