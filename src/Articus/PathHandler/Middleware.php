@@ -4,6 +4,8 @@ namespace Articus\PathHandler;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\StreamInterface;
@@ -12,7 +14,7 @@ use Zend\Expressive\Router\RouteResult;
 use Zend\Expressive\Router\RouterInterface;
 use Zend\Http\Header\Accept;
 use Zend\Http\Header\ContentType;
-use Zend\Stratigility\MiddlewareInterface;
+use Zend\Diactoros\Response as DiactorosResponse;
 
 /**
  * Primary service
@@ -212,6 +214,22 @@ class Middleware implements MiddlewareInterface
 		return $this;
 	}
 
+	/**
+	 * @inheritdoc
+	 */
+	public function process(Request $request, DelegateInterface $delegate)
+	{
+		$response = new DiactorosResponse();
+		return $this($request, $response);
+	}
+
+	/**
+	 * The method was left intact to remain compatibility with Zend\Stratigility\MiddlewareInterface
+	 * @param Request $request
+	 * @param Response $response
+	 * @param callable|null $next
+	 * @return Response
+	 */
 	public function __invoke(Request $request, Response $response, callable $next = null)
 	{
 		try

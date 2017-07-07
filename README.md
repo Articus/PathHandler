@@ -12,6 +12,10 @@ This library provides a replacement for default routing and dispatch middleware 
 - handling - perform requested operation and get some result
 - producing - prepare response body and headers using operation result
 
+## Quick start
+
+Just write [Swagger specification](https://swagger.io/specification/) for your future API and use [Swagger Codegen](https://swagger.io/swagger-codegen/) to generate `ze-ph` server. Both steps can be easily done in your browser with [Swagger Editor](http://editor.swagger.io/).   
+
 ## How to install?
 
 Just add `"articus/path-handler": "*"` to your [composer.json](https://getcomposer.org/doc/04-schema.md#require).

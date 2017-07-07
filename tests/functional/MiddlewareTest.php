@@ -3,6 +3,7 @@ namespace Test\PathHandler;
 
 use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
 use Prophecy\Argument;
 use Prophecy\Prophecy;
 use Test\PathHandler\Sample;
@@ -23,9 +24,17 @@ class MiddlewareTest extends \Codeception\Test\Unit
 		$this->verifyMockObjects();
 	}
 
-	protected function createResponse()
+	/**
+	 * @return DelegateInterface
+	 */
+	protected function createDelegator()
 	{
-		return new \Zend\Stratigility\Http\Response(new \Zend\Diactoros\Response());
+		$delegatorProphecy = $this->prophesize(DelegateInterface::class);
+		$delegatorProphecy
+			->process(Argument::type(Request::class))
+			->shouldNotBeCalled()
+		;
+		return $delegatorProphecy->reveal();
 	}
 
 	/**
@@ -158,8 +167,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handlerProphecy, [], [], []);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEmpty($response->getBody()->getContents());
@@ -181,7 +190,7 @@ class MiddlewareTest extends \Codeception\Test\Unit
 			[],
 			'test:123'
 		);
-		$response = $this->createResponse();
+		$delegator = $this->createDelegator();
 
 		$exception = new \Exception('Low level problem');
 		$handlerProphecy = $this->prophesize($interfaceName);
@@ -193,9 +202,9 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handlerProphecy, [], [], []);
 
-		$tester->expectException($exception, function () use (&$request, &$response, &$middleware)
+		$tester->expectException($exception, function () use (&$request, &$delegator, &$middleware)
 		{
-			$middleware($request, $response);
+			$middleware->process($request, $delegator);
 		});
 	}
 
@@ -237,8 +246,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, ['Test' => $consumerProphecy], [], []);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEmpty($response->getBody()->getContents());
@@ -269,8 +278,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, ['Test' => $consumerProphecy], [], []);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(415, $response->getStatusCode());
 		$tester->assertEquals('Unsupported media type', $response->getReasonPhrase());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
@@ -328,8 +337,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 			[]
 		);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEmpty($response->getBody()->getContents());
@@ -372,8 +381,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, [], ['Test' => $attributeProphecy], []);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEmpty($response->getBody()->getContents());
@@ -427,8 +436,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, [], ['Test' => $attributeProphecy, 'TestLow' => $lowAttributeProphecy], []);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEmpty($response->getBody()->getContents());
@@ -475,8 +484,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, [], [], ['Test' => $producerProphecy]);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEquals('test:payload', $response->getBody()->getContents());
@@ -527,8 +536,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, [], [], ['Test' => $producerProphecy]);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEquals('test:payload', $response->getBody()->getContents());
@@ -561,8 +570,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, [], [], ['Test' => $producerProphecy]);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(406, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEmpty($response->getBody()->getContents());
@@ -615,8 +624,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handler, [], [], ['Test' => $producerProphecy, 'TestLow' => $lowProducerProphecy]);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(200, $response->getStatusCode());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
 		$tester->assertEquals('test:payload', $response->getBody()->getContents());
@@ -645,8 +654,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handlerProphecy, [], [], []);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(404, $response->getStatusCode());
 		$tester->assertEquals('Not found', $response->getReasonPhrase());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
@@ -675,8 +684,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware($handlerProphecy, [], [], []);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(405, $response->getStatusCode());
 		$tester->assertEquals('Method not allowed', $response->getReasonPhrase());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
@@ -713,8 +722,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware(Sample\Handler\PostWithProducerForException::class, [], [], ['Test' => $producerProphecy]);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(123, $response->getStatusCode());
 		$tester->assertEquals('Test reason', $response->getReasonPhrase());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
@@ -752,8 +761,8 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$middleware = $this->createMiddleware(Sample\Handler\PostWithProducerForHeaderException::class, [], [], ['Test' => $producerProphecy]);
 
-		/** @var Response $response */
-		$response = $middleware($request, $this->createResponse());
+		$response = $middleware->process($request, $this->createDelegator());
+		$tester->assertInstanceOf(Response::class, $response);
 		$tester->assertEquals(123, $response->getStatusCode());
 		$tester->assertEquals('Test reason', $response->getReasonPhrase());
 		$tester->assertInstanceOf(Stream::class, $response->getBody());
