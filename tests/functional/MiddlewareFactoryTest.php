@@ -9,6 +9,8 @@ use Zend\Expressive\Router\RouterInterface;
 
 class MiddlewareFactoryTest extends \Codeception\Test\Unit
 {
+	use RouterTrait;
+
 	/**
 	 * @var \Test\PathHandler\FunctionalTester
 	 */
@@ -18,19 +20,7 @@ class MiddlewareFactoryTest extends \Codeception\Test\Unit
 	{
 		$config = [
 			'path_handler' => [
-				'routes' => [
-					'routes' => [
-						'main' => [
-							'type' => 'Literal',
-							'options' => [
-								'route' => '/',
-								'defaults' => [
-									'handler' => 'Handler',
-								]
-							]
-						]
-					]
-				],
+				'routes' => 'router',
 				'handlers' => [
 					'invokables' => [
 						'Handler' => 'My\Handler',
@@ -43,6 +33,24 @@ class MiddlewareFactoryTest extends \Codeception\Test\Unit
 		];
 		$containerProphecy = $this->prophesize(ContainerInterface::class);
 		$containerProphecy->get('config')->willReturn($config);
+
+		$router = $this->createRouter(
+			'router',
+			[
+				'main' => [
+					'type' => 'Literal',
+					'options' => [
+						'route' => '/',
+						'defaults' => [
+							'handler' => 'Handler',
+						]
+					]
+				]
+			]
+		);
+		$containerProphecy->has('router')->willReturn(true);
+		$containerProphecy->get('router')->willReturn($router);
+
 		$container = $containerProphecy->reveal();
 
 		$factory = new PH\MiddlewareFactory();

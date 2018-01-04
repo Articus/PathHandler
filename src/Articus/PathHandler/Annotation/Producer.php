@@ -2,7 +2,10 @@
 
 namespace Articus\PathHandler\Annotation;
 
+use Doctrine\Common\Annotations\Annotation as DA;
+
 /**
+ * Annotation for adding producer service to handler
  * @Annotation
  * @Target({"METHOD", "CLASS"})
  */
@@ -10,12 +13,14 @@ class Producer
 {
 	/**
 	 * Content media type of the requests for which producer should be used
+	 * @DA\Required()
 	 * @var string
 	 */
 	public $mediaType;
 
 	/**
 	 * Name that should be passed to PluginManager::get
+	 * @DA\Required()
 	 * @var string
 	 */
 	public $name;

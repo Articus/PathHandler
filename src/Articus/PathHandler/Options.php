@@ -7,11 +7,12 @@ use Zend\Stdlib\AbstractOptions;
 
 class Options extends AbstractOptions
 {
+	const DEFAULT_HANDLER_ATTR = 'handler';
 	/**
 	 * Request attribute that contains handler name
 	 * @var string
 	 */
-	protected $handlerAttr = 'handler';
+	protected $handlerAttr = self::DEFAULT_HANDLER_ATTR;
 	/**
 	 * Configuration for router
 	 * @var array|string

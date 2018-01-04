@@ -4,8 +4,6 @@ namespace Articus\PathHandler;
 
 use Interop\Container\ContainerInterface;
 use Zend\Cache\StorageFactory;
-use Zend\Expressive\Router\ZendRouter;
-use Zend\Router\Http\TreeRouteStack;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 class MiddlewareFactory implements FactoryInterface
@@ -27,9 +25,6 @@ class MiddlewareFactory implements FactoryInterface
 		{
 			case empty($options->getRoutes()):
 				throw new \LogicException('PathHandler router is not configured.');
-			case is_array($options->getRoutes()):
-				$router = new SimpleRouter(TreeRouteStack::factory($options->getRoutes()));
-				break;
 			case (is_string($options->getRoutes()) && $container->has($options->getRoutes())):
 				$router = $container->get($options->getRoutes());
 				break;

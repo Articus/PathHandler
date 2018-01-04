@@ -14,6 +14,7 @@ use Zend\Diactoros\Stream;
 class MiddlewareTest extends \Codeception\Test\Unit
 {
 	use RequestTrait;
+	use RouterTrait;
 	/**
 	 * @var \Test\PathHandler\FunctionalTester
 	 */
@@ -49,22 +50,7 @@ class MiddlewareTest extends \Codeception\Test\Unit
 		$containerProphecy = $this->prophesize(ContainerInterface::class);
 		$config = [
 			'path_handler' => [
-				'routes' => [
-					'routes' => [
-						'main' => [
-							'type' => 'Literal',
-							'options' => [
-								'route' => '/test',
-								'defaults' => [
-									'handler' => 'Test',
-								]
-							]
-						]
-					],
-					'default_params' => [
-						'middleware' => '',
-					],
-				],
+				'routes' => 'router',
 				'handlers' => [
 					'invokables' => [],
 					'factories' => [],
@@ -124,6 +110,24 @@ class MiddlewareTest extends \Codeception\Test\Unit
 		}
 
 		$containerProphecy->get('config')->willReturn($config);
+
+		$router = $this->createRouter(
+			'router',
+			[
+				'main' => [
+					'type' => 'Literal',
+					'options' => [
+						'route' => '/test',
+						'defaults' => [
+							'handler' => 'Test',
+						]
+					]
+				]
+			]
+		);
+		$containerProphecy->has('router')->willReturn(true);
+		$containerProphecy->get('router')->willReturn($router);
+
 		$container = $containerProphecy->reveal();
 
 		$factory = new PH\MiddlewareFactory();

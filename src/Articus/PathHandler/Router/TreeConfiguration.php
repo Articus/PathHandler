@@ -1,10 +1,9 @@
 <?php
 
-namespace Articus\PathHandler;
+namespace Articus\PathHandler\Router;
 
 
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Zend\Expressive\Router\Exception;
 use Zend\Expressive\Router\Route;
 use Zend\Expressive\Router\RouteResult;
 use Zend\Expressive\Router\RouterInterface;
@@ -17,7 +16,7 @@ use Zend\Psr7Bridge\Psr7ServerRequest;
  * Zend\Expressive\Router\ZendRouter does not support that since 1.3 .
  * See https://github.com/zendframework/zend-expressive-zendrouter/issues/18 for more details.
  */
-class SimpleRouter implements RouterInterface
+class TreeConfiguration implements RouterInterface
 {
 	/**
 	 * @var TreeRouteStack

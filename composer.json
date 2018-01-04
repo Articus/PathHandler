@@ -1,6 +1,6 @@
 {
   "name": "articus/path-handler",
-  "description": "Simple middleware for API development with Zend Expressive",
+  "description": "Alternative routing and dispatch middleware for API development with Zend Expressive",
   "keywords": [
     "middleware",
     "API",
@@ -13,24 +13,29 @@
       "name": "Arthur Mogliev"
     }
   ],
-  "version": "0.2",
+  "version": "0.3",
   "require": {
     "php": "^5.6 || ^7.0",
     "doctrine/annotations": "^1.4",
     "zendframework/zend-cache": "^2.7",
     "zendframework/zend-servicemanager": "^3.3",
-    "zendframework/zend-expressive": "^2.0",
-    "zendframework/zend-router": "^3.0",
-    "zendframework/zend-psr7bridge": "^0.2"
+    "zendframework/zend-expressive": "^2.1",
+    "http-interop/http-middleware": "^0.4.1"
   },
   "suggest": {
     "zendframework/zend-serializer": "It is required for most Zend Cache adapters to store metadata.",
-    "articus/data-transfer": "It is required for Articus\\PathHandler\\Attribute\\Transter and Articus\\PathHandler\\Producer\\Transfer"
+    "articus/data-transfer": "It is required for Articus\\PathHandler\\Attribute\\Transter and Articus\\PathHandler\\Producer\\Transfer",
+    "nikic/fast-route": "It is required for Articus\\PathHandler\\Router\\FastRouteAnnotation",
+    "zendframework/zend-router": "It is required for Articus\\PathHandler\\Router\\TreeConfiguration",
+    "zendframework/zend-psr7bridge": "It is required for Articus\\PathHandler\\Router\\TreeConfiguration"
   },
   "require-dev": {
     "articus/data-transfer": "*",
     "codeception/base": "*",
-    "phpspec/prophecy": "*"
+    "phpspec/prophecy": "*",
+    "nikic/fast-route": "^1.2",
+    "zendframework/zend-router": "^3.0",
+    "zendframework/zend-psr7bridge": "^1.0"
   },
   "autoload": {
     "psr-4": {

@@ -1,6 +1,8 @@
 <?php
 namespace Articus\PathHandler\Annotation;
 
+use Doctrine\Common\Annotations\Annotation as DA;
+
 /**
  * Annotation for adding consumer service to handler
  * @Annotation
@@ -16,6 +18,7 @@ class Consumer
 
 	/**
 	 * Name that should be passed to PluginManager::get
+	 * @DA\Required()
 	 * @var string
 	 */
 	public $name;
