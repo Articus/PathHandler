@@ -130,7 +130,7 @@ class MiddlewareTest extends \Codeception\Test\Unit
 
 		$container = $containerProphecy->reveal();
 
-		$factory = new PH\MiddlewareFactory();
+		$factory = new PH\MiddlewareFactory('path_handler');
 		return $factory($container, PH\Middleware::class);
 	}
 

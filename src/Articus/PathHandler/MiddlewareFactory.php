@@ -4,11 +4,13 @@ namespace Articus\PathHandler;
 
 use Interop\Container\ContainerInterface;
 use Zend\Cache\StorageFactory;
-use Zend\ServiceManager\Factory\FactoryInterface;
 
-class MiddlewareFactory implements FactoryInterface
+class MiddlewareFactory extends ConfigAwareFactory
 {
-	const CONFIG_KEY = 'path_handler';
+	public function __construct($configKey = Middleware::class)
+	{
+		parent::__construct($configKey);
+	}
 
 	/**
 	 * @inheritdoc
@@ -16,8 +18,7 @@ class MiddlewareFactory implements FactoryInterface
 	 */
 	public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
 	{
-		$config = $container->get('config');
-		$options = new Options(isset($config[self::CONFIG_KEY])? $config[self::CONFIG_KEY] : []);
+		$options = new Options($this->getServiceConfig($container));
 
 		//Prepare router
 		$router = null;

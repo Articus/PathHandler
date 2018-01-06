@@ -53,7 +53,7 @@ class MiddlewareFactoryTest extends \Codeception\Test\Unit
 
 		$container = $containerProphecy->reveal();
 
-		$factory = new PH\MiddlewareFactory();
+		$factory = new PH\MiddlewareFactory('path_handler');
 		$service = $factory($container, PH\Middleware::class);
 		$this->tester->assertInstanceOf(PH\Middleware::class, $service);
 	}
@@ -101,7 +101,7 @@ class MiddlewareFactoryTest extends \Codeception\Test\Unit
 		
 		$container = $containerProphecy->reveal();
 
-		$factory = new PH\MiddlewareFactory();
+		$factory = new PH\MiddlewareFactory('path_handler');
 		/** @var PH\Middleware $middleware */
 		$middleware = $factory($container, PH\Middleware::class);
 		$this->tester->assertInstanceOf(PH\Middleware::class, $middleware);
@@ -111,5 +111,61 @@ class MiddlewareFactoryTest extends \Codeception\Test\Unit
 		$this->tester->assertSame($consumerPluginManager, $middleware->getConsumerPluginManager());
 		$this->tester->assertSame($attributePluginManager, $middleware->getAttributePluginManager());
 		$this->tester->assertSame($producerPluginManager, $middleware->getProducerPluginManager());
+	}
+
+	public function testTwoServicesAreCreated()
+	{
+		$config = [
+			'path_handler_1' => [
+				'routes' => 'router',
+				'handlers' => [
+					'invokables' => [
+						'Handler' => 'My\Handler',
+					],
+				],
+				'metadata_cache' => [
+					'adapter' => 'blackhole',
+				],
+			],
+			'path_handler_2' => [
+				'routes' => 'router',
+				'handlers' => [
+					'invokables' => [
+						'Handler' => 'My\Handler',
+					],
+				],
+				'metadata_cache' => [
+					'adapter' => 'blackhole',
+				],
+			],
+		];
+		$containerProphecy = $this->prophesize(ContainerInterface::class);
+		$containerProphecy->get('config')->willReturn($config);
+
+		$router = $this->createRouter(
+			'router',
+			[
+				'main' => [
+					'type' => 'Literal',
+					'options' => [
+						'route' => '/',
+						'defaults' => [
+							'handler' => 'Handler',
+						]
+					]
+				]
+			]
+		);
+		$containerProphecy->has('router')->willReturn(true);
+		$containerProphecy->get('router')->willReturn($router);
+
+		$container = $containerProphecy->reveal();
+
+		$factory1 = new PH\MiddlewareFactory('path_handler_1');
+		$service1 = $factory1($container, PH\Middleware::class);
+		$this->tester->assertInstanceOf(PH\Middleware::class, $service1);
+		$factory2 = new PH\MiddlewareFactory('path_handler_2');
+		$service2 = $factory2($container, PH\Middleware::class);
+		$this->tester->assertInstanceOf(PH\Middleware::class, $service2);
 	}
 }
