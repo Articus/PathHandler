@@ -1,9 +1,9 @@
 # Path Handler
 
 [![Travis](https://travis-ci.org/Articus/PathHandler.svg?branch=master)](https://travis-ci.org/Articus/PathHandler)
+[![Documentation](https://readthedocs.org/projects/pathhandler/badge/?version=latest)](http://pathhandler.readthedocs.io/en/latest/?badge=latest)
 [![Coveralls](https://coveralls.io/repos/github/Articus/PathHandler/badge.svg?branch=master)](https://coveralls.io/github/Articus/PathHandler?branch=master)
 [![Codacy](https://api.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://www.codacy.com/app/articusw/PathHandler?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Articus/PathHandler&amp;utm_campaign=Badge_Grade)
-[![Documentation](https://readthedocs.org/projects/pathhandler/badge/?version=latest)](http://pathhandler.readthedocs.io/en/latest/?badge=latest)
 
 This library provides a replacement for default routing and dispatch middleware from [Zend Expressive](http://zendframework.github.io/zend-expressive/) and should considerably simplify creating APIs with this nice framework. The idea is to split request processing into phases that should be familiar to anyone who used to write [Swagger](http://swagger.io/) specs:
    
@@ -113,11 +113,7 @@ middleware_pipeline:
     middleware: Articus\PathHandler\Middleware
 ```
 
-For more details about consuming check [this doc](docs/consuming.md).
-
-For more details about attributing check [this doc](docs/attributing.md).
-
-For more details about producing check [this doc](docs/producing.md).
+For more details check [documentation](http://pathhandler.readthedocs.io/en/latest/).
 
 # Enjoy!
 I hope this library will be useful for someone except me. 
