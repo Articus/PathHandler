@@ -84,3 +84,4 @@ class Handler implements PostInterface, PatchInterface
         return ['some' => 'thing']; 
     }
 }
+```
