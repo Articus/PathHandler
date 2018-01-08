@@ -249,7 +249,7 @@ class Middleware implements MiddlewareInterface
 
 			//Create producer
 			$producer = null;
-			if (!empty($metadata->producers))
+			if (!$metadata->producers->isEmpty())
 			{
 				$accept = $this->getAcceptHeader($request);
 				foreach ($this->getProducers($metadata) as $mediaType => list($name, $options))
@@ -271,7 +271,7 @@ class Middleware implements MiddlewareInterface
 			{
 				//Parse body
 				$consumer = null;
-				if (!empty($metadata->consumers))
+				if (!$metadata->consumers->isEmpty())
 				{
 					$contentType = $this->getContentTypeHeader($request);
 					foreach ($this->getConsumers($metadata) as $mediaType => list($name, $options))
@@ -535,9 +535,7 @@ class Middleware implements MiddlewareInterface
 	 */
 	protected function getProducers(Metadata $metadata)
 	{
-		$producers = new \ArrayObject($metadata->producers);
-		$producers->ksort();
-		foreach ($producers as $producer)
+		foreach ($metadata->producers as $producer)
 		{
 			yield $producer->mediaType => [$producer->name, $producer->options];
 		}
@@ -577,9 +575,7 @@ class Middleware implements MiddlewareInterface
 	 */
 	protected function getConsumers(Metadata $metadata)
 	{
-		$consumers = new \ArrayObject($metadata->consumers);
-		$consumers->ksort();
-		foreach ($consumers as $consumer)
+		foreach ($metadata->consumers as $consumer)
 		{
 			yield $consumer->mediaType => [$consumer->name, $consumer->options];
 		}
@@ -592,9 +588,7 @@ class Middleware implements MiddlewareInterface
 	 */
 	protected function getAttributes(Metadata $metadata)
 	{
-		$attributes = new \ArrayObject($metadata->attributes);
-		$attributes->ksort();
-		foreach ($attributes as $attribute)
+		foreach ($metadata->attributes as $attribute)
 		{
 			yield [$attribute->name, $attribute->options];
 		}

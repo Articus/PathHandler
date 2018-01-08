@@ -8,8 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 class PostWithDefaultPriorityConsumers implements Operation\PostInterface
 {
 	/**
-	 * @PHA\Consumer(name="TestLow", mediaType="application/json", options={"test":"consume"})
 	 * @PHA\Consumer(name="Test", mediaType="application/json", options={"test":"consume"})
+	 * @PHA\Consumer(name="TestLow", mediaType="application/json", options={"test":"consume"})
 	 * @param ServerRequestInterface $request
 	 * @return array
 	 */

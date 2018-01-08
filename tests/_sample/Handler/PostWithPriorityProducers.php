@@ -8,8 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 class PostWithPriorityProducers implements Operation\PostInterface
 {
 	/**
-	 * @PHA\Producer(name="Test", mediaType="application/json", options={"test":"produce"}, priority=2)
 	 * @PHA\Producer(name="TestLow", mediaType="application/json", options={"test":"produce"})
+	 * @PHA\Producer(name="Test", mediaType="application/json", options={"test":"produce"}, priority=2)
 	 * @param ServerRequestInterface $request
 	 * @return array
 	 */

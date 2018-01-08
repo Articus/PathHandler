@@ -8,8 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 class PostWithPriorityAttributes implements Operation\PostInterface
 {
 	/**
-	 * @PHA\Attribute(name="Test", options={"test":"attribute"}, priority=2)
 	 * @PHA\Attribute(name="TestLow", options={"test":"attribute"})
+	 * @PHA\Attribute(name="Test", options={"test":"attribute"}, priority=2)
 	 * @param ServerRequestInterface $request
 	 * @return array
 	 */
