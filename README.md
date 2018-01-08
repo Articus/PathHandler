@@ -3,6 +3,7 @@
 [![Travis](https://travis-ci.org/Articus/PathHandler.svg?branch=master)](https://travis-ci.org/Articus/PathHandler)
 [![Coveralls](https://coveralls.io/repos/github/Articus/PathHandler/badge.svg?branch=master)](https://coveralls.io/github/Articus/PathHandler?branch=master)
 [![Codacy](https://api.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://www.codacy.com/app/articusw/PathHandler?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Articus/PathHandler&amp;utm_campaign=Badge_Grade)
+[![Documentation](https://readthedocs.org/projects/pathhandler/badge/?version=latest)](http://pathhandler.readthedocs.io/en/latest/?badge=latest)
 
 This library provides a replacement for default routing and dispatch middleware from [Zend Expressive](http://zendframework.github.io/zend-expressive/) and should considerably simplify creating APIs with this nice framework. The idea is to split request processing into phases that should be familiar to anyone who used to write [Swagger](http://swagger.io/) specs:
    
@@ -18,54 +19,11 @@ Just write [Swagger specification](https://swagger.io/specification/) for your f
 
 ## How to install?
 
-Just add `"articus/path-handler": "*"` to your [composer.json](https://getcomposer.org/doc/04-schema.md#require).
+Just add `"articus/path-handler": "*"` to your [composer.json](https://getcomposer.org/doc/04-schema.md#require) and check [packages suggested by the library](https://getcomposer.org/doc/04-schema.md#suggest) for extra dependencies of optional components you want to use.  
 
 ## How to use?
 
-First of all you need to register a new middleware in your application and add it to middleware pipeline (example is in YAML just for readability):
-
-```YAML
-dependencies:
-  factories:
-    Articus\PathHandler\Middleware: Articus\PathHandler\MiddlewareFactory
-middleware_pipeline:
-  api:
-    middleware: Articus\PathHandler\Middleware
-```
-
-Next you need to configure metadata cache storage that will be used by middleware:
-
-```YAML
-path_handler:
-  # Configure dedicated Zend Cache Storage (see Zend\Cache\StorageFactory) 
-  metadata_cache:
-    adapter: filesystem
-    options:
-      cache_dir: data/PathHandler
-      namespace: ph
-    plugins:
-      serializer:
-        serializer: phpserialize
-  # ... or use existing service inside container
-  #metadata_cache: MyMetadataCacheStorage
-```
-
-Next you need to declare some **paths** that will be used to call your API:
-
-```YAML
-path_handler:
-  # Configure dedicated Zend Router (see Zend\Router\Http\TreeRouteStack::factory) 
-  routes:
-    routes:
-      entity:
-        type: Literal
-        options:
-          route: /entity
-  # ... or use existing Zend\Expressive\Router\RouterInterface service inside container
-  #routes: MyRouter
-```
-
-Finally you need to declare **handlers**. Each handler is a set of all **operations** that can be performed when your path is accessed with distinct HTTP methods. To do this you just need to make a class implementing at least one of the interfaces from `Articus\PathHandler\Operation\ `, decorate its methods with special annotations:
+First of all you need to declare **handlers**. Each handler is a set of all **operations** that can be performed when some **path** of your API is accessed with distinct HTTP methods. To do this you just need to make a class implementing at least one of the interfaces from `Articus\PathHandler\Operation\ ` and decorate its methods with special annotations:
 
 ```PHP
 namespace My;
@@ -75,6 +33,10 @@ use Articus\PathHandler\Exception;
 use Articus\PathHandler\Operation\PostInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * This is how you set path for handler operations
+ * @PHA\Route(pattern="/entity")
+ */
 class Handler implements PostInterface
 {
     /**
@@ -93,28 +55,62 @@ class Handler implements PostInterface
             //This is how you can return non-200 responses
             throw new Exception\UnprocessableEntity($errors);
         }
-        return ['result' => 'success'];
+        /* @var My\DTO $dto */
+        $dto = $request->getAttribute('dto');
+        return $dto;
     }
 }
 ```
 
-... and register this class in configuration:
+Next you need to configure router service (example is in YAML just for readability):
 
 ```YAML
-path_handler:
-  routes:
-    routes:
-      entity:
-        type: Literal
-        options:
-          route: /entity
-          defaults:
-            #Add a routing parameter to link it with path
-            handler: Handler
-  #Add entry in handler plugin manager 
+dependencies:
+  factories:
+    Zend\Expressive\Router\RouterInterface: Articus\PathHandler\Router\FastRouteAnnotationFactory
+Articus\PathHandler\Router\FastRouteAnnotation:
+  # Storage for routing metadata
+  metadata_cache:
+    adapter: filesystem
+    options:
+      cache_dir: data/FastRouteAnnotation
+      namespace: fra
+    plugins:
+      serializer:
+        serializer: phpserialize
+  # List of all your handlers
   handlers:
-    invokables:
-      Handler: My\Handler 
+    - My\Handler
+```
+
+Next you need to configure new middleware:
+
+```YAML
+Articus\PathHandler\Middleware:
+  # Storage for middleware metadata
+  metadata_cache:
+    adapter: filesystem
+    options:
+      cache_dir: data/PathHandler
+      namespace: ph
+    plugins:
+      serializer:
+        serializer: phpserialize
+  # Configuration for handler plugin manager - sub-container dedicated for handlers
+  handlers:
+    factories:
+      My\Handler: My\HandlerFactory
+```
+
+Finally you need to register new middleware and add it to middleware pipeline:
+
+```YAML
+dependencies:
+  factories:
+    Articus\PathHandler\Middleware: Articus\PathHandler\MiddlewareFactory
+middleware_pipeline:
+  api:
+    middleware: Articus\PathHandler\Middleware
 ```
 
 For more details about consuming check [this doc](docs/consuming.md).
