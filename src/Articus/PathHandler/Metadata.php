@@ -37,6 +37,15 @@ class Metadata
 		$this->producers = new FastPriorityQueue();
 	}
 
+	/**
+	 * @inheritdoc
+	 */
+	public function __clone()
+	{
+		$this->consumers = clone $this->consumers;
+		$this->attributes = clone $this->attributes;
+		$this->producers = clone $this->producers;
+	}
 
 	/**
 	 * Adds eligible annotations from provided list to metadata
