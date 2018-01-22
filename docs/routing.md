@@ -81,6 +81,8 @@ use Articus\PathHandler\Annotation as PHA;
 class Handler implements PostInterface
 {/* some code */}
 ```
+
+This router can created with factory `Articus\PathHandler\Router\Factory\FastRouteAnnotation`.
  
 ## TreeConfiguration
 
@@ -98,3 +100,5 @@ Articus\PathHandler\Router\TreeConfiguration:
 ```
 
 Configuration format is defined by `Zend\Router\Http\TreeRouteStack::factory`, check [its documentation](https://docs.zendframework.com/zend-router/routing/#treeroutestack) for details.
+
+This router can created with factory `Articus\PathHandler\Router\Factory\TreeConfiguration`.
