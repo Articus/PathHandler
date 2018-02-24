@@ -46,6 +46,32 @@ class Transfer implements AttributeInterface
 	 */
 	public function __invoke(Request $request)
 	{
+		$data = $this->getData($request);
+		$object = $this->getObject($request);
+		$error = $this->dtService->transfer($data, $object);
+		if (empty($error))
+		{
+			$request = $request->withAttribute($this->options->getObjectAttr(), $object);
+		}
+		elseif (empty($this->options->getErrorAttr()))
+		{
+			throw new Exception\UnprocessableEntity($error);
+		}
+		else
+		{
+			$request = $request->withAttribute($this->options->getErrorAttr(), $error);
+		}
+
+		return $request;
+	}
+
+	/**
+	 * @param Request $request
+	 * @return array|null|object
+	 * @throws Exception\BadRequest
+	 */
+	protected function getData(Request $request)
+	{
 		$data = null;
 		switch ($this->options->getSource())
 		{
@@ -71,7 +97,7 @@ class Transfer implements AttributeInterface
 				$data = [];
 				foreach ($request->getHeaders() as $name => $values)
 				{
-					$data[$name] = (count($values) === 1)? $values[0] : $values;
+					$data[$name] = (count($values) === 1) ? $values[0] : $values;
 				}
 				break;
 			case self::SOURCE_ATTRIBUTE:
@@ -80,22 +106,7 @@ class Transfer implements AttributeInterface
 			default:
 				throw new \InvalidArgumentException(sprintf('Unknown source %s.', $this->options->getSource()));
 		}
-		$object = $this->getObject($request);
-		$error = $this->dtService->transfer($data, $object);
-		if (empty($error))
-		{
-			$request = $request->withAttribute($this->options->getObjectAttr(), $object);
-		}
-		elseif (empty($this->options->getErrorAttr()))
-		{
-			throw new Exception\UnprocessableEntity($error);
-		}
-		else
-		{
-			$request = $request->withAttribute($this->options->getErrorAttr(), $error);
-		}
-
-		return $request;
+		return $data;
 	}
 
 	protected function getObject(Request $request)
