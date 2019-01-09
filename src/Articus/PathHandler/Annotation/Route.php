@@ -1,7 +1,7 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Annotation;
-use Doctrine\Common\Annotations\Annotation\Required;
 
 /**
  * Annotation to declare request route that should be processed by handler
@@ -11,22 +11,20 @@ use Doctrine\Common\Annotations\Annotation\Required;
 class Route
 {
 	/**
-	 * Route pattern that should be passed to FastRoute\RouteCollector::addRoute
-	 * @Required()
-	 * @var string
-	 */
-	public $pattern;
-
-	/**
 	 * Unique name that will be used to identify route for URI generation.
-	 * If not set it will be filled with pattern.
 	 * @var string
 	 */
 	public $name;
 
 	/**
+	 * Route pattern that should be passed to FastRoute\RouteCollector::addRoute
+	 * @Required
+	 * @var string
+	 */
+	public $pattern;
+
+	/**
 	 * Default values for matched parameters that wll be available after routing.
-	 * If handler parameter is not set it will be filled with FQN of the class that was annotated with route.
 	 * @var array
 	 */
 	public $defaults = [];

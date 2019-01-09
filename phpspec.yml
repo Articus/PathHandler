@@ -1,0 +1,12 @@
+bootstrap: spec/bootstrap.php
+formatter.name: pretty
+extensions:
+  LeanPHP\PhpSpec\CodeCoverage\CodeCoverageExtension:
+    format:
+      - html
+      - clover
+    output:
+      html: spec_output/coverage
+      clover: spec_output/coverage.xml
+    whitelist:
+      - src

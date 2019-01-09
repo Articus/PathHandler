@@ -1,8 +1,7 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Annotation;
-
-use Doctrine\Common\Annotations\Annotation as DA;
 
 /**
  * Annotation for adding producer service to handler
@@ -13,14 +12,14 @@ class Producer
 {
 	/**
 	 * Content media type of the requests for which producer should be used
-	 * @DA\Required()
+	 * @Required
 	 * @var string
 	 */
 	public $mediaType;
 
 	/**
 	 * Name that should be passed to PluginManager::get
-	 * @DA\Required()
+	 * @Required
 	 * @var string
 	 */
 	public $name;
@@ -32,7 +31,8 @@ class Producer
 	public $options = null;
 
 	/**
-	 * Priority in which media type for producer should check against request
+	 * Priority in which media type for producer should check against request. The higher - the earlier.
+	 * If two producers have equal priority, the one declared earlier will be checked earlier.
 	 * @var integer
 	 */
 	public $priority = 1;

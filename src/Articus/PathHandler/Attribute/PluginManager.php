@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Attribute;
 
@@ -12,20 +13,11 @@ class PluginManager extends AbstractPluginManager
 	protected $instanceOf = AttributeInterface::class;
 
 	protected $factories = [
-		Transfer::class => Factory::class,
+		Transfer::class => Factory\Transfer::class,
 	];
 
 	protected $aliases = [
 		'Transfer' => Transfer::class,
 		'transfer' => Transfer::class,
 	];
-
-	/**
-	 * @inheritdoc
-	 * @return AttributeInterface
-	 */
-	public function get($name, array $options = null)
-	{
-		return parent::get($name, $options);
-	}
 }

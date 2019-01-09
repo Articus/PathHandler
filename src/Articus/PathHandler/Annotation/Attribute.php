@@ -1,7 +1,7 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Annotation;
-use Doctrine\Common\Annotations\Annotation as DA;
 
 /**
  * Annotation for adding attribute service to handler
@@ -12,7 +12,7 @@ class Attribute
 {
 	/**
 	 * Name that should be passed to PluginManager::get
-	 * @DA\Required()
+	 * @Required
 	 * @var string
 	 */
 	public $name;
@@ -24,7 +24,8 @@ class Attribute
 	public $options = null;
 
 	/**
-	 * Priority in which attribute should added to request
+	 * Priority in which attribute should added to request. The higher - the earlier.
+	 * If two attributes have equal priority, the one declared earlier will be added earlier.
 	 * @var integer
 	 */
 	public $priority = 1;

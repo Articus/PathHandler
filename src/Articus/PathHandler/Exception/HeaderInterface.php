@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Exception;
 
@@ -8,8 +9,8 @@ namespace Articus\PathHandler\Exception;
 interface HeaderInterface
 {
 	/**
-	 * Should yield header name => header value
+	 * Should yield header name => header value(s)
 	 * @return \Generator
 	 */
-	public function getHeaders();
+	public function getHeaders(): \Generator;
 }

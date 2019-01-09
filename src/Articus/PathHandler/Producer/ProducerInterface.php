@@ -1,6 +1,8 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
+
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -8,10 +10,10 @@ use Psr\Http\Message\StreamInterface;
  */
 interface ProducerInterface
 {
-    /**
+	/**
 	 * Prepares response body
-     * @param mixed $data
-     * @return StreamInterface
-     */
-    public function assemble($data);
+	 * @param mixed $data
+	 * @return null|StreamInterface
+	 */
+	public function assemble($data): ?StreamInterface;
 }

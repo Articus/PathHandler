@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Articus\PathHandler;
 
 use Interop\Container\ContainerInterface;
@@ -17,8 +19,9 @@ abstract class ConfigAwareFactory implements FactoryInterface
 
 	/**
 	 * Factory constructor.
+	 * @param string $configKey
 	 */
-	public function __construct($configKey)
+	public function __construct(string $configKey)
 	{
 		$this->configKey = $configKey;
 	}
@@ -31,12 +34,15 @@ abstract class ConfigAwareFactory implements FactoryInterface
 	 *     my_service: [My\Service\ConfigAwareFactory, my_service_config]
 	 * my_service_config:
 	 *   parameter: value
+	 * @param string $name
+	 * @param array $arguments
+	 * @return object
 	 */
-	public static function __callStatic($name, array $arguments)
+	public static function __callStatic(string $name, array $arguments)
 	{
-		if (count($arguments) < 3)
+		if (\count($arguments) < 3)
 		{
-			throw new \InvalidArgumentException(sprintf(
+			throw new \InvalidArgumentException(\sprintf(
 				'To invoke %s with custom configuration key statically 3 arguments are required: container, service name and options.',
 				static::class
 			));
@@ -49,9 +55,8 @@ abstract class ConfigAwareFactory implements FactoryInterface
 	 * @param ContainerInterface $container
 	 * @return array
 	 */
-	protected function getServiceConfig(ContainerInterface $container)
+	protected function getServiceConfig(ContainerInterface $container): array
 	{
-		$config = $container->get('config');
-		return (isset($config[$this->configKey])? $config[$this->configKey] : []);
+		return $container->get('config')[$this->configKey] ?? [];
 	}
 }

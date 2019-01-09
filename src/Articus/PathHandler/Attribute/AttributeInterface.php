@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Articus\PathHandler\Attribute;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -13,5 +15,5 @@ interface AttributeInterface
 	 * @param Request $request
 	 * @return Request
 	 */
-	public function __invoke(Request $request);
+	public function __invoke(Request $request): Request;
 }

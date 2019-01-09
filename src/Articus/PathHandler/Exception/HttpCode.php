@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Articus\PathHandler\Exception;
 
 use Exception;
@@ -14,7 +16,7 @@ class HttpCode extends \Exception
 	 */
 	protected $payload;
 
-	public function __construct($code, $reason, $payload = null, Exception $previous = null)
+	public function __construct(int $code, string $reason, $payload = null, Exception $previous = null)
 	{
 		parent::__construct($reason, $code, $previous);
 		$this->payload = $payload;

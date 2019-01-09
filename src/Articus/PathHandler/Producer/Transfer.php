@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Articus\PathHandler\Producer;
 
 use Articus\DataTransfer\Mapper\MapperInterface;
@@ -16,11 +18,13 @@ class Transfer extends Json
 	protected $dtService;
 
 	/**
-	 * @var callable|MapperInterface
+	 * @var null|callable|MapperInterface
 	 */
 	protected $mapper;
+
 	/**
 	 * @param DTService $dtService
+	 * @param null|callable|MapperInterface $mapper
 	 */
 	public function __construct(DTService $dtService, $mapper = null)
 	{
@@ -31,38 +35,44 @@ class Transfer extends Json
 	/**
 	 * @inheritdoc
 	 */
-	protected function stringify($objectOrArray)
+	protected function stringify($objectOrArray): string
 	{
-		$array = [];
-		$errors = [];
-		if (is_object($objectOrArray))
-		{
-			$errors = $this->dtService->transfer($objectOrArray, $array, $this->mapper);
-		}
-		elseif (is_array($objectOrArray))
-		{
-			foreach ($objectOrArray as $index => $object)
-			{
-				$item = [];
-				if (is_object($object))
-				{
-					$itemErrors = $this->dtService->transfer($object, $item, $this->mapper);
-					if (!empty($itemErrors))
-					{
-						$errors[$index] = $itemErrors;
-					}
-				}
-				else
-				{
-					$item = $object;
-				}
-				$array[$index] = $item;
-			}
-		}
+		[$data, $errors] = $this->transfer($objectOrArray);
 		if (!empty($errors))
 		{
-			throw new UnprocessableEntity($errors);
+			throw new \InvalidArgumentException('Failed to transfer data.', 0, new UnprocessableEntity($errors));
 		}
-		return parent::stringify($array);
+		return parent::stringify($data);
+	}
+
+	/**
+	 * Tries to transfer data from specified object or array to multi-dimensional scalar array
+	 * @param mixed $objectOrArray
+	 * @return array tuple (<transfered data> , <errors encountered during transfer>)
+	 */
+	protected function transfer($objectOrArray): array
+	{
+		$data = [];
+		$errors = [];
+		if (\is_object($objectOrArray))
+		{
+			$errors = $this->dtService->transfer($objectOrArray, $data, $this->mapper);
+		}
+		elseif (\is_array($objectOrArray))
+		{
+			foreach ($objectOrArray as $index => $itemObjectOrArray)
+			{
+				[$data[$index], $itemErrors] = $this->transfer($itemObjectOrArray);
+				if (!empty($itemErrors))
+				{
+					$errors[$index] = $itemErrors;
+				}
+			}
+		}
+		else
+		{
+			$data = $objectOrArray;
+		}
+		return [$data, $errors];
 	}
 }

@@ -1,7 +1,7 @@
 <?php
-namespace Articus\PathHandler\Annotation;
+declare(strict_types=1);
 
-use Doctrine\Common\Annotations\Annotation as DA;
+namespace Articus\PathHandler\Annotation;
 
 /**
  * Annotation for adding consumer service to handler
@@ -18,7 +18,7 @@ class Consumer
 
 	/**
 	 * Name that should be passed to PluginManager::get
-	 * @DA\Required()
+	 * @Required
 	 * @var string
 	 */
 	public $name;
@@ -30,7 +30,8 @@ class Consumer
 	public $options = null;
 
 	/**
-	 * Priority in which media type for consumer should check against request
+	 * Priority in which media type for consumer should check against request. The higher - the earlier.
+	 * If two consumers have equal priority, the one declared earlier will be checked earlier.
 	 * @var integer
 	 */
 	public $priority = 1;

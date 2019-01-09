@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
@@ -12,5 +13,5 @@ interface HeaderInterface
 	 * @param mixed $data
 	 * @return \Generator
 	 */
-	public function assembleHeaders($data);
+	public function assembleHeaders($data): \Generator;
 }

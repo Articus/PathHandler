@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Exception;
 
@@ -7,12 +8,15 @@ namespace Articus\PathHandler\Exception;
  */
 trait LocationAwareTrait
 {
+	/**
+	 * @var string
+	 */
 	protected $location;
 
 	/**
 	 * @inheritdoc
 	 */
-	public function getHeaders()
+	public function getHeaders(): \Generator
 	{
 		yield 'Location' => $this->location;
 	}

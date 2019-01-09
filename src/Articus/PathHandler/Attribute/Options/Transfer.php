@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Articus\PathHandler\Attribute\Options;
 
 use Zend\Stdlib\AbstractOptions;
@@ -31,72 +33,64 @@ class Transfer extends AbstractOptions
 	/**
 	 * @return string
 	 */
-	public function getSource()
+	public function getSource(): string
 	{
 		return $this->source;
 	}
 
 	/**
 	 * @param string $source
-	 * @return self
 	 */
-	public function setSource($source)
+	public function setSource(string $source): void
 	{
 		$this->source = $source;
-		return $this;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getType()
+	public function getType(): string
 	{
 		return $this->type;
 	}
 
 	/**
 	 * @param string $type
-	 * @return self
 	 */
-	public function setType($type)
+	public function setType(string $type): void
 	{
 		$this->type = $type;
-		return $this;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getObjectAttr()
+	public function getObjectAttr(): string
 	{
 		return $this->objectAttr;
 	}
 
 	/**
 	 * @param string $objectAttr
-	 * @return self
 	 */
-	public function setObjectAttr($objectAttr)
+	public function setObjectAttr(string $objectAttr): void
 	{
 		$this->objectAttr = $objectAttr;
-		return $this;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getErrorAttr()
+	public function getErrorAttr(): ?string
 	{
 		return $this->errorAttr;
 	}
 
 	/**
 	 * @param string $errorAttr
-	 * @return self
 	 */
-	public function setErrorAttr($errorAttr)
+	public function setErrorAttr(?string $errorAttr): void
 	{
 		$this->errorAttr = $errorAttr;
-		return $this;
 	}
 }

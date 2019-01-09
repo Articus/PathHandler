@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Consumer;
 
@@ -10,12 +11,21 @@ use Psr\Http\Message\StreamInterface;
  */
 class Json implements ConsumerInterface
 {
-	public function parse(StreamInterface $body, $preParsedBody, $mediaType, array $parameters)
+	/**
+	 * @inheritdoc
+	 * @throws Exception\BadRequest
+	 */
+	public function parse(StreamInterface $body, $preParsedBody, string $mediaType, array $parameters)
 	{
-		$result = json_decode($body->getContents(), true);
-		if (($result === null) && ($result !== 'null'))
+		//TODO allow to pass decoding options via parameters
+		$result = \json_decode($body->getContents(), true);
+		if (($result === null) && (\json_last_error() !== \JSON_ERROR_NONE))
 		{
-			throw new Exception\BadRequest('Malformed JSON');
+			throw new Exception\BadRequest('Malformed JSON: failed to decode');
+		}
+		elseif (!(($result === null) || \is_array($result)))
+		{
+			throw new Exception\BadRequest('Malformed JSON: expecting null, array or object');
 		}
 		return $result;
 	}

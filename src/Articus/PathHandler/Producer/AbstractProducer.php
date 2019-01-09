@@ -1,7 +1,9 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
+use Psr\Http\Message\StreamInterface;
 use Zend\Diactoros\Stream;
 
 /**
@@ -12,7 +14,7 @@ abstract class AbstractProducer implements ProducerInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function assemble($data)
+	public function assemble($data): ?StreamInterface
 	{
 		$result = null;
 		if ($data !== null)
@@ -30,5 +32,5 @@ abstract class AbstractProducer implements ProducerInterface
 	 * @param mixed $data
 	 * @return string
 	 */
-	abstract protected function stringify($data);
+	abstract protected function stringify($data): string;
 }

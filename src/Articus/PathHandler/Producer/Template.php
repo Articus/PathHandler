@@ -1,7 +1,9 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
+use Zend\Expressive\Response\ServerRequestErrorResponseGenerator;
 use Zend\Expressive\Template\TemplateRendererInterface;
 
 /**
@@ -25,28 +27,27 @@ class Template extends AbstractProducer
 	/**
 	 * @inheritdoc
 	 */
-	protected function stringify($data)
+	protected function stringify($data): string
 	{
 		$name = null;
 		$params = [];
 
-		if (is_array($data) && isset($data[0], $data[1]))
+		if (\is_array($data) && isset($data[0], $data[1]))
 		{
-			list($name, $params) = $data;
+			[$name, $params] = $data;
 		}
 		else
 		{
 			$name = $data;
 		}
 
-		if (empty($name) || (!is_string($name)))
+		if (empty($name) || (!\is_string($name)))
 		{
 			//TODO make default template configurable
-			$name = 'error::error';
+			$name = ServerRequestErrorResponseGenerator::TEMPLATE_DEFAULT;
 			$params['data'] = $data;
-			//throw new \InvalidArgumentException('No template name to render.');
 		}
+
 		return $this->renderer->render($name, $params);
 	}
-
 }

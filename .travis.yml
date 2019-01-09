@@ -1,16 +1,15 @@
 language: php
 php:
-  - 5.6
-  - 7.0
   - 7.1
   - 7.2
+  - 7.3
 
 install:
-  - composer install -o -n
-  - curl -s -L https://github.com/satooshi/php-coveralls/releases/download/v1.0.1/coveralls.phar > coveralls.phar
+  - composer install --no-interaction --no-progress --no-suggest
+  - if [[ TRAVIS_PHP_VERSION == '7.2' ]]; then curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar > coveralls.phar ; fi
 
 script:
-  - composer run-script test
+  - phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run
 
 after_success:
-  - php coveralls.phar -v
+  - if [[ TRAVIS_PHP_VERSION == '7.2' ]]; then php coveralls.phar -v ; fi

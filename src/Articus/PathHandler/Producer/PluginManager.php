@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
@@ -12,6 +13,12 @@ class PluginManager extends AbstractPluginManager
 {
 	protected $instanceOf = ProducerInterface::class;
 
+	protected $factories = [
+		Json::class => InvokableFactory::class,
+		Template::class => Factory\Template::class,
+		Transfer::class => Factory\Transfer::class,
+	];
+
 	protected $aliases = [
 		'Json' => Json::class,
 		'Template' => Template::class,
@@ -20,22 +27,4 @@ class PluginManager extends AbstractPluginManager
 		'template' => Template::class,
 		'transfer' => Transfer::class,
 	];
-
-	protected $factories = [
-		Json::class => InvokableFactory::class,
-		Template::class => Factory::class,
-		Transfer::class => Factory::class,
-	];
-
-	/**
-	 * Just for correct auto complete
-	 * @inheritdoc
-	 * @return ProducerInterface
-	 */
-	public function get($name, array $options = null)
-	{
-		return parent::get($name, $options);
-	}
-
-
 }

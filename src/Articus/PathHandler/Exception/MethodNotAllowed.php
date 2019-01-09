@@ -1,11 +1,11 @@
 <?php
-namespace Articus\PathHandler\Exception;
+declare(strict_types=1);
 
-use Exception;
+namespace Articus\PathHandler\Exception;
 
 class MethodNotAllowed extends HttpCode
 {
-	public function __construct(Exception $previous = null)
+	public function __construct(\Exception $previous = null)
 	{
 		parent::__construct(405, 'Method not allowed', null, $previous);
 	}

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Articus\PathHandler\Attribute;
 
 use Articus\DataTransfer\Service as DTService;
@@ -44,7 +46,7 @@ class Transfer implements AttributeInterface
 	 * @throws Exception\BadRequest
 	 * @throws Exception\UnprocessableEntity
 	 */
-	public function __invoke(Request $request)
+	public function __invoke(Request $request): Request
 	{
 		$data = $this->getData($request);
 		$object = $this->getObject($request);
@@ -67,10 +69,10 @@ class Transfer implements AttributeInterface
 
 	/**
 	 * @param Request $request
-	 * @return array|null|object
+	 * @return array
 	 * @throws Exception\BadRequest
 	 */
-	protected function getData(Request $request)
+	protected function getData(Request $request): array
 	{
 		$data = null;
 		switch ($this->options->getSource())
@@ -80,7 +82,7 @@ class Transfer implements AttributeInterface
 				break;
 			case self::SOURCE_POST:
 				$data = $request->getParsedBody();
-				if (!is_array($data))
+				if (!\is_array($data))
 				{
 					throw new Exception\BadRequest('Unexpected content');
 				}
@@ -97,24 +99,28 @@ class Transfer implements AttributeInterface
 				$data = [];
 				foreach ($request->getHeaders() as $name => $values)
 				{
-					$data[$name] = (count($values) === 1) ? $values[0] : $values;
+					$data[$name] = (\count($values) === 1) ? $values[0] : $values;
 				}
 				break;
 			case self::SOURCE_ATTRIBUTE:
 				$data = $request->getAttributes();
 				break;
 			default:
-				throw new \InvalidArgumentException(sprintf('Unknown source %s.', $this->options->getSource()));
+				throw new \InvalidArgumentException(\sprintf('Unknown source %s.', $this->options->getSource()));
 		}
 		return $data;
 	}
 
+	/**
+	 * @param Request $request
+	 * @return object
+	 */
 	protected function getObject(Request $request)
 	{
 		$className = $this->options->getType();
-		if (!class_exists($className))
+		if (!\class_exists($className))
 		{
-			throw new \InvalidArgumentException(sprintf('Unknown class %s.', $this->options->getType()));
+			throw new \InvalidArgumentException(\sprintf('Unknown class %s.', $this->options->getType()));
 		}
 
 		$result = $request->getAttribute($this->options->getObjectAttr());
