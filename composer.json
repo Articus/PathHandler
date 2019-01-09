@@ -54,7 +54,8 @@
   "repositories" : [
     {
       "type" : "vcs",
-      "url" : "https://github.com/samsonasik/phpspec-code-coverage"
+      "url" : "https://github.com/samsonasik/phpspec-code-coverage",
+      "no-api": true
     }
   ]
 }

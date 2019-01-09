@@ -8,6 +8,9 @@ install:
   - composer install --no-interaction --no-progress --no-suggest
   - if [[ TRAVIS_PHP_VERSION == '7.2' ]]; then curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar > coveralls.phar ; fi
 
+before_script:
+  - phpenv config-rm xdebug.ini
+
 script:
   - phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run
 
