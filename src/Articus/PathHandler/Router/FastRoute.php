@@ -15,6 +15,7 @@ use Zend\Expressive\Router\RouterInterface;
  */
 class FastRoute implements RouterInterface
 {
+	public const CACHE_KEY = 'fast-route';
 	/**
 	 * @var CacheStorage
 	 */
@@ -151,7 +152,7 @@ class FastRoute implements RouterInterface
 
 		if (($this->dispatcher === null) || ($this->parsedRoutes === null) || (!empty(\array_diff_key($this->routes, $this->parsedRoutes))))
 		{
-			$routingData = $this->cacheStorage->getItem(self::class);
+			$routingData = $this->cacheStorage->getItem(self::CACHE_KEY);
 			//Check if cached routing data corresponds with added routes
 			if (($routingData !== null) && (!empty(\array_diff_key($this->routes, $routingData[1]))))
 			{
@@ -161,7 +162,7 @@ class FastRoute implements RouterInterface
 			if ($routingData === null)
 			{
 				$routingData = $this->generateRoutingData();
-				$this->cacheStorage->setItem(self::class, $routingData);
+				$this->cacheStorage->setItem(self::CACHE_KEY, $routingData);
 			}
 			$this->dispatcher = new FR\Dispatcher\GroupCountBased($routingData[0]);
 			$this->parsedRoutes = $routingData[1];

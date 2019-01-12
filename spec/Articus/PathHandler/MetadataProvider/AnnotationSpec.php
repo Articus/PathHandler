@@ -31,7 +31,7 @@ class AnnotationSpec extends ObjectBehavior
 			[],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -57,8 +57,8 @@ class AnnotationSpec extends ObjectBehavior
 		};
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -74,7 +74,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handlerName = 'test';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -91,7 +91,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\SeveralMethodsForSingleHttpMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -108,7 +108,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoMethodsHandlingHttpMethods();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -125,7 +125,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\EmptyHttpMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -142,7 +142,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NonStringHttpMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -171,7 +171,7 @@ class AnnotationSpec extends ObjectBehavior
 			[$handlerClassName => new FastPriorityQueue()],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -206,8 +206,8 @@ class AnnotationSpec extends ObjectBehavior
 		};
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -223,7 +223,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handlerName = 'test';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -240,7 +240,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoRoutes();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -257,7 +257,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoPatternRoute();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -306,7 +306,7 @@ class AnnotationSpec extends ObjectBehavior
 			],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -389,8 +389,8 @@ class AnnotationSpec extends ObjectBehavior
 			return $result;
 		};
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -418,7 +418,7 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -437,8 +437,8 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'UNKNOWN';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -458,7 +458,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoNameConsumer();
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldThrow(AnnotationException::class)->during('hasConsumers', [$handlerName, $httpMethod]);
@@ -507,7 +507,7 @@ class AnnotationSpec extends ObjectBehavior
 			],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -584,8 +584,8 @@ class AnnotationSpec extends ObjectBehavior
 			return $result;
 		};
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -612,7 +612,7 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -630,8 +630,8 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'UNKNOWN';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -650,7 +650,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoNameAttribute();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->getAttributes($handlerName, $httpMethod)->shouldThrow(AnnotationException::class)->during('current', []);
@@ -698,7 +698,7 @@ class AnnotationSpec extends ObjectBehavior
 			],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -777,8 +777,8 @@ class AnnotationSpec extends ObjectBehavior
 			return $result;
 		};
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -806,7 +806,7 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -825,8 +825,8 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'UNKNOWN';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -846,7 +846,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoNameProducer();
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldThrow(AnnotationException::class)->during('hasProducers', [$handlerName, $httpMethod]);
@@ -864,7 +864,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoMediaTypeProducer();
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldThrow(AnnotationException::class)->during('hasProducers', [$handlerName, $httpMethod]);
@@ -896,7 +896,7 @@ class AnnotationSpec extends ObjectBehavior
 			[$handlerClassName => []],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -928,8 +928,8 @@ class AnnotationSpec extends ObjectBehavior
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
 
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -948,7 +948,7 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -970,8 +970,8 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\ValidMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -993,7 +993,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\SeveralRequiredParametersMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -1015,8 +1015,8 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\ValidMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);

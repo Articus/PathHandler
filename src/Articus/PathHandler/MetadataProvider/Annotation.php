@@ -16,6 +16,8 @@ use Zend\Stdlib\FastPriorityQueue;
  */
 class Annotation implements MetadataProviderInterface
 {
+	public const CACHE_KEY = 'metadata';
+
 	/**
 	 * @var PluginManagerInterface
 	 */
@@ -85,7 +87,7 @@ class Annotation implements MetadataProviderInterface
 			$this->consumers,
 			$this->attributes,
 			$this->producers
-		] = $this->cacheStorage->getItem(self::class) ?? [[], [], [], [], [], []];
+		] = $this->cacheStorage->getItem(self::CACHE_KEY) ?? [[], [], [], [], [], []];
 	}
 
 	public function __destruct()
@@ -94,7 +96,7 @@ class Annotation implements MetadataProviderInterface
 		if ($this->needCacheUpdate)
 		{
 			$this->cacheStorage->setItem(
-				self::class,
+				self::CACHE_KEY,
 				[
 					$this->handlerClassNames,
 					$this->routes,

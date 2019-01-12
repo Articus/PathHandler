@@ -73,8 +73,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/static/test';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request->getUri()->shouldBeCalledOnce()->willReturn($uri);
@@ -94,8 +94,8 @@ class FastRouteSpec extends ObjectBehavior
 		$httpMethods = ['TEST'];
 		$route = new Route('/variables/{test1}/and/{test2}', $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request->getUri()->shouldBeCalledOnce()->willReturn($uri);
@@ -117,8 +117,8 @@ class FastRouteSpec extends ObjectBehavior
 		$httpMethods = ['TEST'];
 		$route = new Route('/variable/{test:\\d+}', $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request1->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request1->getUri()->shouldBeCalledOnce()->willReturn($uri1);
@@ -147,8 +147,8 @@ class FastRouteSpec extends ObjectBehavior
 		$httpMethods = ['TEST'];
 		$route = new Route('/optionals[/test1[/test2]]', $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request1->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request1->getUri()->shouldBeCalledOnce()->willReturn($uri1);
@@ -180,8 +180,8 @@ class FastRouteSpec extends ObjectBehavior
 		$httpMethods = ['TEST'];
 		$route = new Route('/optional[/variable/{test}]', $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request1->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request1->getUri()->shouldBeCalledOnce()->willReturn($uri1);
@@ -209,8 +209,8 @@ class FastRouteSpec extends ObjectBehavior
 		$route1 = new Route('/test/123', $middleware->getWrappedObject(), $httpMethods);
 		$route2 = new Route('/test/{test}', $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request1->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request1->getUri()->shouldBeCalledOnce()->willReturn($uri1);
@@ -241,8 +241,8 @@ class FastRouteSpec extends ObjectBehavior
 		$route2 = new Route('/test2/{test1}', $middleware->getWrappedObject(), $httpMethods);
 		$route2->setOptions(['defaults' => ['test1' => 123, 'test2' => 456]]);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request1->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request1->getUri()->shouldBeCalledOnce()->willReturn($uri1);
@@ -260,8 +260,8 @@ class FastRouteSpec extends ObjectBehavior
 
 	public function it_fails_to_match_route_that_was_not_registered(CacheStorage $cache, Request $request, UriInterface $uri)
 	{
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn('TEST');
 		$request->getUri()->shouldBeCalledOnce()->willReturn($uri);
@@ -280,8 +280,8 @@ class FastRouteSpec extends ObjectBehavior
 		$httpMethods = ['TEST'];
 		$path = '/test';
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn('INVALID');
 		$request->getUri()->shouldBeCalledOnce()->willReturn($uri);
@@ -302,8 +302,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/test';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledTimes(2)->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledTimes(2);
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledTimes(2)->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledTimes(2);
 
 		$request->getMethod()->shouldBeCalledTimes(2)->willReturn($httpMethods[0]);
 		$request->getUri()->shouldBeCalledTimes(2)->willReturn($uri);
@@ -325,8 +325,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/test';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn([[[],[]], []]);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn([[[],[]], []]);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethods[0]);
 		$request->getUri()->shouldBeCalledOnce()->willReturn($uri);
@@ -354,8 +354,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/static/test';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 
 		$this->addRoute($route);
@@ -368,8 +368,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/variable/{test1}/and/{test2}';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->addRoute($route);
 		$this->generateUri($route->getName(), ['test1' => '123', 'test2' => '456'])->shouldBe('/variable/123/and/456');
@@ -381,8 +381,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/optional[/test1[/test2]]';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->addRoute($route);
 		$this->generateUri($route->getName())->shouldBe('/optional/test1/test2');
@@ -394,8 +394,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/test[/test1[/{test}]]';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->addRoute($route);
 		$this->generateUri($route->getName())->shouldBe('/test/test1');
@@ -418,8 +418,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/variable/{test}';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->addRoute($route);
 		$this->shouldThrow(\InvalidArgumentException::class)->during('generateUri', [$route->getName()]);
@@ -434,8 +434,8 @@ class FastRouteSpec extends ObjectBehavior
 		$path = '/variable/{test:\\d+}';
 		$route = new Route($path, $middleware->getWrappedObject(), $httpMethods);
 
-		$cache->getItem(PH\Router\FastRoute::class)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\Router\FastRoute::class, Argument::any())->shouldBeCalledOnce();
+		$cache->getItem(PH\Router\FastRoute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->setItem(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->addRoute($route);
 		$this->shouldThrow(\InvalidArgumentException::class)->during('generateUri', [$route->getName(), ['test' => 'qwer']]);
