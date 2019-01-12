@@ -46,6 +46,11 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	protected $producerPluginManager;
 
 	/**
+	 * @var callable
+	 */
+	protected $responseGenerator;
+
+	/**
 	 * Middleware constructor.
 	 * @param string $handlerName
 	 * @param MetadataProviderInterface $metadataProvider
@@ -53,6 +58,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	 * @param PluginManagerInterface $consumerPluginManager
 	 * @param PluginManagerInterface $attributePluginManager
 	 * @param PluginManagerInterface $producerPluginManager
+	 * @param callable $responseGenerator
 	 */
 	public function __construct(
 		string $handlerName,
@@ -60,7 +66,8 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		PluginManagerInterface $handlerPluginManager,
 		PluginManagerInterface $consumerPluginManager,
 		PluginManagerInterface $attributePluginManager,
-		PluginManagerInterface $producerPluginManager
+		PluginManagerInterface $producerPluginManager,
+		callable $responseGenerator
 	)
 	{
 		$this->handlerName = $handlerName;
@@ -69,6 +76,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		$this->consumerPluginManager = $consumerPluginManager;
 		$this->attributePluginManager = $attributePluginManager;
 		$this->producerPluginManager = $producerPluginManager;
+		$this->responseGenerator = $responseGenerator;
 	}
 
 	/**
@@ -84,8 +92,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	 */
 	public function handle(Request $request): Response
 	{
-		//TODO allow to customize empty response
-		$result = new DiactorosResponse();
+		$result = $this->generateEmptyResponse();
 		try
 		{
 			$httpMethod = $request->getMethod();
@@ -173,6 +180,16 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Generate empty response object.
+	 * Using separate method just because there is no return type declaration for callable.
+	 * @return Response
+	 */
+	protected function generateEmptyResponse(): Response
+	{
+		return ($this->responseGenerator)();
 	}
 
 	/**

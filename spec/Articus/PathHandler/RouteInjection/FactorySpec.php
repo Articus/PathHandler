@@ -7,6 +7,7 @@ use Articus\PathHandler as PH;
 use PhpSpec\ObjectBehavior;
 use Interop\Container\ContainerInterface;
 use Prophecy\Argument;
+use Psr\Http\Message\ResponseInterface as Response;
 use Zend\Expressive\Router\Route;
 use Zend\Expressive\Router\RouterInterface;
 use Zend\ServiceManager\PluginManagerInterface;
@@ -18,12 +19,17 @@ class FactorySpec extends ObjectBehavior
 		$this->shouldImplement(PH\ConfigAwareFactory::class);
 	}
 
-	public function it_returns_router_with_simple_config(ContainerInterface $container)
+	public function it_returns_router_with_simple_config(ContainerInterface $container, Response $response)
 	{
 		$config = [
 			PH\RouteInjection\Factory::class => []
 		];
+		$responseGenerator = function () use ($response)
+		{
+			return $response;
+		};
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$container->get(Response::class)->shouldBeCalledOnce()->willReturn($responseGenerator);
 
 		$this->__invoke($container, 'router')->shouldBeAnInstanceOf(PH\Router\FastRoute::class);
 	}
@@ -35,7 +41,8 @@ class FactorySpec extends ObjectBehavior
 		PluginManagerInterface $handlerManager,
 		PluginManagerInterface $consumerManager,
 		PluginManagerInterface $attributeManager,
-		PluginManagerInterface $producerManager
+		PluginManagerInterface $producerManager,
+		Response $response
 	)
 	{
 		$routerKey = 'router_service';
@@ -110,6 +117,10 @@ class FactorySpec extends ObjectBehavior
 			}
 			return $result;
 		};
+		$responseGenerator = function () use ($response)
+		{
+			return $response;
+		};
 
 		$config = [
 			PH\RouteInjection\Factory::class => [
@@ -136,6 +147,7 @@ class FactorySpec extends ObjectBehavior
 		$container->get($attributeManagerKey)->shouldBeCalledOnce()->willReturn($attributeManager);
 		$container->has($producerManagerKey)->shouldBeCalledOnce()->willReturn(true);
 		$container->get($producerManagerKey)->shouldBeCalledOnce()->willReturn($producerManager);
+		$container->get(Response::class)->shouldBeCalledOnce()->willReturn($responseGenerator);
 
 		$metadata->getHttpMethods($handleNames[0])->shouldBeCalledTimes(2)->willReturn($httpMethods[$handleNames[0]]);
 		$metadata->getHttpMethods($handleNames[1])->shouldBeCalledOnce()->willReturn($httpMethods[$handleNames[1]]);
@@ -327,6 +339,16 @@ class FactorySpec extends ObjectBehavior
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
+	}
+
+	public function it_throws_on_invalid_response_generator(ContainerInterface $container)
+	{
+		$config = [
+			PH\RouteInjection\Factory::class => []
+		];
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$container->get(Response::class)->shouldBeCalledOnce()->willReturn(null);
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
 	}
 }

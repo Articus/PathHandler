@@ -5,6 +5,7 @@ namespace Articus\PathHandler\RouteInjection;
 
 use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Zend\Cache\StorageFactory;
 use Zend\Expressive\Router\Route;
 use Zend\Expressive\Router\RouterInterface;
@@ -36,29 +37,8 @@ class Factory extends PH\ConfigAwareFactory
 		$consumerPluginManager = self::getConsumerPluginManager($container, $options->getConsumers());
 		$attributePluginManager = self::getAttributePluginManager($container, $options->getAttributes());
 		$producerPluginManager = self::getProducerPluginManager($container, $options->getProducers());
-
-		//Prepare metadata provider
-		$metadataProvider = null;
-		switch (true)
-		{
-			case empty($options->getMetadata()):
-				throw new \LogicException('PathHandler metadata provider is not configured.');
-			case \is_array($options->getMetadata()):
-				$metadataProvider = new PH\MetadataProvider\Annotation(
-					$handlerPluginManager,
-					StorageFactory::factory($options->getMetadata()['cache'] ?? [])
-				);
-				break;
-			case (\is_string($options->getMetadata()) && $container->has($options->getMetadata())):
-				$metadataProvider = $container->get($options->getMetadata());
-				if (!($metadataProvider instanceof PH\MetadataProviderInterface))
-				{
-					throw new \LogicException('Invalid metadata provider for PathHandler.');
-				}
-				break;
-			default:
-				throw new \LogicException('Invalid configuration for PathHandler metadata provider.');
-		}
+		$metadataProvider = self::getMetadataProvider($container, $handlerPluginManager, $options->getMetadata());
+		$responseGenerator = self::getResponseGenerator($container);
 
 		//Inject routes
 		foreach ($options->getPaths() as $pathPrefix => $handlerNames)
@@ -74,7 +54,8 @@ class Factory extends PH\ConfigAwareFactory
 						$handlerPluginManager,
 						$consumerPluginManager,
 						$attributePluginManager,
-						$producerPluginManager
+						$producerPluginManager,
+						$responseGenerator
 					);
 					$route = new Route($pathPrefix . $pattern, $middleware, $httpMethods, $routeName);
 					if (!empty($defaults))
@@ -217,6 +198,52 @@ class Factory extends PH\ConfigAwareFactory
 				break;
 			default:
 				throw new \LogicException('Invalid configuration for PathHandler producer plugin manager.');
+		}
+		return $result;
+	}
+
+	/**
+	 * @param ContainerInterface $container
+	 * @return callable
+	 */
+	protected static function getResponseGenerator(ContainerInterface $container): callable
+	{
+		$result = $container->get(ResponseInterface::class);
+		if (!\is_callable($result))
+		{
+			throw new \LogicException('Invalid response generator for PathHandler.');
+		}
+		return $result;
+	}
+
+	/**
+	 * @param ContainerInterface $container
+	 * @param PluginManagerInterface $handlerPluginManager
+	 * @param $options
+	 * @return PH\MetadataProviderInterface
+	 */
+	protected static function getMetadataProvider(ContainerInterface $container, PluginManagerInterface $handlerPluginManager, $options): PH\MetadataProviderInterface
+	{
+		$result = null;
+		switch (true)
+		{
+			case empty($options):
+				throw new \LogicException('PathHandler metadata provider is not configured.');
+			case \is_array($options):
+				$result = new PH\MetadataProvider\Annotation(
+					$handlerPluginManager,
+					StorageFactory::factory($options['cache'] ?? [])
+				);
+				break;
+			case (\is_string($options) && $container->has($options)):
+				$result = $container->get($options);
+				if (!($result instanceof PH\MetadataProviderInterface))
+				{
+					throw new \LogicException('Invalid metadata provider for PathHandler.');
+				}
+				break;
+			default:
+				throw new \LogicException('Invalid configuration for PathHandler metadata provider.');
 		}
 		return $result;
 	}
