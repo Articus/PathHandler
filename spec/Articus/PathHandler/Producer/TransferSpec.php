@@ -7,28 +7,35 @@ use Articus\DataTransfer\Mapper\MapperInterface;
 use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler as PH;
 use PhpSpec\ObjectBehavior;
-use Prophecy\Argument;
+use Psr\Http\Message\StreamInterface;
 
 class TransferSpec extends ObjectBehavior
 {
-	public function let(DTService $dt, MapperInterface $mapper)
+	public function let(DTService $dt, MapperInterface $mapper, StreamInterface $stream)
 	{
-		$this->beConstructedWith($dt, $mapper);
+		$streamFactory = function () use ($stream)
+		{
+			return $stream->getWrappedObject();
+		};
+
+		$this->beConstructedWith($streamFactory, $dt, $mapper);
 		$this->shouldImplement(PH\Producer\ProducerInterface::class);
 	}
 
-	public function it_transfers_scalar_to_json(DTService $dt)
+	public function it_transfers_scalar_to_json(DTService $dt, StreamInterface $stream)
 	{
 		$objectOrArray = 123;
 		$json = '123';
 
 		$dt->transfer()->shouldNotBeCalled();
 
-		$stream = $this->assemble($objectOrArray);
-		$stream->getContents()->shouldBe($json);
+		$stream->write($json)->shouldBeCalledOnce();
+		$stream->rewind()->shouldBeCalledOnce();
+
+		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
-	public function it_transfers_object_to_json(DTService $dt, MapperInterface $mapper)
+	public function it_transfers_object_to_json(DTService $dt, MapperInterface $mapper, StreamInterface $stream)
 	{
 		//TODO find a way to pass argument by reference
 		$objectOrArray = new \stdClass();
@@ -37,11 +44,13 @@ class TransferSpec extends ObjectBehavior
 
 		$dt->transfer($objectOrArray, $data, $mapper)->shouldBeCalledOnce()->willReturn([]);
 
-		$stream = $this->assemble($objectOrArray);
-		$stream->getContents()->shouldBe($json);
+		$stream->write($json)->shouldBeCalledOnce();
+		$stream->rewind()->shouldBeCalledOnce();
+
+		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
-	public function it_transfers_array_of_scalars_to_json(DTService $dt)
+	public function it_transfers_array_of_scalars_to_json(DTService $dt, StreamInterface $stream)
 	{
 		//TODO find a way to pass argument by reference
 		$objectOrArray = [123, 'qwer'];
@@ -49,11 +58,13 @@ class TransferSpec extends ObjectBehavior
 
 		$dt->transfer()->shouldNotBeCalled();
 
-		$stream = $this->assemble($objectOrArray);
-		$stream->getContents()->shouldBe($json);
+		$stream->write($json)->shouldBeCalledOnce();
+		$stream->rewind()->shouldBeCalledOnce();
+
+		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
-	public function it_transfers_array_of_objects_to_json(DTService $dt, MapperInterface $mapper)
+	public function it_transfers_array_of_objects_to_json(DTService $dt, MapperInterface $mapper, StreamInterface $stream)
 	{
 		//TODO find a way to pass argument by reference
 		$objectOrArray = [new \stdClass()];
@@ -62,8 +73,10 @@ class TransferSpec extends ObjectBehavior
 
 		$dt->transfer($objectOrArray[0], $data, $mapper)->shouldBeCalledOnce()->willReturn([]);
 
-		$stream = $this->assemble($objectOrArray);
-		$stream->getContents()->shouldBe($json);
+		$stream->write($json)->shouldBeCalledOnce();
+		$stream->rewind()->shouldBeCalledOnce();
+
+		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
 	public function it_throws_on_non_transferable_data(DTService $dt, MapperInterface $mapper)

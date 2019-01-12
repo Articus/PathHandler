@@ -26,8 +26,9 @@ class Transfer extends Json
 	 * @param DTService $dtService
 	 * @param null|callable|MapperInterface $mapper
 	 */
-	public function __construct(DTService $dtService, $mapper = null)
+	public function __construct(callable $streamFactory, DTService $dtService, $mapper = null)
 	{
+		parent::__construct($streamFactory);
 		$this->dtService = $dtService;
 		$this->mapper = $mapper;
 	}

@@ -8,7 +8,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Zend\Diactoros\Response as DiactorosResponse;
 use Zend\Http\Header\Accept;
 use Zend\Http\Header\ContentType;
 use Zend\ServiceManager\PluginManagerInterface;

@@ -14,7 +14,7 @@ class PluginManager extends AbstractPluginManager
 	protected $instanceOf = ProducerInterface::class;
 
 	protected $factories = [
-		Json::class => InvokableFactory::class,
+		Json::class => Factory\Json::class,
 		Template::class => Factory\Template::class,
 		Transfer::class => Factory\Transfer::class,
 	];

@@ -17,10 +17,12 @@ class Template extends AbstractProducer
 	protected $renderer;
 
 	/**
+	 * @param callable $streamFactory
 	 * @param TemplateRendererInterface $renderer
 	 */
-	public function __construct(TemplateRendererInterface $renderer)
+	public function __construct(callable $streamFactory, TemplateRendererInterface $renderer)
 	{
+		parent::__construct($streamFactory);
 		$this->renderer = $renderer;
 	}
 

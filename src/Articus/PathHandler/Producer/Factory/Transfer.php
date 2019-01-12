@@ -7,6 +7,7 @@ use Articus\DataTransfer\Mapper\MapperInterface;
 use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
+use Psr\Http\Message\StreamInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
@@ -49,7 +50,7 @@ class Transfer implements FactoryInterface
 					throw new \LogicException('Invalid mapper.');
 			}
 		}
-		return new PH\Producer\Transfer($container->get(DTService::class), $mapper);
+		return new PH\Producer\Transfer($container->get(StreamInterface::class), $container->get(DTService::class), $mapper);
 	}
 
 	/**

@@ -4,13 +4,26 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Producer;
 
 use Psr\Http\Message\StreamInterface;
-use Zend\Diactoros\Stream;
 
 /**
  * Base class for producers that somehow transform data to string
  */
 abstract class AbstractProducer implements ProducerInterface
 {
+	/**
+	 * @var callable
+	 */
+	protected $streamFactory;
+
+	/**
+	 * AbstractProducer constructor.
+	 * @param callable $streamFactory
+	 */
+	public function __construct(callable $streamFactory)
+	{
+		$this->streamFactory = $streamFactory;
+	}
+
 	/**
 	 * @inheritdoc
 	 */
@@ -19,12 +32,22 @@ abstract class AbstractProducer implements ProducerInterface
 		$result = null;
 		if ($data !== null)
 		{
-			$result = new Stream('php://temp', 'wb+');
+			$result = $this->createStream();
 			$result->write($this->stringify($data));
 			$result->rewind();
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Creates new stream.
+	 * Using separate method just because there is no return type declaration for callable.
+	 * @return StreamInterface
+	 */
+	protected function createStream(): StreamInterface
+	{
+		return ($this->streamFactory)();
 	}
 
 	/**
