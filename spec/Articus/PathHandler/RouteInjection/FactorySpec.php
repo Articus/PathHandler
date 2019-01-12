@@ -21,12 +21,7 @@ class FactorySpec extends ObjectBehavior
 	public function it_returns_router_with_simple_config(ContainerInterface $container)
 	{
 		$config = [
-			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
-			]
+			PH\RouteInjection\Factory::class => []
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 
@@ -163,10 +158,6 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'router' => [],
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -179,10 +170,6 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'router' => $routerKey,
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -196,10 +183,6 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'router' => 123,
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -212,10 +195,6 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'metadata' => [],
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -228,10 +207,6 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'metadata' => $metadataKey,
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -245,30 +220,12 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'metadata' => 123,
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
 	}
 
-
-	public function it_throws_on_empty_handler_manager_config(ContainerInterface $container)
-	{
-		$config = [
-			PH\RouteInjection\Factory::class => [
-				'handlers' => [],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
-			]
-		];
-		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
-		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
-	}
 
 	public function it_throws_on_invalid_handler_manager(ContainerInterface $container, $handlerManager)
 	{
@@ -276,9 +233,6 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'handlers' => $key,
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -292,9 +246,6 @@ class FactorySpec extends ObjectBehavior
 		$config = [
 			PH\RouteInjection\Factory::class => [
 				'handlers' => 123,
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -302,29 +253,12 @@ class FactorySpec extends ObjectBehavior
 	}
 	
 
-	public function it_throws_on_empty_consumer_manager_config(ContainerInterface $container)
-	{
-		$config = [
-			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => [],
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
-			]
-		];
-		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
-		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
-	}
-
 	public function it_throws_on_invalid_consumer_manager(ContainerInterface $container, $consumerManager)
 	{
 		$key = 'invalid';
 		$config = [
 			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
 				'consumers' => $key,
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -337,40 +271,20 @@ class FactorySpec extends ObjectBehavior
 	{
 		$config = [
 			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
 				'consumers' => 123,
-				'attributes' => ['factories' => []],
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
 	}
 
-
-	public function it_throws_on_empty_attribute_manager_config(ContainerInterface $container)
-	{
-		$config = [
-			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => [],
-				'producers' => ['factories' => []],
-			]
-		];
-		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
-		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
-	}
 
 	public function it_throws_on_invalid_attribute_manager(ContainerInterface $container, $attributeManager)
 	{
 		$key = 'invalid';
 		$config = [
 			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
 				'attributes' => $key,
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
@@ -383,39 +297,19 @@ class FactorySpec extends ObjectBehavior
 	{
 		$config = [
 			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
 				'attributes' => 123,
-				'producers' => ['factories' => []],
 			]
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
 	}
 
-
-	public function it_throws_on_empty_producer_manager_config(ContainerInterface $container)
-	{
-		$config = [
-			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
-				'producers' => [],
-			]
-		];
-		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
-		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
-	}
 
 	public function it_throws_on_invalid_producer_manager(ContainerInterface $container, $producerManager)
 	{
 		$key = 'invalid';
 		$config = [
 			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
 				'producers' => $key,
 			]
 		];
@@ -429,9 +323,6 @@ class FactorySpec extends ObjectBehavior
 	{
 		$config = [
 			PH\RouteInjection\Factory::class => [
-				'handlers' => ['factories' => []],
-				'consumers' => ['factories' => []],
-				'attributes' => ['factories' => []],
 				'producers' => 123,
 			]
 		];

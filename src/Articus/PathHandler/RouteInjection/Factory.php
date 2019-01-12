@@ -127,8 +127,6 @@ class Factory extends PH\ConfigAwareFactory
 		$result = null;
 		switch (true)
 		{
-			case empty($options):
-				throw new \LogicException('PathHandler handler plugin manager is not configured.');
 			case \is_array($options):
 				$result = new PH\PluginManager($container, $options);
 				break;
@@ -155,8 +153,6 @@ class Factory extends PH\ConfigAwareFactory
 		$result = null;
 		switch (true)
 		{
-			case empty($options):
-				throw new \LogicException('PathHandler consumer plugin manager is not configured.');
 			case \is_array($options):
 				$result = new PH\Consumer\PluginManager($container, $options);
 				break;
@@ -183,8 +179,6 @@ class Factory extends PH\ConfigAwareFactory
 		$result = null;
 		switch (true)
 		{
-			case empty($options):
-				throw new \LogicException('PathHandler attribute plugin manager is not configured.');
 			case \is_array($options):
 				$result = new PH\Attribute\PluginManager($container, $options);
 				break;
@@ -211,8 +205,6 @@ class Factory extends PH\ConfigAwareFactory
 		$result = null;
 		switch (true)
 		{
-			case empty($options):
-				throw new \LogicException('PathHandler producer plugin manager is not configured.');
 			case \is_array($options):
 				$result = new PH\Producer\PluginManager($container, $options);
 				break;
