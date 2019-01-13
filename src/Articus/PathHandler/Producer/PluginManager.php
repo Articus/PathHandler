@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Producer;
 
 use Zend\ServiceManager\AbstractPluginManager;
-use Zend\ServiceManager\Factory\InvokableFactory;
 
 /**
  * Producer plugin manager

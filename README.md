@@ -5,17 +5,19 @@
 [![Coveralls](https://coveralls.io/repos/github/Articus/PathHandler/badge.svg?branch=master)](https://coveralls.io/github/Articus/PathHandler?branch=master)
 [![Codacy](https://api.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://www.codacy.com/app/articusw/PathHandler?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Articus/PathHandler&amp;utm_campaign=Badge_Grade)
 
-This library provides a replacement for default routing and dispatch middleware from [Zend Expressive](http://zendframework.github.io/zend-expressive/) and should considerably simplify creating APIs with this nice framework. The idea is to split request processing into phases that should be familiar to anyone who used to write [Swagger](http://swagger.io/) specs:
-   
-- routing - determine what operation should you perform for specified request path
-- consuming - parse request body
-- attributing - calculate set of request attributes that you need to perform operation from raw request data (it can be any auxiliary actions like checking authentication and getting current user, validating data and making DTO from it, retrieving entity from DB by id from request parameters and etc)
-- handling - perform requested operation and get some result
-- producing - prepare response body and headers using operation result
+
+This library considerably simplifies API development with [Zend Expressive](http://zendframework.github.io/zend-expressive/) by reducing amount of boilerplate code you have to write for each API operation. The idea is to provide a more convenient way to deal with:
+
+- routing - routes for all operations are registered automatically
+- consuming - each operation may have unique algorithm to parse request body according its content type
+- attributing (as in [PSR-7 request attributes](https://www.php-fig.org/psr/psr-7/#15-server-side-requests)) - each operation may have its own set of request attributes calculated from raw request data (like current user information insteadof authentication header, validated DTO insteadof form value array, entity object insteadof query parameter with its id and so on)
+- producing - each operation may have unique algorithm to prepare response body from operation result according media type accepted by client
+
+So you can focus on handling your API operations and spend less time on writing auxiliary code for request processing.
 
 ## Quick start
 
-Just write [Swagger specification](https://swagger.io/specification/) for your future API and use [Swagger Codegen](https://swagger.io/swagger-codegen/) to generate `ze-ph` server. Both steps can be easily done in your browser with [Swagger Editor](http://editor.swagger.io/).   
+Just write [OpenAPI Specification](https://swagger.io/specification/) for your future API and use [OpenAPI Codegen](https://swagger.io/swagger-codegen/) to generate `php-ze-ph` server.
 
 ## How to install?
 
@@ -23,23 +25,26 @@ Just add `"articus/path-handler": "*"` to your [composer.json](https://getcompos
 
 ## How to use?
 
-First of all you need to declare **handlers**. Each handler is a set of all **operations** that can be performed when some **path** of your API is accessed with distinct HTTP methods. To do this you just need to make a class implementing at least one of the interfaces from `Articus\PathHandler\Operation\ ` and decorate its methods with special annotations:
+First of all you need a project with Zend Expressive application. For example you can generate one with [this installer](https://github.com/zendframework/zend-expressive-skeleton).  
+
+Next you need to declare **handlers**. Each handler is a set of all **operations** that can be performed when some **path** of your API is accessed with distinct HTTP methods. Any class can be a handler, you just need to decorate it with special annotations:
 
 ```PHP
 namespace My;
 
 use Articus\PathHandler\Annotation as PHA;
 use Articus\PathHandler\Exception;
-use Articus\PathHandler\Operation\PostInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * This is how you set path for handler operations
  * @PHA\Route(pattern="/entity")
  */
-class Handler implements PostInterface
+class Handler
 {
     /**
+     * This is how you declare HTTP method of the operation
+     * @PHA\Post()
      * This is how you consume request body
      * @PHA\Consumer(name="Json", mediaType="application/json")
      * This is how you attribute request
@@ -47,7 +52,7 @@ class Handler implements PostInterface
      * This is how you produce response body from returned value
      * @PHA\Producer(name="Json", mediaType="application/json")
      */
-    public function handlePost(ServerRequestInterface $request)
+    public function handlePost(ServerRequestInterface $request): \My\DTO
     {
         $errors = $request->getAttribute('errors');
         if (!empty($errors))
@@ -55,68 +60,35 @@ class Handler implements PostInterface
             //This is how you can return non-200 responses
             throw new Exception\UnprocessableEntity($errors);
         }
-        /* @var My\DTO $dto */
+        /* @var \My\DTO $dto */
         $dto = $request->getAttribute('dto');
         return $dto;
     }
 }
 ```
 
-Next you need to configure router service (example is in YAML just for readability):
+Finally you need to configure special factory for router service (example is in YAML just for readability):
 
 ```YAML
 dependencies:
   factories:
-    Zend\Expressive\Router\RouterInterface: Articus\PathHandler\Router\FastRouteAnnotationFactory
-Articus\PathHandler\Router\FastRouteAnnotation:
-  # Storage for routing metadata
-  metadata_cache:
-    adapter: filesystem
-    options:
-      cache_dir: data/FastRouteAnnotation
-      namespace: fra
-    plugins:
-      serializer:
-        serializer: phpserialize
-  # List of all your handlers
-  handlers:
+    Zend\Expressive\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
+
+Articus\PathHandler\RouteInjection\Factory:
+  paths:
+    '':
+    # List of your handlers   
     - My\Handler
-```
-
-Next you need to configure new middleware:
-
-```YAML
-Articus\PathHandler\Middleware:
-  # Storage for middleware metadata
-  metadata_cache:
-    adapter: filesystem
-    options:
-      cache_dir: data/PathHandler
-      namespace: ph
-    plugins:
-      serializer:
-        serializer: phpserialize
   # Configuration for handler plugin manager - sub-container dedicated for handlers
   handlers:
     factories:
       My\Handler: My\HandlerFactory
 ```
 
-Finally you need to register new middleware and add it to middleware pipeline:
-
-```YAML
-dependencies:
-  factories:
-    Articus\PathHandler\Middleware: Articus\PathHandler\MiddlewareFactory
-middleware_pipeline:
-  api:
-    middleware: Articus\PathHandler\Middleware
-```
-
 For more details check [documentation](http://pathhandler.readthedocs.io/en/latest/).
 
 # Enjoy!
 I hope this library will be useful for someone except me. 
-Currently it is only the initial release. It is used for production purposes but it lacks lots of refinement, especially in terms of tests and documentation. 
+It is used for production purposes but it lacks lots of refinement, especially in terms of tests and documentation. 
 
 If you have any suggestions, advices, questions or fixes feel free to submit issue or pull request.

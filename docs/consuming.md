@@ -3,7 +3,7 @@
 To consume request body you need a **consumer** - class that implements `Articus\PathHandler\Consumer\ConsumerInterface` and is registered in configuration:
  
 ```YAML
-path_handler:
+Articus\PathHandler\RouteInjection\Factory:
   #Add entry in consumer plugin manager 
   consumers:
     invokables:
@@ -20,13 +20,16 @@ To use consumer for operation in your handler you just need to annotate operatio
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Operation\PostInterface;
 use Articus\PathHandler\Annotation as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
-class Handler implements PostInterface
+/**
+ * @PHA\Route(pattern="/entity")
+ */
+class Handler
 {
     /**
+     * @PHA\Post()
      * @PHA\Consumer(name="Json")
      */
     public function handlePost(ServerRequestInterface $request)
@@ -41,13 +44,16 @@ Each operation method can have several consumers. Just specify request content t
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Operation\PostInterface;
 use Articus\PathHandler\Annotation as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
-class Handler implements PostInterface
+/**
+ * @PHA\Route(pattern="/entity")
+ */
+class Handler
 {
     /**
+     * @PHA\Post()
      * @PHA\Consumer(name="Json", mediaType="application/json")
      * @PHA\Consumer(name="Internal", mediaType="multipart/form-data")
      */
@@ -63,20 +69,25 @@ If all operations in your handler need same consumer you can just annotate handl
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Operation\PostInterface;
-use Articus\PathHandler\Operation\PatchInterface;
 use Articus\PathHandler\Annotation as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
+ * @PHA\Route(pattern="/entity")
  * @PHA\Consumer(name="Json", mediaType="application/json")
  */
-class Handler implements PostInterface, PatchInterface
+class Handler
 {
+    /**
+     * @PHA\Post()
+     */
     public function handlePost(ServerRequestInterface $request)
     {
         $data = $request->getParsedBody(); 
     }
+    /**
+     * @PHA\Patch()
+     */
     public function handlePatch(ServerRequestInterface $request)
     {
         $data = $request->getParsedBody(); 

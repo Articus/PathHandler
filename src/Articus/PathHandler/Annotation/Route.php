@@ -17,7 +17,8 @@ class Route
 	public $name;
 
 	/**
-	 * Route pattern that should be passed to FastRoute\RouteCollector::addRoute
+	 * Route path pattern.
+	 * The exact syntax depends on router you choose.
 	 * @Required
 	 * @var string
 	 */

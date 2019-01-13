@@ -1,104 +1,105 @@
 # Routing
 
-PathHandler supports any router that implements `Zend\Expressive\Router\RouterInterface` and expects that:
+PathHandler provides several neat improvements for [standard Zend Expressive routing registration routine](https://docs.zendframework.com/zend-expressive/v3/features/router/intro/).
 
-- it is possible to get instance of this router from container by name `Zend\Expressive\Router\RouterInterface` (like Zend Expressive itself);  
-- every successful result of request matching with this router contains matched parameter `handler`. Value of this parameter should be either handler instance or handler service name that can retrieved from handler plugin manager.
+## Route path prefixes
 
-You can change both router service name and handler parameters name in middleware configuration:
+You can easily add common path prefix for a group of handlers via router factory configuration:
 
 ```YAML
-Articus\PathHandler\Middleware:
-  handler_attr: my_parameter_for_storing_handler_service_name
-  routes: my_router
+Articus\PathHandler\RouteInjection\Factory:
+  paths:
+    '':
+    # List of handlers that should not be prefixed   
+    - My\Handler1
+    - My\Handler2
+    '/v1':
+    # List of handlers which path should be prefixed with /v1   
+    - My\V1\Handler1
+    - My\V1\Handler2
+```
+
+It is useful for prefixes that do not affect handler behaviour, for example API version number.
+
+## Route path declaration
+
+Each handler should have at least one path declaration. Each path declaration may have default values for parameters that will be available after matching and unique name to simplify URI generation. You may declare several paths for single handler. Corresponding routes will be registered in the order they appear in annotations or based on their priority. Check `Articus\PathHandler\Annotation\Route` for details.
+
+```PHP
+namespace My;
+
+use Articus\PathHandler\Annotation as PHA;
+use Articus\PathHandler\Exception;
+
+/**
+ * @PHA\Route(pattern="/some/path")
+ * @PHA\Route(pattern="/another/path", name="another_path_name")
+ * @PHA\Route(pattern="/another/path", defaults={"some_param": 123, "another_param": "another param value"})
+ */
+class Handler
+{
+//...
+}
+```
+
+Path pattern syntax depends on router you choose. Default one is `Articus\PathHandler\Router\FastRoute` based on [FastRoute](https://packagist.org/packages/nikic/fast-route). You can switch to your favourite router implementation via router factory configuration:
+
+```YAML
 dependencies:
   factories:
-    my_router: My\Router\Factory
+    Zend\Expressive\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
+    my_router: My\RouterFactory
+
+Articus\PathHandler\RouteInjection\Factory:
+  router: my_router
 ```
 
-Library provides two routers out of the box:
+## Route HTTP method declaration
 
-- `Articus\PathHandler\Router\FastRouteAnnotation`
-- `Articus\PathHandler\Router\TreeConfiguration`
-
-## FastRouteAnnotation
-
-This is a recommended option if you do not have strong preference for something else :)
-
-This router is based on [FastRoute](https://packagist.org/packages/nikic/fast-route) and allows to declare paths via annotation `Articus\PathHandler\Annotation\Route` like that: 
+Each handler should have at least one class method with HTTP method declaration. There are "shortcuts" for GET, POST, PUT, PATCH and DELETE. Any other HTTP method can be declared with generic `Articus\PathHandler\Annotation\HttpMethod` annotation. Class method may have several HTTP method declarations. You may even create two handlers with same path but mark their class methods to handle different HTTP methods.
 
 ```PHP
 namespace My;
 
 use Articus\PathHandler\Annotation as PHA;
-use Articus\PathHandler\Operation\PostInterface;
+use Articus\PathHandler\Exception;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * @PHA\Route(pattern="/entity/{id:\d+}", defaults={"test":123})
+ * @PHA\Route(pattern="/entity/{id}")
  */
-class Handler implements PostInterface
-{/* some code */}
-```
+class Handler
+{
+    /**
+     * @PHA\HttpMethod("HEAD")
+     * @PHA\Get()
+     */
+    public function read(ServerRequestInterface $request)
+    {
+        //...
+    }
 
-Route `pattern` should be filled according [FastRoute rules](https://github.com/nikic/FastRoute/blob/master/README.md). Matched parameters are calculated as `array_merge (['handler' => <handler class FQN>], <defaults>, <parameteres parsed from URI>)`. If you set custom `handler_attr` in middleware configuration, you need to repeat it in router configuration:
- 
-```YAML
-Articus\PathHandler\Middleware:
-  handler_attr: my_parameter_for_storing_handler_service_name
-Articus\PathHandler\Router\FastRouteAnnotation:
-  handler_attr: my_parameter_for_storing_handler_service_name
-```
-
-If you set multiple routes for handler they will be checked in the order they appear in annotations:
-
-```PHP
-namespace My;
-
-use Articus\PathHandler\Operation\PostInterface;
-use Articus\PathHandler\Annotation as PHA;
+    /**
+     * @PHA\Put()
+     * @PHA\Patch()
+     */
+    public function update(ServerRequestInterface $request)
+    {
+        //...
+    }
+}
 
 /**
- * @PHA\Route(pattern="/entity/0")
- * @PHA\Route(pattern="/entity/{id:\d+}")
+ * @PHA\Route(pattern="/entity/{id}")
  */
-class Handler implements PostInterface
-{/* some code */}
+class DeleteHandler
+{
+    /**
+     * @PHA\Delete()
+     */
+    public function delete(ServerRequestInterface $request)
+    {
+        //...
+    }
+}
 ```
-
-Or you can adjust this order with priority setting (default value is 1). Routes with higher priority will be executed earlier:
-
-```PHP
-```PHP
-namespace My;
-
-use Articus\PathHandler\Operation\PostInterface;
-use Articus\PathHandler\Annotation as PHA;
-
-/**
- * @PHA\Route(pattern="/entity/{id:\d+}")
- * @PHA\Route(pattern="/entity/0", priority=10)
- */
-class Handler implements PostInterface
-{/* some code */}
-```
-
-This router can created with factory `Articus\PathHandler\Router\Factory\FastRouteAnnotation`.
- 
-## TreeConfiguration
-
-This router is based on [Zend Router](https://packagist.org/packages/zendframework/zend-router) and allows to declare paths via tree-like configuration:
-
-```YAML
-Articus\PathHandler\Router\TreeConfiguration:
-  routes:
-    entity:
-      type: Literal
-      options:
-        route: /entity
-        defaults:
-          handler: My\Handler
-```
-
-Configuration format is defined by `Zend\Router\Http\TreeRouteStack::factory`, check [its documentation](https://docs.zendframework.com/zend-router/routing/#treeroutestack) for details.
-
-This router can created with factory `Articus\PathHandler\Router\Factory\TreeConfiguration`.

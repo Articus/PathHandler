@@ -3,7 +3,7 @@
 To produce response body you need a **producer** - class that implements `Articus\PathHandler\Producer\ProducerInterface` and is registered in configuration:
  
 ```YAML
-path_handler:
+Articus\PathHandler\RouteInjection\Factory:
   #Add entry in producer plugin manager 
   producers:
     invokables:
@@ -21,16 +21,19 @@ To use producer for operation in your handler you just need to annotate operatio
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Operation\GetInterface;
 use Articus\PathHandler\Annotation as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
-class Handler implements GetInterface
+/**
+ * @PHA\Route(pattern="/entity")
+ */
+class Handler
 {
     /**
+     * @PHA\Get()
      * @PHA\Producer(name="Json", mediaType="application/json")
      */
-    public function handleGet(ServerRequestInterface $request)
+    public function handleGet(ServerRequestInterface $request): array
     {
         return ['some' => 'thing']; 
     }
@@ -43,17 +46,20 @@ Specify several producers if you want to allow client to choose how content will
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Operation\GetInterface;
 use Articus\PathHandler\Annotation as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
-class Handler implements GetInterface
+/**
+ * @PHA\Route(pattern="/entity")
+ */
+class Handler
 {
     /**
+     * @PHA\Get()
      * @PHA\Producer(name="Json", mediaType="application/json")
      * @PHA\Producer(name="Template", mediaType="text/html")
      */
-    public function handleGet(ServerRequestInterface $request)
+    public function handleGet(ServerRequestInterface $request): array
     {
         return ['success', ['some' => 'thing']]; 
     }
@@ -65,21 +71,26 @@ If all operations in your handler need same producer you can just annotate handl
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Operation\PostInterface;
-use Articus\PathHandler\Operation\PatchInterface;
 use Articus\PathHandler\Annotation as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
+ * @PHA\Route(pattern="/entity")
  * @PHA\Producer(name="Json", mediaType="application/json")
  */
-class Handler implements PostInterface, PatchInterface
+class Handler
 {
-    public function handlePost(ServerRequestInterface $request)
+    /**
+     * @PHA\Post()
+     */
+    public function handlePost(ServerRequestInterface $request): array
     {
         return ['some' => 'thing']; 
     }
-    public function handlePatch(ServerRequestInterface $request)
+    /**
+     * @PHA\Patch()
+     */
+    public function handlePatch(ServerRequestInterface $request): array
     {
         return ['some' => 'thing']; 
     }

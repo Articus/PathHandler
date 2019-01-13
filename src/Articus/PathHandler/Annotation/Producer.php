@@ -18,14 +18,14 @@ class Producer
 	public $mediaType;
 
 	/**
-	 * Name that should be passed to PluginManager::get
+	 * Name that should be passed to PluginManager::build
 	 * @Required
 	 * @var string
 	 */
 	public $name;
 
 	/**
-	 * Options that should be passed to PluginManager::get
+	 * Options that should be passed to PluginManager::build
 	 * @var array
 	 */
 	public $options = null;
