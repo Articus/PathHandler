@@ -10,10 +10,10 @@ before_install:
 
 install:
   - composer install --no-interaction --no-progress --no-suggest
-  - if [[ TRAVIS_PHP_VERSION == '7.2' ]]; then curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar > coveralls.phar ; fi
+  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar > coveralls.phar ; fi
 
 script:
   - phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run
 
 after_success:
-  - if [[ TRAVIS_PHP_VERSION == '7.2' ]]; then php coveralls.phar -v ; fi
+  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then php coveralls.phar -v ; fi
