@@ -17,7 +17,7 @@ So you can focus on handling your API operations and spend less time on writing 
 
 ## Quick start
 
-Just write [OpenAPI Specification](https://swagger.io/specification/) for your future API and use [OpenAPI Codegen](https://swagger.io/swagger-codegen/) to generate `php-ze-ph` server.
+Just write [OpenAPI Specification](https://swagger.io/specification/) for your future API and use [OpenAPI Codegen](https://openapi-generator.tech/) to generate `php-ze-ph` server.  Check a sample of what you get [here](https://github.com/OpenAPITools/openapi-generator/tree/master/samples/server/openapi3/petstore/php-ze-ph).
 
 ## How to install?
 
