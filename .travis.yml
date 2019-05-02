@@ -1,19 +1,29 @@
 language: php
 php:
-  - 7.1
-  - 7.2
-#Version on Travis CI seems to cause segmentation fault for now :(
-#  - 7.3
+  - '7.1'
+  - '7.2'
+  - '7.3'
 
 before_install:
   - phpenv config-rm xdebug.ini
 
 install:
-  - composer install --no-interaction --no-progress --no-suggest
-  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar > coveralls.phar ; fi
+  - composer install --no-interaction --no-progress --no-suggest --classmap-authoritative
+  - |
+    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
+      curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar > coveralls.phar
+    fi
 
 script:
-  - phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run
+  - |
+    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
+      phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run -c phpspec-coverage.yml
+    else
+      phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run
+    fi
 
 after_success:
-  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then php coveralls.phar -v ; fi
+  - |
+    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
+      php coveralls.phar -v
+    fi

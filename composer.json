@@ -39,7 +39,7 @@
     "ext-json": "*",
     "phpspec/phpspec": "^5.0",
     "phpspec/prophecy": "*",
-    "leanphp/phpspec-code-coverage": "dev-patch-1"
+    "dragonrun1/phpspec-code-coverage": "^4.2.3"
   },
   "autoload": {
     "psr-4": {
@@ -50,12 +50,5 @@
     "psr-4": {
       "spec\\": "spec"
     }
-  },
-  "repositories" : [
-    {
-      "type" : "vcs",
-      "url" : "https://github.com/samsonasik/phpspec-code-coverage",
-      "no-api": true
-    }
-  ]
+  }
 }
