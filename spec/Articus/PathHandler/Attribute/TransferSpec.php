@@ -24,7 +24,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($options->getObjectAttr(), $object)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($data, $object)->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($data, $object, '')->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);
@@ -42,7 +42,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($options->getObjectAttr(), $object)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($data, $object)->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($data, $object, '')->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);
@@ -58,7 +58,7 @@ class TransferSpec extends ObjectBehavior
 
 		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
 
-		$dt->transfer($data, $object)->shouldNotBeCalled();
+		$dt->transferToTypedData($data, $object, '')->shouldNotBeCalled();
 
 		$this->beConstructedWith($dt, $options);
 		$this->shouldThrow(PH\Exception\BadRequest::class)->during('__invoke', [$in]);
@@ -77,7 +77,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($options->getObjectAttr(), $object)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($transferData, $object)->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($transferData, $object, '')->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);
@@ -97,7 +97,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($options->getObjectAttr(), $object)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($data, $object)->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($data, $object, '')->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);
@@ -113,7 +113,7 @@ class TransferSpec extends ObjectBehavior
 
 		$in->getAttribute(RouteResult::class)->shouldBeCalledOnce()->willReturn(null);
 
-		$dt->transfer($data, $object)->shouldNotBeCalled();
+		$dt->transferToTypedData($data, $object, '')->shouldNotBeCalled();
 
 		$this->beConstructedWith($dt, $options);
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$in]);
@@ -131,7 +131,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($options->getObjectAttr(), $object)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($data, $object)->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($data, $object, '')->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);
@@ -148,6 +148,25 @@ class TransferSpec extends ObjectBehavior
 		$this->shouldThrow(\InvalidArgumentException::class)->during('__invoke', [$in]);
 	}
 
+	public function it_transfers_custom_subset_of_data(DTService $dt, Request $in, Request $out, \stdClass $object)
+	{
+		$subset = 'testSubset';
+		$options = new PH\Attribute\Options\Transfer([
+			'type' => \stdClass::class,
+			'subset' => $subset,
+		]);
+		$data = ['test' => 123];
+
+		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
+		$in->withAttribute($options->getObjectAttr(), $object)->shouldBeCalledOnce()->willReturn($out);
+
+		$dt->transferToTypedData($data, $object, $subset)->shouldBeCalledOnce()->willReturn([]);
+
+		$this->beConstructedWith($dt, $options);
+		$this->__invoke($in)->shouldBe($out);
+	}
+
 	public function it_saves_object_to_attribute_with_custom_name(DTService $dt, Request $in, Request $out, \stdClass $object)
 	{
 		$options = new PH\Attribute\Options\Transfer([
@@ -160,7 +179,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($options->getObjectAttr(), $object)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($data, $object)->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($data, $object, '')->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);
@@ -178,7 +197,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn(null);
 		$in->withAttribute($options->getObjectAttr(), Argument::type($options->getType()))->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($data, Argument::type($options->getType()))->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($data, Argument::type($options->getType()), '')->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);
@@ -210,7 +229,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 
-		$dt->transfer($data, $object)->shouldBeCalledOnce()->willReturn($error);
+		$dt->transferToTypedData($data, $object, '')->shouldBeCalledOnce()->willReturn($error);
 
 		$this->beConstructedWith($dt, $options);
 		$this->shouldThrow($exception)->during('__invoke', [$in]);
@@ -229,7 +248,7 @@ class TransferSpec extends ObjectBehavior
 		$in->getAttribute($options->getObjectAttr())->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($options->getErrorAttr(), $error)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transfer($data, $object)->shouldBeCalledOnce()->willReturn($error);
+		$dt->transferToTypedData($data, $object, '')->shouldBeCalledOnce()->willReturn($error);
 
 		$this->beConstructedWith($dt, $options);
 		$this->__invoke($in)->shouldBe($out);

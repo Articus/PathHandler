@@ -19,6 +19,12 @@ class Transfer extends AbstractOptions
 	protected $type;
 
 	/**
+	 * Name of the data subset that should be transferred
+	 * @var string
+	 */
+	protected $subset = '';
+
+	/**
 	 * Name of the request attribute to store hydrated object
 	 * @var string
 	 */
@@ -60,6 +66,22 @@ class Transfer extends AbstractOptions
 	public function setType(string $type): void
 	{
 		$this->type = $type;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getSubset(): string
+	{
+		return $this->subset;
+	}
+
+	/**
+	 * @param string $subset
+	 */
+	public function setSubset(string $subset): void
+	{
+		$this->subset = $subset;
 	}
 
 	/**

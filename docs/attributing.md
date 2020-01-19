@@ -171,7 +171,7 @@ class Handler
 {
     /**
      * @PHA\Post()
-     * @PHA\Attribute(name="Transfer", options={"type":DTO::class,"source":"get","objectAttr":"dto","errorAttr":"errors"})
+     * @PHA\Attribute(name="Transfer", options={"type":DTO::class,"subset":"part","source":"get","objectAttr":"dto","errorAttr":"errors"})
      */
     public function handlePost(ServerRequestInterface $request)
     {

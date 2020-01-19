@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
-use Articus\DataTransfer\Mapper\MapperInterface;
 use Articus\DataTransfer\Service as DTService;
-use Articus\PathHandler\Exception\UnprocessableEntity;
 
 /**
  * JSON producer extension that simplifies complex data structures with Articus\DataTransfer\Service before encoding
@@ -18,19 +16,20 @@ class Transfer extends Json
 	protected $dtService;
 
 	/**
-	 * @var null|callable|MapperInterface
+	 * @var string
 	 */
-	protected $mapper;
+	protected $subset;
 
 	/**
+	 * @param callable $streamFactory
 	 * @param DTService $dtService
-	 * @param null|callable|MapperInterface $mapper
+	 * @param string $subset
 	 */
-	public function __construct(callable $streamFactory, DTService $dtService, $mapper = null)
+	public function __construct(callable $streamFactory, DTService $dtService, string $subset)
 	{
 		parent::__construct($streamFactory);
 		$this->dtService = $dtService;
-		$this->mapper = $mapper;
+		$this->subset = $subset;
 	}
 
 	/**
@@ -38,42 +37,34 @@ class Transfer extends Json
 	 */
 	protected function stringify($objectOrArray): string
 	{
-		[$data, $errors] = $this->transfer($objectOrArray);
-		if (!empty($errors))
-		{
-			throw new \InvalidArgumentException('Failed to transfer data.', 0, new UnprocessableEntity($errors));
-		}
+		$data = $this->transfer($objectOrArray);
 		return parent::stringify($data);
 	}
 
 	/**
 	 * Tries to transfer data from specified object or array to multi-dimensional scalar array
 	 * @param mixed $objectOrArray
-	 * @return array tuple (<transfered data> , <errors encountered during transfer>)
+	 * @return mixed transfered data
 	 */
-	protected function transfer($objectOrArray): array
+	protected function transfer($objectOrArray)
 	{
-		$data = [];
-		$errors = [];
+		$data = null;
 		if (\is_object($objectOrArray))
 		{
-			$errors = $this->dtService->transfer($objectOrArray, $data, $this->mapper);
+			$data = $this->dtService->extractFromTypedData($objectOrArray, $this->subset);
 		}
 		elseif (\is_array($objectOrArray))
 		{
+			$data = [];
 			foreach ($objectOrArray as $index => $itemObjectOrArray)
 			{
-				[$data[$index], $itemErrors] = $this->transfer($itemObjectOrArray);
-				if (!empty($itemErrors))
-				{
-					$errors[$index] = $itemErrors;
-				}
+				$data[$index] = $this->transfer($itemObjectOrArray);
 			}
 		}
 		else
 		{
 			$data = $objectOrArray;
 		}
-		return [$data, $errors];
+		return $data;
 	}
 }

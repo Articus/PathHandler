@@ -1,13 +1,13 @@
 bootstrap: spec/bootstrap.php
 formatter.name: pretty
-#Code coverage extension causes random crashes on PHP 7.3 even with '--no-coverage' option
-#extensions:
-#  LeanPHP\PhpSpec\CodeCoverage\CodeCoverageExtension:
-#    format:
-#      - html
-#      - clover
-#    output:
-#      html: spec_output/coverage
-#      clover: spec_output/coverage.xml
-#    whitelist:
-#      - src
+extensions:
+  FriendsOfPhpSpec\PhpSpec\CodeCoverage\CodeCoverageExtension:
+    format:
+      #- html
+      - text
+      - clover
+    output:
+      #html: spec_output/phpspec.coverage
+      clover: spec_output/phpspec.coverage.xml
+    whitelist:
+      - src

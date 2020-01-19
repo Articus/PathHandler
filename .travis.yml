@@ -3,27 +3,24 @@ php:
   - '7.1'
   - '7.2'
   - '7.3'
+  - '7.4'
 
 before_install:
   - phpenv config-rm xdebug.ini
 
 install:
-  - composer install --no-interaction --no-progress --no-suggest --classmap-authoritative
   - |
-    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
-      curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar > coveralls.phar
+    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.1" ]]; then
+      cp ./composer.lock.7.1 ./composer.lock
     fi
+  - composer install --no-interaction --no-progress --no-suggest --classmap-authoritative
 
 script:
-  - |
-    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
-      phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run -c phpspec-coverage.yml
-    else
-      phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run
-    fi
+  - phpdbg -qrr vendor/phpspec/phpspec/bin/phpspec run
 
 after_success:
   - |
-    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
+    if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.4" ]]; then
+      curl -s -L https://github.com/php-coveralls/php-coveralls/releases/download/v2.2.0/php-coveralls.phar > coveralls.phar
       php coveralls.phar -v
     fi

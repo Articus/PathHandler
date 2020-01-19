@@ -50,7 +50,7 @@ class Transfer implements AttributeInterface
 	{
 		$data = $this->getData($request);
 		$object = $this->getObject($request);
-		$error = $this->dtService->transfer($data, $object);
+		$error = $this->dtService->transferToTypedData($data, $object, $this->options->getSubset());
 		if (empty($error))
 		{
 			$request = $request->withAttribute($this->options->getObjectAttr(), $object);
