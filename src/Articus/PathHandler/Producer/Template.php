@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
-use Zend\Expressive\Response\ServerRequestErrorResponseGenerator;
-use Zend\Expressive\Template\TemplateRendererInterface;
+use Mezzio\Response\ServerRequestErrorResponseGenerator;
+use Mezzio\Template\TemplateRendererInterface;
 
 /**
  * Simple producer that uses provided data to render template

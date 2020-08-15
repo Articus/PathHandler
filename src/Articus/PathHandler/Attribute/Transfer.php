@@ -5,8 +5,8 @@ namespace Articus\PathHandler\Attribute;
 
 use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler\Exception;
+use Mezzio\Router\RouteResult;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Zend\Expressive\Router\RouteResult;
 
 /**
  * Simple attribute that transfer data from specified source to newly created or existing object.
@@ -26,18 +26,69 @@ class Transfer implements AttributeInterface
 	protected $dtService;
 
 	/**
-	 * @var Options\Transfer
+	 * @var string
 	 */
-	protected $options;
+	protected $source;
+
+	/**
+	 * @var string
+	 */
+	protected $type;
+
+	/**
+	 * @var string
+	 */
+	protected $subset;
+
+	/**
+	 * @var string
+	 */
+	protected $objectAttr;
+
+	/**
+	 * @var callable
+	 */
+	protected $instanciator;
+
+	/**
+	 * @var string[]
+	 */
+	protected $instanciatorArgAttrs;
+
+	/**
+	 * @var string|null
+	 */
+	protected $errorAttr;
 
 	/**
 	 * @param DTService $dtService
-	 * @param Options\Transfer $options
+	 * @param string $source
+	 * @param string $type
+	 * @param string $subset
+	 * @param string $objectAttr
+	 * @param callable $instanciator
+	 * @param string[] $instanciatorArgAttrs
+	 * @param null|string $errorAttr
 	 */
-	public function __construct(DTService $dtService, Options\Transfer $options)
+	public function __construct(
+		DTService $dtService,
+		string $source,
+		string $type,
+		string $subset,
+		string $objectAttr,
+		callable $instanciator,
+		array $instanciatorArgAttrs,
+		?string $errorAttr
+	)
 	{
 		$this->dtService = $dtService;
-		$this->options = $options;
+		$this->source = $source;
+		$this->type = $type;
+		$this->subset = $subset;
+		$this->objectAttr = $objectAttr;
+		$this->instanciator = $instanciator;
+		$this->instanciatorArgAttrs = $instanciatorArgAttrs;
+		$this->errorAttr = $errorAttr;
 	}
 
 	/**
@@ -50,18 +101,18 @@ class Transfer implements AttributeInterface
 	{
 		$data = $this->getData($request);
 		$object = $this->getObject($request);
-		$error = $this->dtService->transferToTypedData($data, $object, $this->options->getSubset());
+		$error = $this->dtService->transferToTypedData($data, $object, $this->subset);
 		if (empty($error))
 		{
-			$request = $request->withAttribute($this->options->getObjectAttr(), $object);
+			$request = $request->withAttribute($this->objectAttr, $object);
 		}
-		elseif (empty($this->options->getErrorAttr()))
+		elseif (empty($this->errorAttr))
 		{
 			throw new Exception\UnprocessableEntity($error);
 		}
 		else
 		{
-			$request = $request->withAttribute($this->options->getErrorAttr(), $error);
+			$request = $request->withAttribute($this->errorAttr, $error);
 		}
 
 		return $request;
@@ -75,7 +126,7 @@ class Transfer implements AttributeInterface
 	protected function getData(Request $request): array
 	{
 		$data = null;
-		switch ($this->options->getSource())
+		switch ($this->source)
 		{
 			case self::SOURCE_GET:
 				$data = $request->getQueryParams();
@@ -106,7 +157,7 @@ class Transfer implements AttributeInterface
 				$data = $request->getAttributes();
 				break;
 			default:
-				throw new \InvalidArgumentException(\sprintf('Unknown source %s.', $this->options->getSource()));
+				throw new \InvalidArgumentException(\sprintf('Unknown source %s.', $this->source));
 		}
 		return $data;
 	}
@@ -117,17 +168,24 @@ class Transfer implements AttributeInterface
 	 */
 	protected function getObject(Request $request)
 	{
-		$className = $this->options->getType();
-		if (!\class_exists($className))
+		if (!\class_exists($this->type))
 		{
-			throw new \InvalidArgumentException(\sprintf('Unknown class %s.', $this->options->getType()));
+			throw new \InvalidArgumentException(\sprintf('Unknown class %s.', $this->type));
 		}
 
-		$result = $request->getAttribute($this->options->getObjectAttr());
-		if (!($result instanceof $className))
+		$result = $request->getAttribute($this->objectAttr);
+		if (!($result instanceof $this->type))
 		{
-			//TODO use Doctrine instantiator instead?
-			$result = new $className();
+			$instanciatorArgs = [$request];
+			if (!empty($this->instanciatorArgAttrs))
+			{
+				$instanciatorArgs = [];
+				foreach ($this->instanciatorArgAttrs as $instanciatorArgAttr)
+				{
+					$instanciatorArgs[] = $request->getAttribute($instanciatorArgAttr);
+				}
+			}
+			$result = ($this->instanciator)($this->type, ...$instanciatorArgs);
 		}
 		return $result;
 	}

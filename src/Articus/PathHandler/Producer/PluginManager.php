@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
-use Zend\ServiceManager\AbstractPluginManager;
+use Laminas\ServiceManager\AbstractPluginManager;
 
 /**
  * Producer plugin manager

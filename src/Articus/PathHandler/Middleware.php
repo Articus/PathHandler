@@ -8,9 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Zend\Http\Header\Accept;
-use Zend\Http\Header\ContentType;
-use Zend\ServiceManager\PluginManagerInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
 
 class Middleware implements MiddlewareInterface, RequestHandlerInterface
 {
@@ -127,9 +125,9 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 				{
 					$consumer = null;
 					$contentType = $this->getContentTypeHeader($request);
-					foreach ($this->metadataProvider->getConsumers($this->handlerName, $httpMethod) as [$mediaType, $name, $options])
+					foreach ($this->metadataProvider->getConsumers($this->handlerName, $httpMethod) as [$mediaRange, $name, $options])
 					{
-						if ($contentType->match($mediaType))
+						if ($contentType->match($mediaRange))
 						{
 							$consumer = $this->consumerPluginManager->build($name, $options);
 							if (!($consumer instanceof Consumer\ConsumerInterface))
@@ -194,20 +192,15 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	/**
 	 * Makes Accept header object from PSR-7 request
 	 * @param Request $request
-	 * @return Accept
+	 * @return Header\Accept
 	 * @throws Exception\BadRequest
 	 */
-	protected function getAcceptHeader(Request $request): Accept
+	protected function getAcceptHeader(Request $request): Header\Accept
 	{
-		$headerName = 'Accept';
-		$headerLine = '*/*';
-		if ($request->hasHeader($headerName))
-		{
-			$headerLine = $request->getHeaderLine($headerName);
-		}
 		try
 		{
-			return Accept::fromString($headerName . ': ' . $headerLine);
+			$headerValue = $request->getHeaderLine('Accept') ?: '*/*';
+			return new Header\Accept($headerValue);
 		}
 		catch (\Exception $e)
 		{
@@ -218,23 +211,23 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	/**
 	 * Makes ContentType header object from PSR-7 request
 	 * @param Request $request
-	 * @return ContentType
+	 * @return Header\ContentType
 	 * @throws Exception\BadRequest
 	 */
-	protected function getContentTypeHeader(Request $request): ContentType
+	protected function getContentTypeHeader(Request $request): Header\ContentType
 	{
 		$headerName = 'Content-Type';
 		if (!$request->hasHeader($headerName))
 		{
 			throw new Exception\BadRequest('Content-Type header should be declared');
 		}
-		if (count($request->getHeader($headerName)) > 1)
+		if (\count($request->getHeader($headerName)) > 1)
 		{
 			throw new Exception\BadRequest('Multiple Content-Type headers are not allowed');
 		}
 		try
 		{
-			return ContentType::fromString($headerName . ': ' . $request->getHeaderLine($headerName));
+			return new Header\ContentType($request->getHeaderLine($headerName));
 		}
 		catch (\Exception $e)
 		{

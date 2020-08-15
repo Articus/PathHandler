@@ -7,9 +7,9 @@ use Articus\PathHandler\Annotation as PHA;
 use Articus\PathHandler\MetadataProviderInterface;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Cache\Storage\StorageInterface as CacheStorage;
-use Zend\ServiceManager\PluginManagerInterface;
-use Zend\Stdlib\FastPriorityQueue;
+use Psr\SimpleCache\CacheInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
+use Laminas\Stdlib\FastPriorityQueue;
 
 /**
  * Provider that gets handler metadata from handler class annotations
@@ -24,9 +24,9 @@ class Annotation implements MetadataProviderInterface
 	protected $handlerPluginManager;
 
 	/**
-	 * @var CacheStorage
+	 * @var CacheInterface
 	 */
-	protected $cacheStorage;
+	protected $cache;
 
 	/**
 	 * @var bool
@@ -41,7 +41,7 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * Map <handler class name> -> <sorted list of routes>
-	 * @var FastPriorityQueue[] Map<string, FastPriorityQueue>
+	 * @var string[][] Map<string, string[]>
 	 */
 	protected $routes;
 
@@ -53,31 +53,31 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * Map <handler class name> -> <handler method name> -> <sorted list of consumers>
-	 * @var FastPriorityQueue[][] Map<string, Map<string, FastPriorityQueue>>
+	 * @var string[][][] Map<string, Map<string, string[]>>
 	 */
 	protected $consumers;
 
 	/**
 	 * Map <handler class name> -> <handler method name> -> <sorted list of attributes>
-	 * @var FastPriorityQueue[][] Map<string, Map<string, FastPriorityQueue>>
+	 * @var string[][][] Map<string, Map<string, string[]>>
 	 */
 	protected $attributes;
 
 	/**
 	 * Map <handler class name> -> <handler method name> -> <sorted list of producers>
-	 * @var FastPriorityQueue[][] Map<string, Map<string, FastPriorityQueue>>
+	 * @var string[][][] Map<string, Map<string, string[]>>
 	 */
 	protected $producers;
 
 	/**
 	 * MetadataProvider constructor.
 	 * @param PluginManagerInterface $handlerPluginManager
-	 * @param CacheStorage $cacheStorage
+	 * @param CacheInterface $cache
 	 */
-	public function __construct(PluginManagerInterface $handlerPluginManager, CacheStorage $cacheStorage)
+	public function __construct(PluginManagerInterface $handlerPluginManager, CacheInterface $cache)
 	{
 		$this->handlerPluginManager = $handlerPluginManager;
-		$this->cacheStorage = $cacheStorage;
+		$this->cache = $cache;
 
 		//Restore internal data from cache
 		[
@@ -87,7 +87,7 @@ class Annotation implements MetadataProviderInterface
 			$this->consumers,
 			$this->attributes,
 			$this->producers
-		] = $this->cacheStorage->getItem(self::CACHE_KEY) ?? [[], [], [], [], [], []];
+		] = $this->cache->get(self::CACHE_KEY) ?? [[], [], [], [], [], []];
 	}
 
 	public function __destruct()
@@ -95,7 +95,7 @@ class Annotation implements MetadataProviderInterface
 		//Dump updated internal data to cache
 		if ($this->needCacheUpdate)
 		{
-			$this->cacheStorage->setItem(
+			$this->cache->set(
 				self::CACHE_KEY,
 				[
 					$this->handlerClassNames,
@@ -143,7 +143,7 @@ class Annotation implements MetadataProviderInterface
 		$this->ascertainMetadata($handlerName, $httpMethod);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
 		$handlerMethodName = $this->handlerMethodNames[$handlerClassName][$httpMethod];
-		return (!$this->consumers[$handlerClassName][$handlerMethodName]->isEmpty());
+		return (!empty($this->consumers[$handlerClassName][$handlerMethodName]));
 	}
 
 	/**
@@ -182,7 +182,7 @@ class Annotation implements MetadataProviderInterface
 		$this->ascertainMetadata($handlerName, $httpMethod);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
 		$handlerMethodName = $this->handlerMethodNames[$handlerClassName][$httpMethod];
-		return (!$this->producers[$handlerClassName][$handlerMethodName]->isEmpty());
+		return (!empty($this->producers[$handlerClassName][$handlerMethodName]));
 	}
 
 	/**
@@ -295,7 +295,7 @@ class Annotation implements MetadataProviderInterface
 					$routes->insert([$annotation->name, $annotation->pattern, $annotation->defaults], $annotation->priority);
 					break;
 				case ($annotation instanceof PHA\Consumer):
-					$commonConsumers->insert([$annotation->mediaType, $annotation->name, $annotation->options], $annotation->priority);
+					$commonConsumers->insert([$annotation->mediaRange, $annotation->name, $annotation->options], $annotation->priority);
 					break;
 				case ($annotation instanceof PHA\Attribute):
 					$commonAttributes->insert([$annotation->name, $annotation->options], $annotation->priority);
@@ -309,7 +309,7 @@ class Annotation implements MetadataProviderInterface
 		{
 			throw new \LogicException(\sprintf('Invalid metadata for %s: no route.', $handlerClassName));
 		}
-		$this->routes[$handlerClassName] = $routes;
+		$this->routes[$handlerClassName] = $routes->toArray();
 
 		//Process public method annotations
 		foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method)
@@ -339,7 +339,7 @@ class Annotation implements MetadataProviderInterface
 						$hasMetadata = true;
 						break;
 					case ($annotation instanceof PHA\Consumer):
-						$consumers->insert([$annotation->mediaType, $annotation->name, $annotation->options], $annotation->priority);
+						$consumers->insert([$annotation->mediaRange, $annotation->name, $annotation->options], $annotation->priority);
 						$hasMetadata = true;
 						break;
 					case ($annotation instanceof PHA\Attribute):
@@ -362,9 +362,9 @@ class Annotation implements MetadataProviderInterface
 						$handlerClassName
 					));
 				}
-				$this->consumers[$handlerClassName][$handlerMethodName] = $consumers;
-				$this->attributes[$handlerClassName][$handlerMethodName] = $attributes;
-				$this->producers[$handlerClassName][$handlerMethodName] = $producers;
+				$this->consumers[$handlerClassName][$handlerMethodName] = $consumers->toArray();
+				$this->attributes[$handlerClassName][$handlerMethodName] = $attributes->toArray();
+				$this->producers[$handlerClassName][$handlerMethodName] = $producers->toArray();
 			}
 		}
 		if (empty($handlerMethodNames))

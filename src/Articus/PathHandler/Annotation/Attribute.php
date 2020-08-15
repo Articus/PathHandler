@@ -26,7 +26,7 @@ class Attribute
 	/**
 	 * Priority in which attribute should added to request. The higher - the earlier.
 	 * If two attributes have equal priority, the one declared earlier will be added earlier.
-	 * @var integer
+	 * @var int
 	 */
 	public $priority = 1;
 }

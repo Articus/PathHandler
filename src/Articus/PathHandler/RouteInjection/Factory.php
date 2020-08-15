@@ -6,16 +6,21 @@ namespace Articus\PathHandler\RouteInjection;
 use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Zend\Cache\StorageFactory;
-use Zend\Expressive\Router\Route;
-use Zend\Expressive\Router\RouterInterface;
-use Zend\ServiceManager\PluginManagerInterface;
+use Psr\SimpleCache\CacheInterface;
+use Mezzio\Router\Route;
+use Mezzio\Router\RouterInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
 
 /**
  * Factory that provides zend expressive router with all PathHandler routes injected into it
  */
 class Factory extends PH\ConfigAwareFactory
 {
+	protected const CACHE_KEYS = [
+		PH\MetadataProvider\Annotation::class => PH\MetadataProvider\Annotation::CACHE_KEY,
+		PH\Router\FastRoute::class => PH\Router\FastRoute::CACHE_KEY,
+	];
+
 	public function __construct(string $configKey = self::class)
 	{
 		parent::__construct($configKey);
@@ -31,17 +36,17 @@ class Factory extends PH\ConfigAwareFactory
 	{
 		$options = new Options(\array_merge($this->getServiceConfig($container), $options ?? []));
 
-		$result = self::getInjectableRouter($container, $options->getRouter());
+		$result = self::getInjectableRouter($container, $options->router);
 
-		$handlerPluginManager = self::getHandlerPluginManager($container, $options->getHandlers());
-		$consumerPluginManager = self::getConsumerPluginManager($container, $options->getConsumers());
-		$attributePluginManager = self::getAttributePluginManager($container, $options->getAttributes());
-		$producerPluginManager = self::getProducerPluginManager($container, $options->getProducers());
-		$metadataProvider = self::getMetadataProvider($container, $handlerPluginManager, $options->getMetadata());
+		$handlerPluginManager = self::getHandlerPluginManager($container, $options->handlers);
+		$consumerPluginManager = self::getConsumerPluginManager($container, $options->consumers);
+		$attributePluginManager = self::getAttributePluginManager($container, $options->attributes);
+		$producerPluginManager = self::getProducerPluginManager($container, $options->producers);
+		$metadataProvider = self::getMetadataProvider($container, $handlerPluginManager, $options->metadata);
 		$responseGenerator = self::getResponseGenerator($container);
 
 		//Inject routes
-		foreach ($options->getPaths() as $pathPrefix => $handlerNames)
+		foreach ($options->paths as $pathPrefix => $handlerNames)
 		{
 			foreach ($handlerNames as $handlerName)
 			{
@@ -72,6 +77,34 @@ class Factory extends PH\ConfigAwareFactory
 
 	/**
 	 * @param ContainerInterface $container
+	 * @param string $cacheAwareClass
+	 * @param $options
+	 * @return CacheInterface
+	 */
+	protected static function getCache(ContainerInterface $container, string $cacheAwareClass, $options): CacheInterface
+	{
+		$result = null;
+		switch (true)
+		{
+			case ($options === null):
+			case \is_array($options):
+				$result = new PH\Cache\DataFilePerKey(self::CACHE_KEYS[$cacheAwareClass], $options['directory'] ?? null);
+				break;
+			case (\is_string($options) && $container->has($options)):
+				$result = $container->get($options);
+				if (!($result instanceof CacheInterface))
+				{
+					throw new \LogicException(\sprintf('Invalid cache service for "%s".', $cacheAwareClass));
+				}
+				break;
+			default:
+				throw new \LogicException(\sprintf('Invalid configuration for "%s" cache.', $cacheAwareClass));
+		}
+		return $result;
+	}
+
+	/**
+	 * @param ContainerInterface $container
 	 * @param array|string $options
 	 * @return RouterInterface
 	 */
@@ -83,7 +116,8 @@ class Factory extends PH\ConfigAwareFactory
 			case empty($options):
 				throw new \LogicException('PathHandler router is not configured.');
 			case \is_array($options):
-				$result = new PH\Router\FastRoute(StorageFactory::factory($options['cache'] ?? []));
+				$cache = self::getCache($container, PH\Router\FastRoute::class, $options['cache'] ?? []);
+				$result = new PH\Router\FastRoute($cache);
 				break;
 			case (\is_string($options) && $container->has($options)):
 				$result = $container->get($options);
@@ -230,10 +264,8 @@ class Factory extends PH\ConfigAwareFactory
 			case empty($options):
 				throw new \LogicException('PathHandler metadata provider is not configured.');
 			case \is_array($options):
-				$result = new PH\MetadataProvider\Annotation(
-					$handlerPluginManager,
-					StorageFactory::factory($options['cache'] ?? [])
-				);
+				$cache = self::getCache($container, PH\MetadataProvider\Annotation::class, $options['cache'] ?? []);
+				$result = new PH\MetadataProvider\Annotation($handlerPluginManager, $cache);
 				break;
 			case (\is_string($options) && $container->has($options)):
 				$result = $container->get($options);

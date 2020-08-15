@@ -8,15 +8,14 @@ use spec\Example;
 use Articus\PathHandler as PH;
 use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Zend\Cache\Storage\StorageInterface as CacheStorage;
-use Zend\ServiceManager\PluginManagerInterface;
-use Zend\Stdlib\FastPriorityQueue;
+use Psr\SimpleCache\CacheInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
 
 class AnnotationSpec extends ObjectBehavior
 {
 	public function it_returns_cached_http_methods_for_handler_if_cache_exists(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -31,7 +30,7 @@ class AnnotationSpec extends ObjectBehavior
 			[],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -41,7 +40,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_returns_http_methods_for_handler_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -57,8 +56,8 @@ class AnnotationSpec extends ObjectBehavior
 		};
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -68,13 +67,13 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_http_methods_return_for_invalid_handler(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -84,14 +83,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_http_methods_return_for_handler_with_several_methods_handling_same_http_method(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\SeveralMethodsForSingleHttpMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -101,14 +100,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_http_methods_return_for_handler_without_methods_handling_http_methods(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\NoMethodsHandlingHttpMethods();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -118,14 +117,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_http_methods_return_for_handler_with_empty_http_method(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\EmptyHttpMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -135,14 +134,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_http_methods_return_for_handler_with_non_string_http_method(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\NonStringHttpMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -150,38 +149,38 @@ class AnnotationSpec extends ObjectBehavior
 		$this->__destruct();
 	}
 
-
 	public function it_returns_cached_routes_for_handler_if_cache_exists(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handlerClassName = 'test_class';
-		$routes = new FastPriorityQueue();
-		$routes->insert(['test_1', '/test_1', ['test_1' => 123]], 1);
-		$routes->insert(['test_2', '/test_2', ['test_2' => 123]], 1);
-		$routes->insert(['test_3', '/test_3', ['test_3' => 123]], 1);
+		$routes = [
+			['test_1', '/test_1', ['test_1' => 123]],
+			['test_2', '/test_2', ['test_2' => 123]],
+			['test_3', '/test_3', ['test_3' => 123]],
+		];
 		$cacheData = [
 			[$handlerName => $handlerClassName],
 			[$handlerClassName => $routes],
 			[$handlerClassName => []],
-			[$handlerClassName => new FastPriorityQueue()],
-			[$handlerClassName => new FastPriorityQueue()],
-			[$handlerClassName => new FastPriorityQueue()],
+			[$handlerClassName => []],
+			[$handlerClassName => []],
+			[$handlerClassName => []],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->getRoutes($handlerName)->shouldIterateAs($routes->toArray());
+		$this->getRoutes($handlerName)->shouldIterateAs($routes);
 		$this->__destruct();
 	}
 
 	public function it_returns_routes_for_handler_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -199,15 +198,12 @@ class AnnotationSpec extends ObjectBehavior
 		];
 		$cacheChecker = function (array $cacheData) use ($handlerClassName, $routes)
 		{
-			return ((!empty($cacheData[1][$handlerClassName]))
-				&& ($cacheData[1][$handlerClassName] instanceof FastPriorityQueue)
-				&& ($cacheData[1][$handlerClassName]->toArray() == $routes)
-			);
+			return ($cacheData[1][$handlerClassName] == $routes);
 		};
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -217,13 +213,13 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_routes_return_for_invalid_handler(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -233,14 +229,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_routes_return_for_handler_without_routes(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\NoRoutes();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -250,14 +246,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_routes_return_for_handler_with_no_pattern_route(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\NoPatternRoute();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -268,25 +264,26 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_checks_and_returns_cached_consumers_for_handler_method_if_cache_exists(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = ['test_1', 'test_2'];
 		$httpMethod = ['TEST1', 'TEST2'];
 		$handlerClassName = ['test_class_1', 'test_class_2'];
 		$handlerMethod = ['test_method_1', 'test_method_2'];
-		$consumers = new FastPriorityQueue();
-		$consumers->insert(['test_1/mime', 'test_1', ['test_1' => 123]], 1);
-		$consumers->insert(['test_2/mime', 'test_2', ['test_2' => 123]], 1);
-		$consumers->insert(['test_3/mime', 'test_3', ['test_3' => 123]], 1);
+		$consumers = [
+			['test_1/mime', 'test_1', ['test_1' => 123]],
+			['test_2/mime', 'test_2', ['test_2' => 123]],
+			['test_3/mime', 'test_3', ['test_3' => 123]],
+		];
 		$cacheData = [
 			[
 				$handlerName[0] => $handlerClassName[0],
 				$handlerName[1] => $handlerClassName[1],
 			],
 			[
-				$handlerClassName[0] => new FastPriorityQueue(),
-				$handlerClassName[1] => new FastPriorityQueue(),
+				$handlerClassName[0] => [],
+				$handlerClassName[1] => [],
 			],
 			[
 				$handlerClassName[0] => [$httpMethod[0] => $handlerMethod[0]],
@@ -294,7 +291,7 @@ class AnnotationSpec extends ObjectBehavior
 			],
 			[
 				$handlerClassName[0] => [$handlerMethod[0] => $consumers],
-				$handlerClassName[1] => [$handlerMethod[1] => new FastPriorityQueue()],
+				$handlerClassName[1] => [$handlerMethod[1] => []],
 			],
 			[
 				$handlerClassName[0] => [],
@@ -306,12 +303,12 @@ class AnnotationSpec extends ObjectBehavior
 			],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
 		$this->hasConsumers($handlerName[0], $httpMethod[0])->shouldBe(true);
-		$this->getConsumers($handlerName[0], $httpMethod[0])->shouldIterateAs($consumers->toArray());
+		$this->getConsumers($handlerName[0], $httpMethod[0])->shouldIterateAs($consumers);
 		$this->hasConsumers($handlerName[1], $httpMethod[1])->shouldBe(false);
 		$this->getConsumers($handlerName[1], $httpMethod[1])->shouldIterateAs([]);
 		$this->__destruct();
@@ -319,7 +316,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_checks_and_returns_consumers_for_handler_method_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerNames = ['consumers', 'common_consumers'];
@@ -380,17 +377,15 @@ class AnnotationSpec extends ObjectBehavior
 				foreach ([0, 1] as $j)
 				{
 					$result = ($result
-						&& (!empty($cacheData[3][$handlerClassNames[$i]][$handlerMethods[$j]]))
-						&& ($cacheData[3][$handlerClassNames[$i]][$handlerMethods[$j]] instanceof FastPriorityQueue)
-						&& ($cacheData[3][$handlerClassNames[$i]][$handlerMethods[$j]]->toArray() === $consumers[$handlerClassNames[$i]][$handlerMethods[$j]])
+						&& ($cacheData[3][$handlerClassNames[$i]][$handlerMethods[$j]] == $consumers[$handlerClassNames[$i]][$handlerMethods[$j]])
 					);
 				}
 			}
 			return $result;
 		};
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -411,14 +406,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_consumers_check_and_return_for_invalid_handler(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -429,7 +424,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_consumers_check_and_return_for_invalid_handler_method(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -437,8 +432,8 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'UNKNOWN';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -450,7 +445,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_consumers_check_and_return_for_handler_with_no_name_consumer(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -458,7 +453,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoNameConsumer();
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldThrow(AnnotationException::class)->during('hasConsumers', [$handlerName, $httpMethod]);
@@ -469,25 +464,26 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_returns_cached_attributes_for_handler_method_if_cache_exists(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = ['test_1', 'test_2'];
 		$httpMethod = ['TEST1', 'TEST2'];
 		$handlerClassName = ['test_class_1', 'test_class_2'];
 		$handlerMethod = ['test_method_1', 'test_method_2'];
-		$attributes = new FastPriorityQueue();
-		$attributes->insert(['test_1', ['test_1' => 123]], 1);
-		$attributes->insert(['test_2', ['test_2' => 123]], 1);
-		$attributes->insert(['test_3', ['test_3' => 123]], 1);
+		$attributes = [
+			['test_1', ['test_1' => 123]],
+			['test_2', ['test_2' => 123]],
+			['test_3', ['test_3' => 123]],
+		];
 		$cacheData = [
 			[
 				$handlerName[0] => $handlerClassName[0],
 				$handlerName[1] => $handlerClassName[1],
 			],
 			[
-				$handlerClassName[0] => new FastPriorityQueue(),
-				$handlerClassName[1] => new FastPriorityQueue(),
+				$handlerClassName[0] => [],
+				$handlerClassName[1] => [],
 			],
 			[
 				$handlerClassName[0] => [$httpMethod[0] => $handlerMethod[0]],
@@ -499,7 +495,7 @@ class AnnotationSpec extends ObjectBehavior
 			],
 			[
 				$handlerClassName[0] => [$handlerMethod[0] => $attributes],
-				$handlerClassName[1] => [$handlerMethod[1] => new FastPriorityQueue()],
+				$handlerClassName[1] => [$handlerMethod[1] => []],
 			],
 			[
 				$handlerClassName[0] => [],
@@ -507,18 +503,18 @@ class AnnotationSpec extends ObjectBehavior
 			],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->getAttributes($handlerName[0], $httpMethod[0])->shouldIterateAs($attributes->toArray());
+		$this->getAttributes($handlerName[0], $httpMethod[0])->shouldIterateAs($attributes);
 		$this->getAttributes($handlerName[1], $httpMethod[1])->shouldIterateAs([]);
 		$this->__destruct();
 	}
 
 	public function it_returns_attributes_for_handler_method_and_saves_them_to_cache_if_cache_is_empty(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerNames = ['attributes', 'common_attributes'];
@@ -575,17 +571,15 @@ class AnnotationSpec extends ObjectBehavior
 				foreach ([0, 1] as $j)
 				{
 					$result = ($result
-						&& (!empty($cacheData[4][$handlerClassNames[$i]][$handlerMethods[$j]]))
-						&& ($cacheData[4][$handlerClassNames[$i]][$handlerMethods[$j]] instanceof FastPriorityQueue)
-						&& ($cacheData[4][$handlerClassNames[$i]][$handlerMethods[$j]]->toArray() === $attributes[$handlerClassNames[$i]][$handlerMethods[$j]])
+						&& ($cacheData[4][$handlerClassNames[$i]][$handlerMethods[$j]] == $attributes[$handlerClassNames[$i]][$handlerMethods[$j]])
 					);
 				}
 			}
 			return $result;
 		};
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -605,14 +599,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_attributes_return_for_invalid_handler(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -622,7 +616,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_attributes_return_for_invalid_handler_method(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -630,8 +624,8 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'UNKNOWN';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -642,7 +636,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_attributes_return_for_handler_with_no_name_attribute(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -650,7 +644,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoNameAttribute();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->getAttributes($handlerName, $httpMethod)->shouldThrow(AnnotationException::class)->during('current', []);
@@ -660,25 +654,26 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_checks_and_returns_cached_producers_for_handler_method_if_cache_exists(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = ['test_1', 'test_2'];
 		$httpMethod = ['TEST1', 'TEST2'];
 		$handlerClassName = ['test_class_1', 'test_class_2'];
 		$handlerMethod = ['test_method_1', 'test_method_2'];
-		$producers = new FastPriorityQueue();
-		$producers->insert(['test_1/mime', 'test_1', ['test_1' => 123]], 1);
-		$producers->insert(['test_2/mime', 'test_2', ['test_2' => 123]], 1);
-		$producers->insert(['test_3/mime', 'test_3', ['test_3' => 123]], 1);
+		$producers = [
+			['test_1/mime', 'test_1', ['test_1' => 123]],
+			['test_2/mime', 'test_2', ['test_2' => 123]],
+			['test_3/mime', 'test_3', ['test_3' => 123]],
+		];
 		$cacheData = [
 			[
 				$handlerName[0] => $handlerClassName[0],
 				$handlerName[1] => $handlerClassName[1],
 			],
 			[
-				$handlerClassName[0] => new FastPriorityQueue(),
-				$handlerClassName[1] => new FastPriorityQueue(),
+				$handlerClassName[0] => [],
+				$handlerClassName[1] => [],
 			],
 			[
 				$handlerClassName[0] => [$httpMethod[0] => $handlerMethod[0]],
@@ -694,16 +689,16 @@ class AnnotationSpec extends ObjectBehavior
 			],
 			[
 				$handlerClassName[0] => [$handlerMethod[0] => $producers],
-				$handlerClassName[1] => [$handlerMethod[1] => new FastPriorityQueue()],
+				$handlerClassName[1] => [$handlerMethod[1] => []],
 			],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
 		$this->hasProducers($handlerName[0], $httpMethod[0])->shouldBe(true);
-		$this->getProducers($handlerName[0], $httpMethod[0])->shouldIterateAs($producers->toArray());
+		$this->getProducers($handlerName[0], $httpMethod[0])->shouldIterateAs($producers);
 		$this->hasProducers($handlerName[1], $httpMethod[1])->shouldBe(false);
 		$this->getProducers($handlerName[1], $httpMethod[1])->shouldIterateAs([]);
 		$this->__destruct();
@@ -711,7 +706,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_checks_and_returns_producers_for_handler_method_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerNames = ['producers', 'common_producers'];
@@ -768,17 +763,15 @@ class AnnotationSpec extends ObjectBehavior
 				foreach ([0, 1] as $j)
 				{
 					$result = ($result
-						&& (!empty($cacheData[5][$handlerClassNames[$i]][$handlerMethods[$j]]))
-						&& ($cacheData[5][$handlerClassNames[$i]][$handlerMethods[$j]] instanceof FastPriorityQueue)
-						&& ($cacheData[5][$handlerClassNames[$i]][$handlerMethods[$j]]->toArray() === $producers[$handlerClassNames[$i]][$handlerMethods[$j]])
+						&& ($cacheData[5][$handlerClassNames[$i]][$handlerMethods[$j]] == $producers[$handlerClassNames[$i]][$handlerMethods[$j]])
 					);
 				}
 			}
 			return $result;
 		};
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -799,14 +792,14 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_producers_check_and_return_for_invalid_handler(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -817,7 +810,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_producers_check_and_return_for_invalid_handler_method(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -825,8 +818,8 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'UNKNOWN';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -838,7 +831,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_producers_check_and_return_for_handler_with_no_name_producer(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -846,7 +839,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoNameProducer();
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldThrow(AnnotationException::class)->during('hasProducers', [$handlerName, $httpMethod]);
@@ -856,7 +849,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_producers_check_and_return_for_handler_with_no_media_type_producer(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache
+		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
@@ -864,7 +857,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\NoMediaTypeProducer();
 
 		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldThrow(AnnotationException::class)->during('hasProducers', [$handlerName, $httpMethod]);
@@ -875,7 +868,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_executes_cached_handler_method_if_cache_exists(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache,
+		CacheInterface $cache,
 	 	Example\Handler\ValidMethod $handlerObject,
 		Request $request,
 		$handlerData
@@ -889,14 +882,14 @@ class AnnotationSpec extends ObjectBehavior
 
 		$cacheData = [
 			[$handlerName => $handlerClassName],
-			[$handlerClassName => new FastPriorityQueue()],
+			[$handlerClassName => []],
 			[$handlerClassName => [$httpMethod => $handlerMethod]],
 			[$handlerClassName => []],
 			[$handlerClassName => []],
 			[$handlerClassName => []],
 		];
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn($cacheData);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -906,7 +899,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_executes_handler_method_and_saves_metadata_to_cache_on_destruct_if_cache_is_empty(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache,
+		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request,
 		$handlerData
@@ -928,8 +921,8 @@ class AnnotationSpec extends ObjectBehavior
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
 
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -939,7 +932,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_handler_method_execute_for_invalid_handler(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache,
+		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request
 	)
@@ -948,7 +941,7 @@ class AnnotationSpec extends ObjectBehavior
 		$httpMethod = 'TEST';
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -960,7 +953,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_handler_method_execute_for_invalid_handler_method(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache,
+		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request
 	)
@@ -970,8 +963,8 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\ValidMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -983,7 +976,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_handler_method_execute_for_handler_method_having_several_required_parameters(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache,
+		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request
 	)
@@ -993,7 +986,7 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\SeveralRequiredParametersMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
@@ -1005,7 +998,7 @@ class AnnotationSpec extends ObjectBehavior
 
 	public function it_throws_on_handler_method_execute_for_invalid_handler_object(
 		PluginManagerInterface $handlerManager,
-		CacheStorage $cache,
+		CacheInterface $cache,
 		$handlerObject,
 		Request $request
 	)
@@ -1015,8 +1008,8 @@ class AnnotationSpec extends ObjectBehavior
 		$handler = new Example\Handler\ValidMethod();
 
 		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
-		$cache->getItem(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
-		$cache->setItem(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
+		$cache->get(PH\MetadataProvider\Annotation::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
+		$cache->set(PH\MetadataProvider\Annotation::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);

@@ -33,7 +33,7 @@ interface MetadataProviderInterface
 	 * Returns information about consumers configured for specified HTTP method in handler with specified name
 	 * @param string $handlerName
 	 * @param string $httpMethod
-	 * @return \Generator yields tuples (<media type supported by consumer>, <consumer name>, <consumer options>) sorted by priority
+	 * @return \Generator yields tuples (<media range supported by consumer>, <consumer name>, <consumer options>) sorted by priority
 	 */
 	public function getConsumers(string $handlerName, string $httpMethod): \Generator;
 

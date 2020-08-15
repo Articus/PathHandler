@@ -7,7 +7,7 @@ use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\StreamInterface;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class Transfer implements FactoryInterface
 {

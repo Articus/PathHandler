@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Consumer;
 
-use Zend\ServiceManager\AbstractPluginManager;
-use Zend\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\AbstractPluginManager;
+use Laminas\ServiceManager\Factory\InvokableFactory;
 
 /**
  * Consumer plugin manager

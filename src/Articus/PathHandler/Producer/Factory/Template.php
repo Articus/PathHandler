@@ -6,8 +6,8 @@ namespace Articus\PathHandler\Producer\Factory;
 use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\StreamInterface;
-use Zend\Expressive\Template\TemplateRendererInterface;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Mezzio\Template\TemplateRendererInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class Template implements FactoryInterface
 {

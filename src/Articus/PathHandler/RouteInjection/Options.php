@@ -3,19 +3,15 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\RouteInjection;
 
-use Zend\Stdlib\AbstractOptions;
-
-class Options extends AbstractOptions
+class Options
 {
 	/**
 	 * Configuration for default router or custom router service name.
 	 * After creating it will be injected with path handler routes.
 	 * @var array|string
 	 */
-	protected $router = [
-		'cache' => [
-			'adapter' => 'blackhole',
-		],
+	public $router = [
+		'cache' => [],
 	];
 
 	/**
@@ -23,151 +19,68 @@ class Options extends AbstractOptions
 	 * Each handler name should be available via handler plugin manager.
 	 * @var array Map<string, Array<string>>
 	 */
-	protected $paths = [];
+	public $paths = [];
 
 	/**
 	 * Configuration for default metadata provider or custom metadata provider service name
 	 * @var array|string
 	 */
-	protected $metadata = [
-		'cache' => [
-			'adapter' => 'blackhole',
-		],
+	public $metadata = [
+		'cache' => [],
 	];
 
 	/**
 	 * Configuration for default handler plugin manager or custom handler plugin manager service name
 	 * @var array|string
 	 */
-	protected $handlers = [];
+	public $handlers = [];
 
 	/**
 	 * Configuration for default consumer plugin manager or custom consumer plugin manager service name
 	 * @var array|string
 	 */
-	protected $consumers = [];
+	public $consumers = [];
 
 	/**
 	 * Configuration for default attribute plugin manager or custom attribute plugin manager service name
 	 * @var array|string
 	 */
-	protected $attributes = [];
+	public $attributes = [];
 
 	/**
 	 * Configuration for default producer plugin manager or custom producer plugin manager service name
 	 * @var array|string
 	 */
-	protected $producers = [];
+	public $producers = [];
 
-	/**
-	 * @return array|string
-	 */
-	public function getRouter()
+	public function __construct(iterable $options)
 	{
-		return $this->router;
-	}
-
-	/**
-	 * @param array|string $router
-	 */
-	public function setRouter($router): void
-	{
-		$this->router = $router;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getPaths(): array
-	{
-		return $this->paths;
-	}
-
-	/**
-	 * @param array $paths
-	 */
-	public function setPaths(array $paths): void
-	{
-		$this->paths = $paths;
-	}
-
-	/**
-	 * @return array|string
-	 */
-	public function getMetadata()
-	{
-		return $this->metadata;
-	}
-
-	/**
-	 * @param array|string $metadata
-	 */
-	public function setMetadata($metadata): void
-	{
-		$this->metadata = $metadata;
-	}
-
-	/**
-	 * @return array|string
-	 */
-	public function getHandlers()
-	{
-		return $this->handlers;
-	}
-
-	/**
-	 * @param array|string $handlers
-	 */
-	public function setHandlers($handlers): void
-	{
-		$this->handlers = $handlers;
-	}
-
-	/**
-	 * @return array|string
-	 */
-	public function getConsumers()
-	{
-		return $this->consumers;
-	}
-
-	/**
-	 * @param array|string $consumers
-	 */
-	public function setConsumers($consumers): void
-	{
-		$this->consumers = $consumers;
-	}
-
-	/**
-	 * @return array|string
-	 */
-	public function getAttributes()
-	{
-		return $this->attributes;
-	}
-
-	/**
-	 * @param array|string $attributes
-	 */
-	public function setAttributes($attributes): void
-	{
-		$this->attributes = $attributes;
-	}
-
-	/**
-	 * @return array|string
-	 */
-	public function getProducers()
-	{
-		return $this->producers;
-	}
-
-	/**
-	 * @param array|string $producers
-	 */
-	public function setProducers($producers): void
-	{
-		$this->producers = $producers;
+		foreach ($options as $key => $value)
+		{
+			switch ($key)
+			{
+				case 'router':
+					$this->router = $value;
+					break;
+				case 'paths':
+					$this->paths = $value;
+					break;
+				case 'metadata':
+					$this->metadata = $value;
+					break;
+				case 'handlers':
+					$this->handlers = $value;
+					break;
+				case 'consumers':
+					$this->consumers = $value;
+					break;
+				case 'attributes':
+					$this->attributes = $value;
+					break;
+				case 'producers':
+					$this->producers = $value;
+					break;
+			}
+		}
 	}
 }

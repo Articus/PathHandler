@@ -11,10 +11,10 @@ namespace Articus\PathHandler\Annotation;
 class Consumer
 {
 	/**
-	 * Content media type of the requests for which consumer should be used
+	 * Content media range of the requests for which consumer should be used
 	 * @var string
 	 */
-	public $mediaType = '*/*';
+	public $mediaRange = '*/*';
 
 	/**
 	 * Name that should be passed to PluginManager::build
@@ -32,7 +32,7 @@ class Consumer
 	/**
 	 * Priority in which media type for consumer should check against request. The higher - the earlier.
 	 * If two consumers have equal priority, the one declared earlier will be checked earlier.
-	 * @var integer
+	 * @var int
 	 */
 	public $priority = 1;
 }

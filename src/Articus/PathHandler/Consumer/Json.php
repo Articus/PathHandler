@@ -23,10 +23,6 @@ class Json implements ConsumerInterface
 		{
 			throw new Exception\BadRequest('Malformed JSON: failed to decode');
 		}
-		elseif (!(($result === null) || \is_array($result)))
-		{
-			throw new Exception\BadRequest('Malformed JSON: expecting null, array or object');
-		}
 		return $result;
 	}
 }

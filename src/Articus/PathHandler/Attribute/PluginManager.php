@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Attribute;
 
-use Zend\ServiceManager\AbstractPluginManager;
+use Laminas\ServiceManager\AbstractPluginManager;
 
 /**
  * Attribute plugin manager

@@ -6,7 +6,7 @@ namespace Articus\PathHandler\Producer\Factory;
 use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\StreamInterface;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class Json implements FactoryInterface
 {

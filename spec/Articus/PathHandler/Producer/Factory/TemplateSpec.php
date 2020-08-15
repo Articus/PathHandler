@@ -7,7 +7,7 @@ use Articus\PathHandler as PH;
 use Interop\Container\ContainerInterface;
 use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\StreamInterface;
-use Zend\Expressive\Template\TemplateRendererInterface;
+use Mezzio\Template\TemplateRendererInterface;
 
 class TemplateSpec extends ObjectBehavior
 {

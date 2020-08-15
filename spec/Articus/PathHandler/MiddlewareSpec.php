@@ -9,7 +9,7 @@ use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\StreamInterface;
-use Zend\ServiceManager\PluginManagerInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
 
 class MiddlewareSpec extends ObjectBehavior
 {
@@ -147,7 +147,7 @@ class MiddlewareSpec extends ObjectBehavior
 		$producerManager->build($producerMetadata[0][1], $producerMetadata[0][2])->shouldBeCalledOnce()->willReturn($producer);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(false);
+		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn('');
 
 		$responseGenerator = function () use ($response)
 		{
@@ -181,7 +181,6 @@ class MiddlewareSpec extends ObjectBehavior
 		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(true);
 		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn("invalid\rvalue");
 
 		$responseGenerator = function () use ($response)
@@ -222,7 +221,6 @@ class MiddlewareSpec extends ObjectBehavior
 		$metadataProvider->getProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->will($producerMetadataGenerator);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(true);
 		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn('test/mime');
 
 		$responseGenerator = function () use ($response)
@@ -263,7 +261,6 @@ class MiddlewareSpec extends ObjectBehavior
 		$producerManager->build($producerMetadata[0][1], $producerMetadata[0][2])->shouldBeCalledOnce()->willReturn(null);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(true);
 		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn($producerMetadata[0][0]);
 
 		$responseGenerator = function () use ($response)
@@ -319,7 +316,6 @@ class MiddlewareSpec extends ObjectBehavior
 		$producerManager->build($producerMetadata[1][1], $producerMetadata[1][2])->shouldBeCalledOnce()->willReturn($producer);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(true);
 		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn($producerMetadata[1][0]);
 
 		$responseGenerator = function () use ($response)
@@ -388,7 +384,6 @@ class MiddlewareSpec extends ObjectBehavior
 		$producerManager->build($producerMetadata[0][1], $producerMetadata[0][2])->shouldBeCalledOnce()->willReturn($producer);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(true);
 		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn($producerMetadata[0][0]);
 
 		$responseGenerator = function () use ($response)
@@ -457,7 +452,6 @@ class MiddlewareSpec extends ObjectBehavior
 		$producerManager->build($producerMetadata[0][1], $producerMetadata[0][2])->shouldBeCalledOnce()->willReturn($producer);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(true);
 		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn($producerMetadata[0][0]);
 
 		$responseGenerator = function () use ($response)
@@ -536,7 +530,6 @@ class MiddlewareSpec extends ObjectBehavior
 		$producerManager->build($producerMetadata[0][1], $producerMetadata[0][2])->shouldBeCalledOnce()->willReturn($producer);
 
 		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
-		$request->hasHeader('Accept')->shouldBeCalledOnce()->willReturn(true);
 		$request->getHeaderLine('Accept')->shouldBeCalledOnce()->willReturn($producerMetadata[0][0]);
 
 		$responseGenerator = function () use ($response)

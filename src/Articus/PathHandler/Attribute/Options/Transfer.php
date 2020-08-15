@@ -3,116 +3,91 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Attribute\Options;
 
-use Zend\Stdlib\AbstractOptions;
+use Articus\PathHandler\Attribute;
 
-class Transfer extends AbstractOptions
+class Transfer
 {
 	/**
+	 * Source of data to transfer
 	 * @var string
 	 */
-	protected $source = \Articus\PathHandler\Attribute\Transfer::SOURCE_POST;
+	public $source = Attribute\Transfer::SOURCE_POST;
 
 	/**
-	 * Class name for hydrated object (should have constructor with no parameters)
+	 * Class name for hydrated object
 	 * @var string
 	 */
-	protected $type;
+	public $type;
 
 	/**
 	 * Name of the data subset that should be transferred
 	 * @var string
 	 */
-	protected $subset = '';
+	public $subset = '';
 
 	/**
 	 * Name of the request attribute to store hydrated object
 	 * @var string
 	 */
-	protected $objectAttr = 'object';
+	public $objectAttr = 'object';
 
 	/**
-	 * Name of the request attribute to store validation errors, if empty Exception\UnprocessableEntity is raised
-	 * @var string
+	 * Name of the service that should be used to instanciate new object if request does not contain one.
+	 * If it is null type constructor is called without arguments.
+	 * Service is invoked with type name and either request object or specified request attributes values.
+	 * @var string|null
 	 */
-	protected $errorAttr = null;
+	public $instanciator;
 
 	/**
-	 * @return string
+	 * Names of request attributes that should be passed to instanciator to create new object.
+	 * If it is empty whole request is passed.
+	 * @var string[]
 	 */
-	public function getSource(): string
+	public $instanciatorArgAttrs = [];
+
+	/**
+	 * Name of the request attribute to store validation errors.
+	 * If it is empty Exception\UnprocessableEntity is raised.
+	 * @var string|null
+	 */
+	public $errorAttr = null;
+
+	public function __construct(iterable $options)
 	{
-		return $this->source;
-	}
-
-	/**
-	 * @param string $source
-	 */
-	public function setSource(string $source): void
-	{
-		$this->source = $source;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getType(): string
-	{
-		return $this->type;
-	}
-
-	/**
-	 * @param string $type
-	 */
-	public function setType(string $type): void
-	{
-		$this->type = $type;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSubset(): string
-	{
-		return $this->subset;
-	}
-
-	/**
-	 * @param string $subset
-	 */
-	public function setSubset(string $subset): void
-	{
-		$this->subset = $subset;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getObjectAttr(): string
-	{
-		return $this->objectAttr;
-	}
-
-	/**
-	 * @param string $objectAttr
-	 */
-	public function setObjectAttr(string $objectAttr): void
-	{
-		$this->objectAttr = $objectAttr;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getErrorAttr(): ?string
-	{
-		return $this->errorAttr;
-	}
-
-	/**
-	 * @param string $errorAttr
-	 */
-	public function setErrorAttr(?string $errorAttr): void
-	{
-		$this->errorAttr = $errorAttr;
+		foreach ($options as $key => $value)
+		{
+			switch ($key)
+			{
+				case 'source':
+					$this->source = $value;
+					break;
+				case 'type':
+					$this->type = $value;
+					break;
+				case 'subset':
+					$this->subset = $value;
+					break;
+				case 'objectAttr':
+				case 'object_attr':
+					$this->objectAttr = $value;
+					break;
+				case 'instanciator':
+					$this->instanciator = $value;
+					break;
+				case 'instanciatorArgAttrs':
+				case 'instanciator_arg_attrs':
+					$this->instanciatorArgAttrs = $value;
+					break;
+				case 'errorAttr':
+				case 'error_attr':
+					$this->errorAttr = $value;
+					break;
+			}
+		}
+		if ($this->type === null)
+		{
+			throw new \LogicException('Option "type" is not set');
+		}
 	}
 }

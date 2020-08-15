@@ -6,8 +6,8 @@ namespace spec\Articus\PathHandler\Producer;
 use Articus\PathHandler as PH;
 use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\StreamInterface;
-use Zend\Expressive\Response\ServerRequestErrorResponseGenerator;
-use Zend\Expressive\Template\TemplateRendererInterface;
+use Mezzio\Response\ServerRequestErrorResponseGenerator;
+use Mezzio\Template\TemplateRendererInterface;
 
 class TemplateSpec extends ObjectBehavior
 {

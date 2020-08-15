@@ -8,17 +8,13 @@ use PhpSpec\ObjectBehavior;
 use Interop\Container\ContainerInterface;
 use Prophecy\Argument;
 use Psr\Http\Message\ResponseInterface as Response;
-use Zend\Expressive\Router\Route;
-use Zend\Expressive\Router\RouterInterface;
-use Zend\ServiceManager\PluginManagerInterface;
+use Mezzio\Router\Route;
+use Mezzio\Router\RouterInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
+use Psr\SimpleCache\CacheInterface;
 
 class FactorySpec extends ObjectBehavior
 {
-	public function let()
-	{
-		$this->shouldImplement(PH\ConfigAwareFactory::class);
-	}
-
 	public function it_returns_router_with_simple_config(ContainerInterface $container, Response $response)
 	{
 		$config = [
@@ -32,6 +28,40 @@ class FactorySpec extends ObjectBehavior
 		$container->get(Response::class)->shouldBeCalledOnce()->willReturn($responseGenerator);
 
 		$this->__invoke($container, 'router')->shouldBeAnInstanceOf(PH\Router\FastRoute::class);
+	}
+
+	public function it_returns_router_with_simple_config_using_external_cache_services(
+		ContainerInterface $container,
+		Response $response,
+		CacheInterface $routerCache,
+		CacheInterface $metadataProviderCache
+	)
+	{
+		$routerCacheKey = 'router_cache_service';
+		$metadataProviderCacheKey = 'metadata_provider_cache_service';
+		$config = [
+			PH\RouteInjection\Factory::class => [
+				'router' => [
+					'cache' => $routerCacheKey,
+				],
+				'metadata' => [
+					'cache' => $metadataProviderCacheKey,
+				],
+			]
+		];
+		$responseGenerator = function () use ($response)
+		{
+			return $response;
+		};
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$container->get(Response::class)->shouldBeCalledOnce()->willReturn($responseGenerator);
+		$container->has($routerCacheKey)->shouldBeCalledOnce()->willReturn(true);
+		$container->get($routerCacheKey)->shouldBeCalledOnce()->willReturn($routerCache);
+		$container->has($metadataProviderCacheKey)->shouldBeCalledOnce()->willReturn(true);
+		$container->get($metadataProviderCacheKey)->shouldBeCalledOnce()->willReturn($metadataProviderCache);
+
+		$this->__invoke($container, 'router')->shouldBeAnInstanceOf(PH\Router\FastRoute::class);
+		//TODO check that router and metadata provider use provided cache services
 	}
 
 	public function it_returns_router_using_external_services(
@@ -176,6 +206,35 @@ class FactorySpec extends ObjectBehavior
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
 	}
 
+	public function it_throws_on_invalid_router_cache(ContainerInterface $container, $routerCache)
+	{
+		$routerCacheKey = 'invalid_cache';
+		$config = [
+			PH\RouteInjection\Factory::class => [
+				'router' => [
+					'cache' => $routerCacheKey,
+				],
+			],
+		];
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$container->has($routerCacheKey)->shouldBeCalledOnce()->willReturn(true);
+		$container->get($routerCacheKey)->shouldBeCalledOnce()->willReturn($routerCache);
+		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
+	}
+
+	public function it_throws_on_invalid_router_cache_config(ContainerInterface $container)
+	{
+		$config = [
+			PH\RouteInjection\Factory::class => [
+				'router' => [
+					'cache' => 123,
+				],
+			],
+		];
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
+	}
+
 	public function it_throws_on_invalid_router(ContainerInterface $container, $router)
 	{
 		$routerKey = 'invalid_router';
@@ -208,6 +267,35 @@ class FactorySpec extends ObjectBehavior
 			PH\RouteInjection\Factory::class => [
 				'metadata' => [],
 			]
+		];
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
+	}
+
+	public function it_throws_on_invalid_metadata_provider_cache(ContainerInterface $container, $metadataCache)
+	{
+		$metadataCacheKey = 'invalid_cache';
+		$config = [
+			PH\RouteInjection\Factory::class => [
+				'metadata' => [
+					'cache' => $metadataCacheKey,
+				],
+			],
+		];
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$container->has($metadataCacheKey)->shouldBeCalledOnce()->willReturn(true);
+		$container->get($metadataCacheKey)->shouldBeCalledOnce()->willReturn($metadataCache);
+		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
+	}
+
+	public function it_throws_on_invalid_metadata_provider_cache_config(ContainerInterface $container)
+	{
+		$config = [
+			PH\RouteInjection\Factory::class => [
+				'metadata' => [
+					'cache' => 123,
+				],
+			],
 		];
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
@@ -351,4 +439,51 @@ class FactorySpec extends ObjectBehavior
 		$container->get(Response::class)->shouldBeCalledOnce()->willReturn(null);
 		$this->shouldThrow(\LogicException::class)->during('__invoke', [$container, 'router']);
 	}
+
+	public function it_gets_configuration_from_custom_config_key(ContainerInterface $container, Response $response, \ArrayAccess $config)
+	{
+		$responseGenerator = function () use ($response)
+		{
+			return $response;
+		};
+
+		$configKey = 'test_config_key';
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$config->offsetExists($configKey)->shouldBeCalledOnce()->willReturn(true);
+		$config->offsetGet($configKey)->shouldBeCalledOnce()->willReturn([]);
+		$container->get(Response::class)->shouldBeCalledOnce()->willReturn($responseGenerator);
+
+		$this->beConstructedWith($configKey);
+		$this->__invoke($container, 'router')->shouldBeAnInstanceOf(PH\Router\FastRoute::class);
+	}
+
+	public function it_constructs_itself_and_gets_configuration_from_custom_config_key(ContainerInterface $container, Response $response, \ArrayAccess $config)
+	{
+		$responseGenerator = function () use ($response)
+		{
+			return $response;
+		};
+
+		$configKey = 'test_config_key';
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$config->offsetExists($configKey)->shouldBeCalledOnce()->willReturn(true);
+		$config->offsetGet($configKey)->shouldBeCalledOnce()->willReturn([]);
+		$container->get(Response::class)->shouldBeCalledOnce()->willReturn($responseGenerator);
+
+		$this->__callStatic($configKey, [$container, 'router', null])->shouldBeAnInstanceOf(PH\Router\FastRoute::class);
+	}
+
+	public function it_throws_on_too_few_arguments_during_self_construct(ContainerInterface $container)
+	{
+		$configKey = 'test_config_key';
+		$error = new \InvalidArgumentException(\sprintf(
+			'To invoke %s with custom configuration key statically 3 arguments are required: container, service name and options.',
+			PH\RouteInjection\Factory::class
+		));
+
+		$this::shouldThrow($error)->during('__callStatic', [$configKey, []]);
+		$this::shouldThrow($error)->during('__callStatic', [$configKey, [$container]]);
+		$this::shouldThrow($error)->during('__callStatic', [$configKey, [$container, 'router']]);
+	}
+
 }

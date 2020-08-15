@@ -5,21 +5,21 @@ namespace Articus\PathHandler\Router;
 
 use FastRoute as FR;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Zend\Cache\Storage\StorageInterface as CacheStorage;
-use Zend\Expressive\Router\Route;
-use Zend\Expressive\Router\RouteResult;
-use Zend\Expressive\Router\RouterInterface;
+use Psr\SimpleCache\CacheInterface;
+use Mezzio\Router\Route;
+use Mezzio\Router\RouteResult;
+use Mezzio\Router\RouterInterface;
 
 /**
- * Router based on nikic/fast-route, alternative for zendframework/zend-expressive-fastroute
+ * Router based on nikic/fast-route, alternative for mezzio/mezzio-fastroute
  */
 class FastRoute implements RouterInterface
 {
 	public const CACHE_KEY = 'fast-route';
 	/**
-	 * @var CacheStorage
+	 * @var CacheInterface
 	 */
-	protected $cacheStorage;
+	protected $cache;
 
 	/**
 	 * Map <route name> -> <route data>
@@ -37,9 +37,9 @@ class FastRoute implements RouterInterface
 	 */
 	protected $parsedRoutes;
 
-	public function __construct(CacheStorage $cacheStorage)
+	public function __construct(CacheInterface $cache)
 	{
-		$this->cacheStorage = $cacheStorage;
+		$this->cache = $cache;
 	}
 
 	/**
@@ -152,7 +152,7 @@ class FastRoute implements RouterInterface
 
 		if (($this->dispatcher === null) || ($this->parsedRoutes === null) || (!empty(\array_diff_key($this->routes, $this->parsedRoutes))))
 		{
-			$routingData = $this->cacheStorage->getItem(self::CACHE_KEY);
+			$routingData = $this->cache->get(self::CACHE_KEY);
 			//Check if cached routing data corresponds with added routes
 			if (($routingData !== null) && (!empty(\array_diff_key($this->routes, $routingData[1]))))
 			{
@@ -162,7 +162,7 @@ class FastRoute implements RouterInterface
 			if ($routingData === null)
 			{
 				$routingData = $this->generateRoutingData();
-				$this->cacheStorage->setItem(self::CACHE_KEY, $routingData);
+				$this->cache->set(self::CACHE_KEY, $routingData);
 			}
 			$this->dispatcher = new FR\Dispatcher\GroupCountBased($routingData[0]);
 			$this->parsedRoutes = $routingData[1];

@@ -11,7 +11,7 @@ namespace Articus\PathHandler\Annotation;
 class Producer
 {
 	/**
-	 * Content media type of the requests for which producer should be used
+	 * Content media type of the responses for which producer should be used
 	 * @Required
 	 * @var string
 	 */
@@ -33,7 +33,7 @@ class Producer
 	/**
 	 * Priority in which media type for producer should check against request. The higher - the earlier.
 	 * If two producers have equal priority, the one declared earlier will be checked earlier.
-	 * @var integer
+	 * @var int
 	 */
 	public $priority = 1;
 }

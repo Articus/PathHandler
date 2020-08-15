@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler;
 
-use Zend\ServiceManager\AbstractPluginManager;
+use Laminas\ServiceManager\AbstractPluginManager;
 
 /**
  * Handler plugin manager
