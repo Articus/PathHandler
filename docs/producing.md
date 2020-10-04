@@ -14,7 +14,7 @@ Library provides three producers out of the box:
 
 - `Json` to encode operation result as JSON string
 - `Transfer` - extension of `Json` producer that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to extract data from operation result before encoding
-- `Template` that gets template name and data from operation result and uses `Zend\Expressive\Template\TemplateRendererInterface` to render it 
+- `Template` that gets template name and data from operation result and uses `Mezzio\Template\TemplateRendererInterface` to render it 
 
 To use producer for operation in your handler you just need to annotate operation method:
 

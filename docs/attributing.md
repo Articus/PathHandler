@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class Attribute implements AttributeInterface
 {
-    public function __invoke(ServerRequestInterface $request)
+    public function __invoke(ServerRequestInterface $request): ServerRequestInterface
     {
         return $request->withAttribute('some', 'thing'); 
     }

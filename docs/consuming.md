@@ -39,7 +39,7 @@ class Handler
 }
 ```
 
-Each operation method can have several consumers. Just specify request content type to determine when each of them should be called: 
+Each operation method can have several consumers. Just specify media range to determine when each of them should be called according request content type: 
 
 ```PHP
 namespace My;
@@ -54,8 +54,8 @@ class Handler
 {
     /**
      * @PHA\Post()
-     * @PHA\Consumer(name="Json", mediaType="application/json")
-     * @PHA\Consumer(name="Internal", mediaType="multipart/form-data")
+     * @PHA\Consumer(name="Json", mediaRange="application/json")
+     * @PHA\Consumer(name="Internal", mediaRange="multipart/form-data")
      */
     public function handlePost(ServerRequestInterface $request)
     {
@@ -63,7 +63,7 @@ class Handler
     }
 }
 ```
-It is recommended to always specify mediaType to enforce anyone calling your API to supply a valid content type. 
+It is recommended to always specify `mediaRange` to enforce anyone calling your API to supply a valid content type. 
 If all operations in your handler need same consumer you can just annotate handler class insteadof annotating each method: 
 
 ```PHP
@@ -74,7 +74,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * @PHA\Route(pattern="/entity")
- * @PHA\Consumer(name="Json", mediaType="application/json")
+ * @PHA\Consumer(name="Json", mediaRange="application/json")
  */
 class Handler
 {

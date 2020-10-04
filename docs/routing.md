@@ -1,6 +1,6 @@
 # Routing
 
-PathHandler provides several neat improvements for [standard Zend Expressive routing registration routine](https://docs.zendframework.com/zend-expressive/v3/features/router/intro/).
+PathHandler provides several neat improvements for [standard Mezzio routing registration routine](https://docs.mezzio.dev/mezzio/v3/features/router/intro/).
 
 ## Route path prefixes
 
@@ -47,7 +47,7 @@ Path pattern syntax depends on router you choose. Default one is `Articus\PathHa
 ```YAML
 dependencies:
   factories:
-    Zend\Expressive\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
+    Mezzio\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
     my_router: My\RouterFactory
 
 Articus\PathHandler\RouteInjection\Factory:

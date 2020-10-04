@@ -12,7 +12,7 @@ use Mezzio\Router\RouterInterface;
 use Laminas\ServiceManager\PluginManagerInterface;
 
 /**
- * Factory that provides zend expressive router with all PathHandler routes injected into it
+ * Factory that provides Mezzio router with all PathHandler routes injected into it
  */
 class Factory extends PH\ConfigAwareFactory
 {

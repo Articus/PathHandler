@@ -6,7 +6,7 @@
 [![Codacy](https://api.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://www.codacy.com/app/articusw/PathHandler?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Articus/PathHandler&amp;utm_campaign=Badge_Grade)
 
 
-This library considerably simplifies API development with [Zend Expressive](http://zendframework.github.io/zend-expressive/) by reducing amount of boilerplate code you have to write for each API operation. The idea is to provide a more convenient way to deal with:
+This library considerably simplifies API development with [Mezzio](https://docs.mezzio.dev/mezzio/) by reducing amount of boilerplate code you have to write for each API operation. The idea is to provide a more convenient way to deal with:
 
 - routing - routes for all operations are registered automatically
 - consuming - each operation may have unique algorithm to parse request body according its content type
@@ -15,17 +15,15 @@ This library considerably simplifies API development with [Zend Expressive](http
 
 So you can focus on handling your API operations and spend less time on writing auxiliary code for request processing.
 
-## Quick start
-
-Just write [OpenAPI Specification](https://swagger.io/specification/) for your future API and use [OpenAPI Codegen](https://openapi-generator.tech/) to generate `php-ze-ph` server.  Check a sample of what you get [here](https://github.com/OpenAPITools/openapi-generator/tree/master/samples/server/openapi3/petstore/php-ze-ph).
-
 ## How to install?
 
-Just add `"articus/path-handler": "*"` to your [composer.json](https://getcomposer.org/doc/04-schema.md#require) and check [packages suggested by the library](https://getcomposer.org/doc/04-schema.md#suggest) for extra dependencies of optional components you want to use.  
+Just add `"articus/path-handler"` to your [composer.json](https://getcomposer.org/doc/04-schema.md#require) and check [packages suggested by the library](https://getcomposer.org/doc/04-schema.md#suggest) for extra dependencies of optional components you want to use.  
+
+> *Note* - library has [Laminas Service Manager](https://docs.laminas.dev/laminas-servicemanager/) as direct dependency but only because of [plugin managers](https://docs.laminas.dev/laminas-servicemanager/plugin-managers/). So you can use this library with any PSR-11 container you like.  
 
 ## How to use?
 
-First of all you need a project with Zend Expressive application. For example you can generate one with [this installer](https://github.com/zendframework/zend-expressive-skeleton).  
+First of all you need a project with Mezzio application. For example, you can generate one with [this installer](https://github.com/mezzio/mezzio-skeleton).  
 
 Next you need to declare **handlers**. Each handler is a set of all **operations** that can be performed when some **path** of your API is accessed with distinct HTTP methods. Any class can be a handler, you just need to decorate it with special annotations:
 
@@ -67,12 +65,12 @@ class Handler
 }
 ```
 
-Finally you need to configure special factory for router service (example is in YAML just for readability):
+Finally you need to configure special factory for router service. Here is a sample configuration for [Laminas Service Manager](https://docs.laminas.dev/laminas-servicemanager/) (example is in YAML just for readability):
 
 ```YAML
 dependencies:
   factories:
-    Zend\Expressive\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
+    Mezzio\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
 
 Articus\PathHandler\RouteInjection\Factory:
   paths:
