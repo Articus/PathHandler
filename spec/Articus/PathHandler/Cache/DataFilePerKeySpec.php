@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace spec\Articus\PathHandler\Cache;
 
 use Articus\PathHandler as PH;
+use PhpSpec\Exception\Example\SkippingException;
 use PhpSpec\ObjectBehavior;
 use spec\Utility\GlobalFunctionMock;
 
@@ -47,6 +48,10 @@ CACHE_CONTENT;
 
 	public function it_throws_if_cache_folder_does_not_exists_and_can_not_be_created()
 	{
+		if (GlobalFunctionMock::disabled())
+		{
+			throw new SkippingException('No global function mock');
+		}
 		$key = self::TEST_CACHE_KEY;
 		$folder = self::TEST_CACHE_FOLDER;
 		$exception = new \InvalidArgumentException(\sprintf('The directory "%s" does not exist and could not be created.', $folder));
@@ -59,6 +64,10 @@ CACHE_CONTENT;
 
 	public function it_throws_if_cache_folder_is_not_writable()
 	{
+		if (GlobalFunctionMock::disabled())
+		{
+			throw new SkippingException('No global function mock');
+		}
 		$key = self::TEST_CACHE_KEY;
 		$folder = self::TEST_CACHE_FOLDER;
 		$exception = new \InvalidArgumentException(\sprintf('The directory "%s" is not writable.', $folder));
@@ -158,6 +167,10 @@ CACHE_CONTENT;
 
 	public function it_does_not_set_value_to_cache_if_it_can_not_save_value_to_temporary_file()
 	{
+		if (GlobalFunctionMock::disabled())
+		{
+			throw new SkippingException('No global function mock');
+		}
 		$key = self::TEST_CACHE_KEY;
 		$folder = self::TEST_CACHE_FOLDER;
 		$value = self::TEST_CACHE_DATA;
@@ -176,6 +189,10 @@ CACHE_CONTENT;
 
 	public function it_does_not_set_value_to_cache_if_it_can_not_move_temporary_file_to_permanent_location()
 	{
+		if (GlobalFunctionMock::disabled())
+		{
+			throw new SkippingException('No global function mock');
+		}
 		$key = self::TEST_CACHE_KEY;
 		$folder = self::TEST_CACHE_FOLDER;
 		$file = self::TEST_CACHE_FILE;
@@ -196,6 +213,7 @@ CACHE_CONTENT;
 				return (($from === $temporaryFile) && ($to === \str_replace($folder, \realpath($folder), $file)));
 			}
 		)->andReturn(false);
+		GlobalFunctionMock::shouldReceive('unlink')->with($temporaryFile)->andReturn(true);
 		$this->beConstructedWith($key, $folder);
 		$this->set($key, $value)->shouldBe(false);
 	}

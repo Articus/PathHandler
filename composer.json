@@ -16,7 +16,7 @@
     }
   ],
   "require": {
-    "php": "^7.1",
+    "php": "^7.1|^8.0",
     "mezzio/mezzio": "^3.2",
     "laminas/laminas-servicemanager": "^3.4"
   },
@@ -36,7 +36,7 @@
     "articus/data-transfer": "^0.4",
     "ext-json": "*",
     "ext-uopz": "*",
-    "phpspec/phpspec": "^5.1|^6.1",
+    "phpspec/phpspec": "^5.1|^6.1|^7.0",
     "friends-of-phpspec/phpspec-code-coverage": "*",
     "mockery/mockery": "^1.3"
   },

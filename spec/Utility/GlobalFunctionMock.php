@@ -52,4 +52,9 @@ class GlobalFunctionMock
 		}
 		self::$innerMock = null;
 	}
+
+	public static function disabled(): bool
+	{
+		return (!\extension_loaded('uopz'));
+	}
 }
