@@ -20,7 +20,7 @@ jobs:
           - php: '8.0'
             upload_coverage: true
             extra_composer_args: '--ignore-platform-req=php'
-    container: ghcr.io/articus/phpdbg-coveralls:${{ matrix.php }}_2021-01-16
+    container: ghcr.io/articus/phpdbg-coveralls:${{ matrix.php }}_2.4.3_2021-01-16
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
