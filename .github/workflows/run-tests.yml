@@ -15,11 +15,9 @@ jobs:
             has_unique_dependencies: true
           - php: '7.3'
           - php: '7.4'
-          # mezzio/mezzio does not support PHP 8 officially yet, so have to ignore php version requirement
           # ext-uopz does not support PHP 8 officially yet, so have to use custom build https://github.com/krakjoe/uopz/pull/138
           - php: '8.0'
             upload_coverage: true
-            extra_composer_args: '--ignore-platform-req=php'
     container: ghcr.io/articus/phpdbg-coveralls:${{ matrix.php }}_2.4.3_2021-01-16
     steps:
       - name: Checkout code
@@ -29,13 +27,11 @@ jobs:
         if: matrix.has_unique_dependencies
         run: cp ./composer.lock.${{ matrix.php }} ./composer.lock
 
-      - name: Enale UOPZ extension
+      - name: Enable UOPZ extension
         run: phpenmod uopz
 
       - name: Install dependencies via Composer
-        run: >
-          php ./composer.phar install --no-interaction --no-progress --prefer-dist --classmap-authoritative
-          ${{ matrix.extra_composer_args }}
+        run: php ./composer.phar install --no-interaction --no-progress --prefer-dist --classmap-authoritative
 
       - name: Run PhpSpec tests
         run: phpdbg -qrr ./vendor/phpspec/phpspec/bin/phpspec run
