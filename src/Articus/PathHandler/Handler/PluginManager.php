@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Articus\PathHandler;
+namespace Articus\PathHandler\Handler;
 
 use Laminas\ServiceManager\AbstractPluginManager;
 

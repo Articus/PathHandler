@@ -3,82 +3,68 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\MetadataProvider;
 
-use Articus\PathHandler\Annotation as PHA;
+use Articus\PathHandler\PhpAttribute as PHA;
 use Articus\PathHandler\MetadataProviderInterface;
-use Doctrine\Common\Annotations\AnnotationReader;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\SimpleCache\CacheInterface;
 use Laminas\ServiceManager\PluginManagerInterface;
 use Laminas\Stdlib\FastPriorityQueue;
 
 /**
- * Provider that gets handler metadata from handler class annotations
+ * Provider that gets handler metadata from handler class PHP attributes
  */
-class Annotation implements MetadataProviderInterface
+class PhpAttribute implements MetadataProviderInterface
 {
-	public const CACHE_KEY = 'annotation-metadata';
+	public const CACHE_KEY = 'php-attribute-metadata';
 
-	/**
-	 * @var PluginManagerInterface
-	 */
-	protected $handlerPluginManager;
-
-	/**
-	 * @var CacheInterface
-	 */
-	protected $cache;
-
-	/**
-	 * @var bool
-	 */
-	protected $needCacheUpdate = false;
+	protected bool $needCacheUpdate = false;
 
 	/**
 	 * Map <handler name> -> <handler class name>
-	 * @var string[] Map<string, string>
+	 * @psalm-var array<string, string>
 	 */
-	protected $handlerClassNames;
+	protected array $handlerClassNames;
 
 	/**
 	 * Map <handler class name> -> <sorted list of routes>
-	 * @var string[][] Map<string, string[]>
+	 * @psalm-var array<string, array>
 	 */
-	protected $routes;
+	protected array $routes;
 
 	/**
 	 * Map <handler class name> -> <http method> -> <handler method name>
-	 * @var string[][] Map<string, Map<string, string>>
+	 * @psalm-var array<string, array<string, string>>
 	 */
-	protected $handlerMethodNames;
+	protected array $handlerMethodNames;
 
 	/**
 	 * Map <handler class name> -> <handler method name> -> <sorted list of consumers>
-	 * @var string[][][] Map<string, Map<string, string[]>>
+	 * @psalm-var array<string, array<string, array>>
 	 */
-	protected $consumers;
+	protected array $consumers;
 
 	/**
 	 * Map <handler class name> -> <handler method name> -> <sorted list of attributes>
-	 * @var string[][][] Map<string, Map<string, string[]>>
+	 * @psalm-var array<string, array<string, array>>
 	 */
-	protected $attributes;
+	protected array $attributes;
 
 	/**
 	 * Map <handler class name> -> <handler method name> -> <sorted list of producers>
-	 * @var string[][][] Map<string, Map<string, string[]>>
+	 * @psalm-var array<string, array<string, array>>
 	 */
-	protected $producers;
+	protected array $producers;
 
 	/**
 	 * MetadataProvider constructor.
 	 * @param PluginManagerInterface $handlerPluginManager
 	 * @param CacheInterface $cache
 	 */
-	public function __construct(PluginManagerInterface $handlerPluginManager, CacheInterface $cache)
+	public function __construct(
+		protected PluginManagerInterface $handlerPluginManager,
+		protected CacheInterface $cache
+	)
 	{
-		$this->handlerPluginManager = $handlerPluginManager;
-		$this->cache = $cache;
-
 		//Restore internal data from cache
 		[
 			$this->handlerClassNames,
@@ -111,8 +97,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function getHttpMethods(string $handlerName): array
 	{
@@ -123,8 +107,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function getRoutes(string $handlerName): \Generator
 	{
@@ -135,8 +117,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function hasConsumers(string $handlerName, string $httpMethod): bool
 	{
@@ -148,8 +128,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function getConsumers(string $handlerName, string $httpMethod): \Generator
 	{
@@ -161,8 +139,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function getAttributes(string $handlerName, string $httpMethod): \Generator
 	{
@@ -174,8 +150,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function hasProducers(string $handlerName, string $httpMethod): bool
 	{
@@ -187,8 +161,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function getProducers(string $handlerName, string $httpMethod): \Generator
 	{
@@ -200,8 +172,6 @@ class Annotation implements MetadataProviderInterface
 
 	/**
 	 * @inheritdoc
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	public function executeHandlerMethod(string $handlerName, string $httpMethod, $handler, ServerRequestInterface $request)
 	{
@@ -226,8 +196,6 @@ class Annotation implements MetadataProviderInterface
 	 * and optionally checks if this metadata contains information about specified HTTP method
 	 * @param string $handlerName
 	 * @param string|null $httpMethod
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	protected function ascertainMetadata(string $handlerName, ?string $httpMethod = null): void
 	{
@@ -264,8 +232,6 @@ class Annotation implements MetadataProviderInterface
 	/**
 	 * Loads metadata for specified handler name
 	 * @param string $handlerName
-	 * @throws \Doctrine\Common\Annotations\AnnotationException
-	 * @throws \ReflectionException
 	 */
 	protected function loadMetadata(string $handlerName): void
 	{
@@ -283,25 +249,29 @@ class Annotation implements MetadataProviderInterface
 		$commonAttributes = new FastPriorityQueue();
 		$commonProducers = new FastPriorityQueue();
 
-		$reflection = new \ReflectionClass($handlerClassName);
-		$reader = new AnnotationReader();
+		$classReflection = new \ReflectionClass($handlerClassName);
 
 		//Process class annotations
-		foreach ($reader->getClassAnnotations($reflection) as $annotation)
+		foreach ($classReflection->getAttributes() as $phpAttributeReflection)
 		{
+			$phpAttribute = match ($phpAttributeReflection->getName())
+			{
+				PHA\Route::class, PHA\Consumer::class, PHA\Attribute::class, PHA\Producer::class => $phpAttributeReflection->newInstance(),
+				default => null,
+			};
 			switch (true)
 			{
-				case ($annotation instanceof PHA\Route):
-					$routes->insert([$annotation->name, $annotation->pattern, $annotation->defaults], $annotation->priority);
+				case ($phpAttribute instanceof PHA\Route):
+					$routes->insert([$phpAttribute->name, $phpAttribute->pattern, $phpAttribute->defaults], $phpAttribute->priority);
 					break;
-				case ($annotation instanceof PHA\Consumer):
-					$commonConsumers->insert([$annotation->mediaRange, $annotation->name, $annotation->options], $annotation->priority);
+				case ($phpAttribute instanceof PHA\Consumer):
+					$commonConsumers->insert([$phpAttribute->mediaRange, $phpAttribute->name, $phpAttribute->options], $phpAttribute->priority);
 					break;
-				case ($annotation instanceof PHA\Attribute):
-					$commonAttributes->insert([$annotation->name, $annotation->options], $annotation->priority);
+				case ($phpAttribute instanceof PHA\Attribute):
+					$commonAttributes->insert([$phpAttribute->name, $phpAttribute->options], $phpAttribute->priority);
 					break;
-				case ($annotation instanceof PHA\Producer):
-					$commonProducers->insert([$annotation->mediaType, $annotation->name, $annotation->options], $annotation->priority);
+				case ($phpAttribute instanceof PHA\Producer):
+					$commonProducers->insert([$phpAttribute->mediaType, $phpAttribute->name, $phpAttribute->options], $phpAttribute->priority);
 					break;
 			}
 		}
@@ -312,19 +282,33 @@ class Annotation implements MetadataProviderInterface
 		$this->routes[$handlerClassName] = $routes->toArray();
 
 		//Process public method annotations
-		foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method)
+		foreach ($classReflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $methodReflection)
 		{
-			$handlerMethodName = $method->getName();
+			$handlerMethodName = $methodReflection->getName();
 			$hasMetadata = false;
 			$consumers = clone $commonConsumers;
 			$attributes = clone $commonAttributes;
 			$producers = clone $commonProducers;
-			foreach ($reader->getMethodAnnotations($method) as $annotation)
+			foreach ($methodReflection->getAttributes() as $phpAttributeReflection)
 			{
+				$phpAttribute = match ($phpAttributeReflection->getName())
+				{
+					PHA\HttpMethod::class,
+					PHA\Get::class,
+					PHA\Post::class,
+					PHA\Patch::class,
+					PHA\Put::class,
+					PHA\Delete::class,
+					PHA\Consumer::class,
+					PHA\Attribute::class,
+					PHA\Producer::class
+						=> $phpAttributeReflection->newInstance(),
+					default => null,
+				};
 				switch (true)
 				{
-					case ($annotation instanceof PHA\HttpMethod):
-						$httpMethod = $annotation->getValue();
+					case ($phpAttribute instanceof PHA\HttpMethod):
+						$httpMethod = $phpAttribute->name;
 						if (!empty($handlerMethodNames[$httpMethod]))
 						{
 							throw new \LogicException(\sprintf(
@@ -338,23 +322,23 @@ class Annotation implements MetadataProviderInterface
 						$handlerMethodNames[$httpMethod] = $handlerMethodName;
 						$hasMetadata = true;
 						break;
-					case ($annotation instanceof PHA\Consumer):
-						$consumers->insert([$annotation->mediaRange, $annotation->name, $annotation->options], $annotation->priority);
+					case ($phpAttribute instanceof PHA\Consumer):
+						$consumers->insert([$phpAttribute->mediaRange, $phpAttribute->name, $phpAttribute->options], $phpAttribute->priority);
 						$hasMetadata = true;
 						break;
-					case ($annotation instanceof PHA\Attribute):
-						$attributes->insert([$annotation->name, $annotation->options], $annotation->priority);
+					case ($phpAttribute instanceof PHA\Attribute):
+						$attributes->insert([$phpAttribute->name, $phpAttribute->options], $phpAttribute->priority);
 						$hasMetadata = true;
 						break;
-					case ($annotation instanceof PHA\Producer):
-						$producers->insert([$annotation->mediaType, $annotation->name, $annotation->options], $annotation->priority);
+					case ($phpAttribute instanceof PHA\Producer):
+						$producers->insert([$phpAttribute->mediaType, $phpAttribute->name, $phpAttribute->options], $phpAttribute->priority);
 						$hasMetadata = true;
 						break;
 				}
 			}
 			if ($hasMetadata)
 			{
-				if ($method->getNumberOfRequiredParameters() > 1)
+				if ($methodReflection->getNumberOfRequiredParameters() > 1)
 				{
 					throw new \LogicException(\sprintf(
 						'Invalid method %s with metadata for %s: more than one required parameter.',
