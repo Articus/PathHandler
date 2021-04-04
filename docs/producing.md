@@ -3,11 +3,10 @@
 To produce response body you need a **producer** - class that implements `Articus\PathHandler\Producer\ProducerInterface` and is registered in configuration:
  
 ```YAML
-Articus\PathHandler\RouteInjection\Factory:
-  #Add entry in producer plugin manager 
-  producers:
-    invokables:
-      MyProducer: My\Producer 
+#Add entry in producer plugin manager 
+Articus\PathHandler\Producer\PluginManager:
+  invokables:
+    MyProducer: My\Producer 
 ```
 
 Library provides three producers out of the box:
@@ -33,6 +32,23 @@ class Handler
      * @PHA\Get()
      * @PHA\Producer(name="Json", mediaType="application/json")
      */
+    public function handleGet(ServerRequestInterface $request): array
+    {
+        return ['some' => 'thing']; 
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Get()]
+    #[PHA\Producer("application/json", "Json")]
     public function handleGet(ServerRequestInterface $request): array
     {
         return ['some' => 'thing']; 
@@ -65,6 +81,24 @@ class Handler
     }
 }
 ```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Get()]
+    #[PHA\Producer("application/json", "Json")]
+    #[PHA\Producer("text/html", "Template")]
+    public function handleGet(ServerRequestInterface $request): array
+    {
+        return ['success', ['some' => 'thing']]; 
+    }
+}
+```
 
 If all operations in your handler need same producer you can just annotate handler class insteadof annotating each method:
 
@@ -90,6 +124,28 @@ class Handler
     /**
      * @PHA\Patch()
      */
+    public function handlePatch(ServerRequestInterface $request): array
+    {
+        return ['some' => 'thing']; 
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+#[PHA\Producer("application/json", "Json")]
+class Handler
+{
+    #[PHA\Post()]
+    public function handlePost(ServerRequestInterface $request): array
+    {
+        return ['some' => 'thing']; 
+    }
+    #[PHA\Patch()]
     public function handlePatch(ServerRequestInterface $request): array
     {
         return ['some' => 'thing']; 

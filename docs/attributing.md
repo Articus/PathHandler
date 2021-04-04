@@ -20,11 +20,10 @@ class Attribute implements AttributeInterface
 ... and is registered in configuration:
  
 ```YAML
-Articus\PathHandler\RouteInjection\Factory:
-  #Add entry in attribute plugin manager 
-  attributes:
-    invokables:
-      MyAttribute: My\Attribute 
+#Add entry in attribute plugin manager 
+Articus\PathHandler\Attribute\PluginManager:
+  invokables:
+    MyAttribute: My\Attribute 
 ```
 
 To use attribute for operation in your handler you just need to annotate operation method:
@@ -46,7 +45,24 @@ class Handler
      */
     public function handlePost(ServerRequestInterface $request)
     {
-        $value = $request->getAttribute('some'); 
+        $value = $request->getAttribute('some');
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Post()]
+    #[PHA\Attribute("MyAttribute")]
+    public function handlePost(ServerRequestInterface $request)
+    {
+        $value = $request->getAttribute('some');
     }
 }
 ```
@@ -68,6 +84,23 @@ class Handler
      * @PHA\Post()
      * @PHA\Attribute(name="MyAttribute", options={"key":"value"})
      */
+    public function handlePost(ServerRequestInterface $request)
+    {
+        $value = $request->getAttribute('some'); 
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Post()]
+    #[PHA\Attribute("MyAttribute", ["key" => "value"])]
     public function handlePost(ServerRequestInterface $request)
     {
         $value = $request->getAttribute('some'); 
@@ -105,6 +138,28 @@ class Handler
     }
 }
 ```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+#[PHA\Attribute("MyAttribute")]
+class Handler
+{
+    #[PHA\Post()]
+    public function handlePost(ServerRequestInterface $request)
+    {
+        $value = $request->getAttribute('some'); 
+    }
+    #[PHA\Patch()]
+    public function handlePatch(ServerRequestInterface $request)
+    {
+        $value = $request->getAttribute('some'); 
+    }
+}
+```
 
 If you set multiple attributes for operation they will be invoked in the same order they appear in annotations:
 
@@ -126,6 +181,25 @@ class Handler
      * @PHA\Attribute(name="Third")
      * @PHA\Attribute(name="Fourth")
      */
+    public function handlePost(ServerRequestInterface $request)
+    {
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+#[PHA\Attribute("First")]
+#[PHA\Attribute("Second")]
+class Handler
+{
+    #[PHA\Post()]
+    #[PHA\Attribute("Third")]
+    #[PHA\Attribute("Fourth")]
     public function handlePost(ServerRequestInterface $request)
     {
     }
@@ -155,6 +229,23 @@ class Handler
     }
 }
 ```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Post()]
+    #[PHA\Attribute("Second")]
+    #[PHA\Attribute("First", priority: 10)]
+    public function handlePost(ServerRequestInterface $request)
+    {
+    }
+}
+```
 
 Library provides just one attribute out of the box - `Transfer` that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to construct DTO and fill it with request data only if this data is valid.
 
@@ -179,7 +270,29 @@ class Handler
         if (empty($errors))
         {
             /** @var DTO $dto */
-            $dto = $this->getAttribute('dto');//Valid DTO filled with data from query params
+            $dto = $request->getAttribute('dto');//Valid DTO filled with data from query params
+        }
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Post()]
+    #[PHA\Attribute("Transfer", ["type"=>DTO::class,"subset"=>"part","source"=>"get","objectAttr"=>"dto","errorAttr"=>"errors"])]
+    public function handlePost(ServerRequestInterface $request)
+    {
+        $errors = $request->getAttribute('errors');//This attribute will store validation errors
+        if (empty($errors))
+        {
+            /** @var DTO $dto */
+            $dto = $request->getAttribute('dto');//Valid DTO filled with data from query params
         }
     }
 }

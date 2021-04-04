@@ -58,23 +58,59 @@ class Handler
     }
 }
 ```
+...or special PHP attributes:
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Articus\PathHandler\Exception;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route('/entity')] //This is how you set path for handler operations
+class Handler
+{
+    #[PHA\Post()] //This is how you declare HTTP method of the operation
+    #[PHA\Consumer('application/json', 'Json')] //This is how you consume request body
+    #[PHA\Attribute('Transfer', ['type'=>'My\DTO','objectAttr'=>'dto','errorAttr'=>'errors'])] //This is how you attribute request
+    #[PHA\Producer('application/json', 'Json')] //This is how you produce response body from returned value
+    public function handlePost(ServerRequestInterface $request): \My\DTO
+    {
+        $errors = $request->getAttribute('errors');
+        if (!empty($errors))
+        {
+            //This is how you can return non-200 responses
+            throw new Exception\UnprocessableEntity($errors);
+        }
+        /* @var \My\DTO $dto */
+        $dto = $request->getAttribute('dto');
+        return $dto;
+    }
+}
+```
 
 Finally you need to configure special factory for router service. Here is a sample configuration for [Laminas Service Manager](https://docs.laminas.dev/laminas-servicemanager/) (example is in YAML just for readability):
 
 ```YAML
 dependencies:
   factories:
-    Mezzio\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
+    Mezzio\Router\RouterInterface: Articus\PathHandler\RouteInjectionFactory
+    Articus\PathHandler\MetadataProviderInterface: Articus\PathHandler\MetadataProvider\Factory\Annotation
+    # Replace previous line with this one if you want use PHP attributes as metadata source 
+    #Articus\PathHandler\MetadataProviderInterface: Articus\PathHandler\MetadataProvider\Factory\PhpAttribute
+    Articus\PathHandler\Handler\PluginManager: Articus\PathHandler\Handler\Factory\PluginManager
+    Articus\PathHandler\Consumer\PluginManager: Articus\PathHandler\Consumer\Factory\PluginManager
+    Articus\PathHandler\Attribute\PluginManager: Articus\PathHandler\Attribute\Factory\PluginManager
+    Articus\PathHandler\Producer\PluginManager: Articus\PathHandler\Producer\Factory\PluginManager
 
-Articus\PathHandler\RouteInjection\Factory:
+Articus\PathHandler\RouteInjectionFactory:
   paths:
     '':
     # List of your handlers   
     - My\Handler
-  # Configuration for handler plugin manager - sub-container dedicated for handlers
-  handlers:
-    factories:
-      My\Handler: My\HandlerFactory
+# Configuration for handler plugin manager - sub-container dedicated for handlers
+Articus\PathHandler\Handler\PluginManager:
+  factories:
+    My\Handler: My\HandlerFactory
 ```
 
 ## Production configuration
@@ -82,16 +118,20 @@ Articus\PathHandler\RouteInjection\Factory:
 In production environment you may want to activate persistent handler metadata cache via configuration:
 
 ```YAML
-Articus\PathHandler\RouteInjection\Factory:
-  metadata:
-    cache:
-      directory: data/cache
+# Activate simple file cache either for annotation-based metadata provider
+Articus\PathHandler\MetadataProvider\Annotation:
+  cache:
+    directory: data/cache
+# or for attribute-based metadata provider
+Articus\PathHandler\MetadataProvider\PhpAttribute:
+  cache:
+    directory: data/cache
 ```
 
 If you use default router you may also want to activate persistent routing table cache:
 
 ```YAML
-Articus\PathHandler\RouteInjection\Factory:
+Articus\PathHandler\RouteInjectionFactory:
   router:
     cache:
       directory: data/cache

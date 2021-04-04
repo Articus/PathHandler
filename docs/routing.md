@@ -7,7 +7,7 @@ PathHandler provides several neat improvements for [standard Mezzio routing regi
 You can easily add common path prefix for a group of handlers via router factory configuration:
 
 ```YAML
-Articus\PathHandler\RouteInjection\Factory:
+Articus\PathHandler\RouteInjectionFactory:
   paths:
     '':
     # List of handlers that should not be prefixed   
@@ -29,7 +29,6 @@ Each handler should have at least one path declaration. Each path declaration ma
 namespace My;
 
 use Articus\PathHandler\Annotation as PHA;
-use Articus\PathHandler\Exception;
 
 /**
  * @PHA\Route(pattern="/some/path")
@@ -41,16 +40,29 @@ class Handler
 //...
 }
 ```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+
+#[PHA\Route("/some/path")]
+#[PHA\Route("/another/path", name: "another_path_name")]
+#[PHA\Route("/another/path", ["some_param" => 123, "another_param" => "another param value"])]
+class Handler
+{
+//...
+}
+```
 
 Path pattern syntax depends on router you choose. Default one is `Articus\PathHandler\Router\FastRoute` based on [FastRoute](https://packagist.org/packages/nikic/fast-route). You can switch to your favourite router implementation via router factory configuration:
 
 ```YAML
 dependencies:
   factories:
-    Mezzio\Router\RouterInterface: Articus\PathHandler\RouteInjection\Factory
+    Mezzio\Router\RouterInterface: Articus\PathHandler\RouteInjectionFactory
     my_router: My\RouterFactory
 
-Articus\PathHandler\RouteInjection\Factory:
+Articus\PathHandler\RouteInjectionFactory:
   router: my_router
 ```
 
@@ -62,7 +74,6 @@ Each handler should have at least one class method with HTTP method declaration.
 namespace My;
 
 use Articus\PathHandler\Annotation as PHA;
-use Articus\PathHandler\Exception;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -97,6 +108,40 @@ class DeleteHandler
     /**
      * @PHA\Delete()
      */
+    public function delete(ServerRequestInterface $request)
+    {
+        //...
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity/{id}")]
+class Handler
+{
+    #[PHA\HttpMethod("HEAD")]
+    #[PHA\Get()]
+    public function read(ServerRequestInterface $request)
+    {
+        //...
+    }
+
+    #[PHA\Put()]
+    #[PHA\Patch()]
+    public function update(ServerRequestInterface $request)
+    {
+        //...
+    }
+}
+
+#[PHA\Route("/entity/{id}")]
+class DeleteHandler
+{
+    #[PHA\Delete()]
     public function delete(ServerRequestInterface $request)
     {
         //...

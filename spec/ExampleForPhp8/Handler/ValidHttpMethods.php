@@ -31,6 +31,12 @@ class ValidHttpMethods
 	{
 	}
 
+	#[PHA\HttpMethod("OPTIONS")]
+	#[PHA\HttpMethod("CUSTOM_METHOD")]
+	public function monitor(Request $request)
+	{
+	}
+
 	public function publicMethod()
 	{
 	}

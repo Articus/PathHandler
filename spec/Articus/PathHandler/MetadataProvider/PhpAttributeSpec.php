@@ -55,7 +55,7 @@ class PhpAttributeSpec extends ObjectBehavior
 		$handlerName = 'test';
 		$handlerClassName = Example\Handler\ValidHttpMethods::class;
 		$handler = new Example\Handler\ValidHttpMethods();
-		$httpMethods = ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE'];
+		$httpMethods = ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS', 'CUSTOM_METHOD'];
 		$cacheChecker = function (array $cacheData) use ($handlerClassName, $httpMethods)
 		{
 			return ((!empty($cacheData[2][$handlerClassName]))

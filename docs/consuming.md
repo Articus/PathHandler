@@ -3,11 +3,10 @@
 To consume request body you need a **consumer** - class that implements `Articus\PathHandler\Consumer\ConsumerInterface` and is registered in configuration:
  
 ```YAML
-Articus\PathHandler\RouteInjection\Factory:
-  #Add entry in consumer plugin manager 
-  consumers:
-    invokables:
-      MyConsumer: My\Consumer 
+#Add entry in consumer plugin manager 
+Articus\PathHandler\Consumer\Factory\PluginManager:
+  invokables:
+    MyConsumer: My\Consumer 
 ```
 
 Library provides two consumers out of the box:
@@ -32,6 +31,23 @@ class Handler
      * @PHA\Post()
      * @PHA\Consumer(name="Json")
      */
+    public function handlePost(ServerRequestInterface $request)
+    {
+        $data = $request->getParsedBody(); 
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Post()]
+    #[PHA\Consumer("*/*", "Json")]
     public function handlePost(ServerRequestInterface $request)
     {
         $data = $request->getParsedBody(); 
@@ -63,6 +79,24 @@ class Handler
     }
 }
 ```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+class Handler
+{
+    #[PHA\Post()]    
+    #[PHA\Consumer("application/json", "Json")]
+    #[PHA\Consumer("multipart/form-data", "Internal")]
+    public function handlePost(ServerRequestInterface $request)
+    {
+        $data = $request->getParsedBody(); 
+    }
+}
+```
 It is recommended to always specify `mediaRange` to enforce anyone calling your API to supply a valid content type. 
 If all operations in your handler need same consumer you can just annotate handler class insteadof annotating each method: 
 
@@ -88,6 +122,28 @@ class Handler
     /**
      * @PHA\Patch()
      */
+    public function handlePatch(ServerRequestInterface $request)
+    {
+        $data = $request->getParsedBody(); 
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity")]
+#[PHA\Consumer("application/json", "Json")]
+class Handler
+{
+    #[PHA\Post()]
+    public function handlePost(ServerRequestInterface $request)
+    {
+        $data = $request->getParsedBody(); 
+    }
+    #[PHA\Patch()]
     public function handlePatch(ServerRequestInterface $request)
     {
         $data = $request->getParsedBody(); 
