@@ -38,6 +38,11 @@ class RouteInjectionFactory extends ConfigAwareFactory
 		$producerPluginManager = self::getProducerManager($container);
 		$metadataProvider = self::getMetadataProvider($container);
 		$responseGenerator = self::getResponseGenerator($container);
+		$defaultProducer = [
+			$config['default_producer']['media_type'] ?? 'text/plain',
+			$config['default_producer']['name'] ?? Producer\Text::class,
+			$config['default_producer']['options'] ?? [],
+		];
 
 		//Inject routes
 		foreach (($config['paths'] ?? []) as $pathPrefix => $handlerNames)
@@ -54,7 +59,8 @@ class RouteInjectionFactory extends ConfigAwareFactory
 						$consumerPluginManager,
 						$attributePluginManager,
 						$producerPluginManager,
-						$responseGenerator
+						$responseGenerator,
+						$defaultProducer
 					);
 					$route = new Route($pathPrefix . $pattern, $middleware, $httpMethods, $routeName);
 					if (!empty($defaults))

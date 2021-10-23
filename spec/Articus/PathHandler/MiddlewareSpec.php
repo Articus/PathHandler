@@ -68,7 +68,56 @@ class MiddlewareSpec extends ObjectBehavior
 		];
 	}
 
-	public function it_generates_empty_successful_response_if_there_is_no_consumers_attributes_producers(
+	public function it_generates_successful_response_with_default_producer_if_there_is_no_consumers_attributes_producers(
+		PH\MetadataProviderInterface $metadataProvider,
+		PluginManagerInterface $handlerManager,
+		PluginManagerInterface $consumerManager,
+		PluginManagerInterface $attributeManager,
+		PluginManagerInterface $producerManager,
+		Request $request,
+		$handler,
+		Response $response,
+		Response $response1,
+		Response $response2,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
+	)
+	{
+		$handlerName = 'test_handler';
+		$httpMethod = 'TEST';
+		$emptyGenerator = function()
+		{
+			yield from [];
+		};
+		$handlerData = ['test' => 123];
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
+		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
+		$metadataProvider->getAttributes($handlerName, $httpMethod)->shouldBeCalledOnce()->will($emptyGenerator);
+		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
+		$metadataProvider->executeHandlerMethod($handlerName, $httpMethod, $handler, $request)->shouldBeCalledOnce()->willReturn($handlerData);
+
+		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+
+		$request->getMethod()->shouldBeCalledOnce()->willReturn($httpMethod);
+
+		$responseGenerator = function () use ($response)
+		{
+			return $response->getWrappedObject();
+		};
+
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble($handlerData)->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+
+		$this->beConstructedWith(
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
+		);
+		$this->handle($request)->shouldBe($response2);
+	}
+
+	public function it_throws_on_invalid_default_producer(
 		PH\MetadataProviderInterface $metadataProvider,
 		PluginManagerInterface $handlerManager,
 		PluginManagerInterface $consumerManager,
@@ -86,6 +135,7 @@ class MiddlewareSpec extends ObjectBehavior
 			yield from [];
 		};
 		$handlerData = ['test' => 123];
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
 		$metadataProvider->getAttributes($handlerName, $httpMethod)->shouldBeCalledOnce()->will($emptyGenerator);
 		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
@@ -100,10 +150,12 @@ class MiddlewareSpec extends ObjectBehavior
 			return $response->getWrappedObject();
 		};
 
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn(null);
+
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response);
+		$this->shouldThrow(\LogicException::class)->during('handle', [$request]);
 	}
 
 	public function it_generates_successful_response_with_first_producer_if_there_is_no_accept(
@@ -159,12 +211,12 @@ class MiddlewareSpec extends ObjectBehavior
 		$producer->assemble($handlerData)->shouldBeCalledOnce()->willReturn($responseBody);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->handle($request)->shouldBe($response2);
 	}
 
-	public function it_generates_bad_request_response_on_invalid_accept_if_there_is_producer(
+	public function it_generates_bad_request_response_with_default_producer_on_invalid_accept_if_there_is_producer(
 		PH\MetadataProviderInterface $metadataProvider,
 		PluginManagerInterface $handlerManager,
 		PluginManagerInterface $consumerManager,
@@ -172,11 +224,16 @@ class MiddlewareSpec extends ObjectBehavior
 		PluginManagerInterface $producerManager,
 		Request $request,
 		Response $response,
-		Response $response1
+		Response $response1,
+		Response $response2,
+		Response $response3,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
 		$httpMethod = 'TEST';
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 
@@ -187,12 +244,18 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			return $response->getWrappedObject();
 		};
-		$response->withStatus(400, 'Invalid Accept header')->shouldBeCalledOnce()->willReturn($response1);
+
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble('Invalid Accept header')->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+		$response2->withStatus(400, 'Bad request')->shouldBeCalledOnce()->willReturn($response3);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response1);
+		$this->handle($request)->shouldBe($response3);
 	}
 
 	public function it_generates_not_acceptable_response_if_producer_does_not_match_accept(
@@ -203,7 +266,11 @@ class MiddlewareSpec extends ObjectBehavior
 		PluginManagerInterface $producerManager,
 		Request $request,
 		Response $response,
-		Response $response1
+		Response $response1,
+		Response $response2,
+		Response $response3,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
@@ -216,6 +283,7 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			yield from $producerMetadata;
 		};
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 		$metadataProvider->getProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->will($producerMetadataGenerator);
@@ -227,12 +295,18 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			return $response->getWrappedObject();
 		};
-		$response->withStatus(406, 'Not acceptable')->shouldBeCalledOnce()->willReturn($response1);
+
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble(null)->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+		$response2->withStatus(406, 'Not acceptable')->shouldBeCalledOnce()->willReturn($response3);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response1);
+		$this->handle($request)->shouldBe($response3);
 	}
 
 	public function it_throws_on_invalid_producer_if_it_matches_accept(
@@ -269,7 +343,7 @@ class MiddlewareSpec extends ObjectBehavior
 		};
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->shouldThrow(\LogicException::class)->during('handle', [$request]);
 	}
@@ -328,7 +402,7 @@ class MiddlewareSpec extends ObjectBehavior
 		$producer->assemble($handlerData)->shouldBeCalledOnce()->willReturn($responseBody);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->handle($request)->shouldBe($response2);
 	}
@@ -400,7 +474,7 @@ class MiddlewareSpec extends ObjectBehavior
 		$producer->assembleHeaders($handlerData)->shouldBeCalledOnce()->will($producerHeaderGenerator);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->handle($request)->shouldBe($response4);
 	}
@@ -465,7 +539,7 @@ class MiddlewareSpec extends ObjectBehavior
 		$producer->assemble($exceptionPayload)->shouldBeCalledOnce()->willReturn($responseBody);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->handle($request)->shouldBe($response3);
 	}
@@ -545,7 +619,7 @@ class MiddlewareSpec extends ObjectBehavior
 		$producer->assemble($exceptionPayload)->shouldBeCalledOnce()->willReturn($responseBody);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->handle($request)->shouldBe($response5);
 	}
@@ -559,11 +633,16 @@ class MiddlewareSpec extends ObjectBehavior
 		PluginManagerInterface $producerManager,
 		Request $request,
 		Response $response,
-		Response $response1
+		Response $response1,
+		Response $response2,
+		Response $response3,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
 		$httpMethod = 'TEST';
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
@@ -575,12 +654,18 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			return $response->getWrappedObject();
 		};
-		$response->withStatus(400, 'Content-Type header should be declared')->shouldBeCalledOnce()->willReturn($response1);
+
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble('Content-Type header should be declared')->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+		$response2->withStatus(400, 'Bad request')->shouldBeCalledOnce()->willReturn($response3);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response1);
+		$this->handle($request)->shouldBe($response3);
 	}
 
 	public function it_generates_bad_request_response_if_there_is_consumer_and_several_content_types(
@@ -591,11 +676,16 @@ class MiddlewareSpec extends ObjectBehavior
 		PluginManagerInterface $producerManager,
 		Request $request,
 		Response $response,
-		Response $response1
+		Response $response1,
+		Response $response2,
+		Response $response3,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
 		$httpMethod = 'TEST';
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
@@ -608,12 +698,18 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			return $response->getWrappedObject();
 		};
-		$response->withStatus(400, 'Multiple Content-Type headers are not allowed')->shouldBeCalledOnce()->willReturn($response1);
+
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble('Multiple Content-Type headers are not allowed')->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+		$response2->withStatus(400, 'Bad request')->shouldBeCalledOnce()->willReturn($response3);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response1);
+		$this->handle($request)->shouldBe($response3);
 	}
 
 	public function it_generates_bad_request_response_on_invalid_content_type_if_there_is_consumer(
@@ -624,11 +720,16 @@ class MiddlewareSpec extends ObjectBehavior
 		PluginManagerInterface $producerManager,
 		Request $request,
 		Response $response,
-		Response $response1
+		Response $response1,
+		Response $response2,
+		Response $response3,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
 		$httpMethod = 'TEST';
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 		$metadataProvider->hasProducers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
@@ -642,12 +743,18 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			return $response->getWrappedObject();
 		};
-		$response->withStatus(400, 'Invalid Content-Type header')->shouldBeCalledOnce()->willReturn($response1);
+
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble('Invalid Content-Type header')->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+		$response2->withStatus(400, 'Bad request')->shouldBeCalledOnce()->willReturn($response3);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response1);
+		$this->handle($request)->shouldBe($response3);
 	}
 
 	public function it_generates_unsupported_media_type_response_if_consumer_does_not_match_content_type(
@@ -658,7 +765,11 @@ class MiddlewareSpec extends ObjectBehavior
 		PluginManagerInterface $producerManager,
 		Request $request,
 		Response $response,
-		Response $response1
+		Response $response1,
+		Response $response2,
+		Response $response3,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
@@ -671,6 +782,7 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			yield from $consumerMetadata;
 		};
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 		$metadataProvider->getConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->will($consumerMetadataGenerator);
@@ -685,12 +797,18 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			return $response->getWrappedObject();
 		};
-		$response->withStatus(415, 'Unsupported media type')->shouldBeCalledOnce()->willReturn($response1);
+
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble(null)->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+		$response2->withStatus(415, 'Unsupported media type')->shouldBeCalledOnce()->willReturn($response3);
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response1);
+		$this->handle($request)->shouldBe($response3);
 	}
 
 	public function it_throws_on_invalid_consumer_if_it_matches_content_type(
@@ -730,7 +848,7 @@ class MiddlewareSpec extends ObjectBehavior
 		};
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->shouldThrow(\LogicException::class)->during('handle', [$request]);
 	}
@@ -744,8 +862,12 @@ class MiddlewareSpec extends ObjectBehavior
 		Request $request,
 		StreamInterface $requestBody,
 		$handler,
+		PH\Consumer\ConsumerInterface $consumer,
 		Response $response,
-		PH\Consumer\ConsumerInterface $consumer
+		Response $response1,
+		Response $response2,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
@@ -766,6 +888,7 @@ class MiddlewareSpec extends ObjectBehavior
 			yield from $consumerMetadata;
 		};
 		$consumerData = ['consumer_test' => 123];
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(true);
 		$metadataProvider->getConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->will($consumerMetadataGenerator);
@@ -791,10 +914,16 @@ class MiddlewareSpec extends ObjectBehavior
 
 		$consumer->parse($requestBody, $requestData, $consumerMetadata[1][0], [])->shouldBeCalledOnce()->willReturn($consumerData);
 
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble($handlerData)->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response);
+		$this->handle($request)->shouldBe($response2);
 	}
 
 	public function it_throws_on_invalid_attribute(
@@ -831,7 +960,7 @@ class MiddlewareSpec extends ObjectBehavior
 		};
 
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, []
 		);
 		$this->shouldThrow(\LogicException::class)->during('handle', [$request]);
 	}
@@ -847,10 +976,14 @@ class MiddlewareSpec extends ObjectBehavior
 		Request $request2,
 		Request $request3,
 		$handler,
-		Response $response,
 		PH\Attribute\AttributeInterface $attribute1,
 		PH\Attribute\AttributeInterface $attribute2,
-		PH\Attribute\AttributeInterface $attribute3
+		PH\Attribute\AttributeInterface $attribute3,
+		Response $response,
+		Response $response1,
+		Response $response2,
+		PH\Producer\ProducerInterface $producer,
+		StreamInterface $responseBody
 	)
 	{
 		$handlerName = 'test_handler';
@@ -865,6 +998,7 @@ class MiddlewareSpec extends ObjectBehavior
 		{
 			yield from $attributeMetadata;
 		};
+		$defaultProducer = ['test/mime', 'test_producer', ['test_option' => 123]];
 
 		$metadataProvider->hasConsumers($handlerName, $httpMethod)->shouldBeCalledOnce()->willReturn(false);
 		$metadataProvider->getAttributes($handlerName, $httpMethod)->shouldBeCalledOnce()->will($attributeMetadataGenerator);
@@ -887,9 +1021,15 @@ class MiddlewareSpec extends ObjectBehavior
 		$attribute2->__invoke($request1)->shouldBeCalledOnce()->willReturn($request2);
 		$attribute3->__invoke($request2)->shouldBeCalledOnce()->willReturn($request3);
 
+		$producerManager->build($defaultProducer[1], $defaultProducer[2])->shouldBeCalledOnce()->willReturn($producer);
+		$producer->assemble($handlerData)->shouldBeCalledOnce()->willReturn($responseBody);
+
+		$response->withHeader('Content-Type', $defaultProducer[0])->shouldBeCalledOnce()->willReturn($response1);
+		$response1->withBody($responseBody)->shouldBeCalledOnce()->willReturn($response2);
+
 		$this->beConstructedWith(
-			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator
+			$handlerName, $metadataProvider, $handlerManager, $consumerManager, $attributeManager, $producerManager, $responseGenerator, $defaultProducer
 		);
-		$this->handle($request)->shouldBe($response);
+		$this->handle($request)->shouldBe($response2);
 	}
 }

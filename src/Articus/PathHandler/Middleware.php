@@ -48,6 +48,11 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	protected $responseGenerator;
 
 	/**
+	 * @var string
+	 */
+	protected $defaultProducer;
+
+	/**
 	 * Middleware constructor.
 	 * @param string $handlerName
 	 * @param MetadataProviderInterface $metadataProvider
@@ -56,7 +61,8 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	 * @param PluginManagerInterface $attributePluginManager
 	 * @param PluginManagerInterface $producerPluginManager
 	 * @param callable $responseGenerator
-	 */
+	 * @param array $defaultProducer tuple (<media type>, <producer name>, <producer options>)
+ */
 	public function __construct(
 		string $handlerName,
 		MetadataProviderInterface $metadataProvider,
@@ -64,7 +70,8 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		PluginManagerInterface $consumerPluginManager,
 		PluginManagerInterface $attributePluginManager,
 		PluginManagerInterface $producerPluginManager,
-		callable $responseGenerator
+		callable $responseGenerator,
+		array $defaultProducer
 	)
 	{
 		$this->handlerName = $handlerName;
@@ -74,6 +81,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		$this->attributePluginManager = $attributePluginManager;
 		$this->producerPluginManager = $producerPluginManager;
 		$this->responseGenerator = $responseGenerator;
+		$this->defaultProducer = $defaultProducer;
 	}
 
 	/**
@@ -172,7 +180,6 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		}
 		catch (Exception\HttpCode $e)
 		{
-			//TODO use default producer to prepare body?
 			$result = $this->populateResponseWithException($e, $result, null);
 		}
 
@@ -244,19 +251,27 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	 */
 	protected function populateResponseWithData($data, Response $response, ?Producer\ProducerInterface $producer): Response
 	{
-		if ($producer !== null)
+		if ($producer === null)
 		{
-			$stream = $producer->assemble($data);
-			if ($stream instanceof StreamInterface)
+			[$mediaType, $name, $options] = $this->defaultProducer;
+			$producer = $this->producerPluginManager->build($name, $options);
+			if (!($producer instanceof Producer\ProducerInterface))
 			{
-				$response = $response->withBody($stream);
+				throw new \LogicException(\sprintf('Invalid default producer %s.', $name));
 			}
-			if ($producer instanceof Producer\HeaderInterface)
+			$response = $response->withHeader('Content-Type', $mediaType);
+		}
+
+		$stream = $producer->assemble($data);
+		if ($stream instanceof StreamInterface)
+		{
+			$response = $response->withBody($stream);
+		}
+		if ($producer instanceof Producer\HeaderInterface)
+		{
+			foreach ($producer->assembleHeaders($data) as $name => $value)
 			{
-				foreach ($producer->assembleHeaders($data) as $name => $value)
-				{
-					$response = $response->withHeader($name, $value);
-				}
+				$response = $response->withHeader($name, $value);
 			}
 		}
 		return $response;

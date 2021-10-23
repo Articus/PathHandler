@@ -42,6 +42,41 @@ class RouteInjectionFactorySpec extends ObjectBehavior
 		$this->__invoke($container, 'router')->shouldBeAnInstanceOf(PH\Router\FastRoute::class);
 	}
 
+	public function it_returns_router_using_custom_default_producer(
+		ContainerInterface $container,
+		PH\MetadataProviderInterface $metadataProvider,
+		PH\Handler\PluginManager $handlerManager,
+		PH\Consumer\PluginManager $consumerManager,
+		PH\Attribute\PluginManager $attributeManager,
+		PH\Producer\PluginManager $producerManager,
+		Response $response
+	)
+	{
+		$config = [
+			PH\RouteInjectionFactory::class => [
+				'default_producer' => [
+					'media_type' => 'test/mime',
+					'name' => 'test_producer',
+					'options' => ['test_option' => 123]
+				],
+			]
+		];
+		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
+		$container->get(PH\MetadataProviderInterface::class)->shouldBeCalledOnce()->willReturn($metadataProvider);
+		$container->get(PH\Handler\PluginManager::class)->shouldBeCalledOnce()->willReturn($handlerManager);
+		$container->get(PH\Consumer\PluginManager::class)->shouldBeCalledOnce()->willReturn($consumerManager);
+		$container->get(PH\Attribute\PluginManager::class)->shouldBeCalledOnce()->willReturn($attributeManager);
+		$container->get(PH\Producer\PluginManager::class)->shouldBeCalledOnce()->willReturn($producerManager);
+		$responseGenerator = function () use ($response)
+		{
+			return $response;
+		};
+		$container->get(Response::class)->shouldBeCalledOnce()->willReturn($responseGenerator);
+
+		$this->__invoke($container, 'router')->shouldBeAnInstanceOf(PH\Router\FastRoute::class);
+		//TODO check that middleware received provided default producer
+	}
+
 	public function it_returns_router_with_simple_config_using_external_cache_service(
 		ContainerInterface $container,
 		PH\MetadataProviderInterface $metadataProvider,

@@ -29,14 +29,9 @@ abstract class AbstractProducer implements ProducerInterface
 	 */
 	public function assemble($data): ?StreamInterface
 	{
-		$result = null;
-		if ($data !== null)
-		{
-			$result = $this->createStream();
-			$result->write($this->stringify($data));
-			$result->rewind();
-		}
-
+		$result = $this->createStream();
+		$result->write($this->stringify($data));
+		$result->rewind();
 		return $result;
 	}
 

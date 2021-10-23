@@ -23,6 +23,19 @@ class TransferSpec extends ObjectBehavior
 		$this->shouldImplement(PH\Producer\ProducerInterface::class);
 	}
 
+	public function it_transfers_null_to_json(DTService $dt, StreamInterface $stream)
+	{
+		$objectOrArray = null;
+		$json = 'null';
+
+		$dt->extractFromTypedData()->shouldNotBeCalled();
+
+		$stream->write($json)->shouldBeCalledOnce();
+		$stream->rewind()->shouldBeCalledOnce();
+
+		$this->assemble($objectOrArray)->shouldBe($stream);
+	}
+
 	public function it_transfers_scalar_to_json(DTService $dt, StreamInterface $stream)
 	{
 		$objectOrArray = 123;

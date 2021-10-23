@@ -9,8 +9,9 @@ Articus\PathHandler\Producer\PluginManager:
     MyProducer: My\Producer 
 ```
 
-Library provides three producers out of the box:
+Library provides four producers out of the box:
 
+- `Text` for strings and stringable objects
 - `Json` to encode operation result as JSON string
 - `Transfer` - extension of `Json` producer that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to extract data from operation result before encoding
 - `Template` that gets template name and data from operation result and uses `Mezzio\Template\TemplateRendererInterface` to render it 
@@ -151,4 +152,16 @@ class Handler
         return ['some' => 'thing']; 
     }
 }
+```
+
+For requests with mangled or unsupported `Accept` header library will generate `text/plain` response using `Text` producer. You may specify another producer for such situations in configuration:
+
+```YAML
+Articus\PathHandler\RouteInjectionFactory:
+  # Same arguments as in producer declaration for handlers  
+  default_producer:
+    media_type: custom-media-type/for-bad-requests
+    name: MyProducerForBadRequests
+    options:
+      some: value
 ```

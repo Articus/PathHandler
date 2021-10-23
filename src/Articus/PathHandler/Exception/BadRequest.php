@@ -5,8 +5,8 @@ namespace Articus\PathHandler\Exception;
 
 class BadRequest extends HttpCode
 {
-	public function __construct(string $reason = 'Bad request', \Exception $previous = null)
+	public function __construct(?string $payload = null, \Exception $previous = null)
 	{
-		parent::__construct(400, $reason, null, $previous);
+		parent::__construct(400, 'Bad request', $payload, $previous);
 	}
 }

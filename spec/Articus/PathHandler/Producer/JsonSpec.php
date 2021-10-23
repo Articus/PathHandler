@@ -19,9 +19,11 @@ class JsonSpec extends ObjectBehavior
 		$this->shouldImplement(PH\Producer\ProducerInterface::class);
 	}
 
-	public function it_produces_null_from_null_data()
+	public function it_produces_json_null_from_null_data(StreamInterface $stream)
 	{
-		$this->assemble(null)->shouldBe(null);
+		$stream->write(\json_encode(null))->shouldBeCalledOnce();
+		$stream->rewind()->shouldBeCalledOnce();
+		$this->assemble(null)->shouldBe($stream);
 	}
 
 	public function it_produces_json_from_json_serializable_data(StreamInterface $stream)

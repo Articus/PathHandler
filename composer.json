@@ -21,10 +21,10 @@
     "laminas/laminas-servicemanager": "^3.4"
   },
   "suggest": {
-    "doctrine/annotations": "It is required for Articus\\PathHandler\\MetadataProvider\\Annotation (default metadata provider).",
-    "psr/simple-cache": "It is required for Articus\\PathHandler\\MetadataProvider\\Annotation (default metadata provider).",
-    "laminas/laminas-stdlib": "It is required for Articus\\PathHandler\\MetadataProvider\\Annotation (default metadata provider).",
-    "nikic/fast-route": "It is required for Articus\\PathHandler\\Router\\FastRoute (default router)",
+    "doctrine/annotations": "It is required for Articus\\PathHandler\\MetadataProvider\\Annotation",
+    "psr/simple-cache": "It is required for Articus\\PathHandler\\MetadataProvider\\Annotation and Articus\\PathHandler\\MetadataProvider\\PhpAttribute",
+    "laminas/laminas-stdlib": "It is required for Articus\\PathHandler\\MetadataProvider\\Annotation and Articus\\PathHandler\\MetadataProvider\\PhpAttribute",
+    "nikic/fast-route": "It is required for Articus\\PathHandler\\Router\\FastRoute",
     "articus/data-transfer": "It is required for Articus\\PathHandler\\Attribute\\Transfer and Articus\\PathHandler\\Producer\\Transfer"
   },
   "require-dev": {

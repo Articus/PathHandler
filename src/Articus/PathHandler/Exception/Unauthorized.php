@@ -5,8 +5,8 @@ namespace Articus\PathHandler\Exception;
 
 class Unauthorized extends HttpCode
 {
-	public function __construct(string $reason = 'Unauthorized', \Exception $previous = null)
+	public function __construct(?string $payload = null, \Exception $previous = null)
 	{
-		parent::__construct(401, $reason, null, $previous);
+		parent::__construct(401, 'Unauthorized', $payload, $previous);
 	}
 }
