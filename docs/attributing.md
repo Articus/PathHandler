@@ -249,6 +249,7 @@ class Handler
 
 ## Build-in attributes
 Library provides two attributes out of the box:
+
 - `IdentifiableValueLoad` that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to load some value by its identifier stored in request attribute
 - `Transfer` that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to construct DTO and fill it with request data only if this data is valid.
 
@@ -259,7 +260,8 @@ Add `Articus\DataTransfer\IdentifiableValueLoader` service inside your container
 ```PHP
 namespace My;
 
-use Articus\DataTransfer\IdentifiableValueLoader;use Psr\Container\ContainerInterface;
+use Articus\DataTransfer\IdentifiableValueLoader;
+use Psr\Container\ContainerInterface;
 
 class LoaderFactory
 {
