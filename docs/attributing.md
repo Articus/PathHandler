@@ -247,7 +247,90 @@ class Handler
 }
 ```
 
-Library provides just one attribute out of the box - `Transfer` that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to construct DTO and fill it with request data only if this data is valid.
+## Build-in attributes
+Library provides two attributes out of the box:
+- `IdentifiableValueLoad` that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to load some value by its identifier stored in request attribute
+- `Transfer` that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to construct DTO and fill it with request data only if this data is valid.
+
+### `IdentifiableValueLoad` usage
+
+Add `Articus\DataTransfer\IdentifiableValueLoader` service inside your container, for example with a factory like:
+
+```PHP
+namespace My;
+
+use Articus\DataTransfer\IdentifiableValueLoader;use Psr\Container\ContainerInterface;
+
+class LoaderFactory
+{
+    public function __invoke(ContainerInterface $container)
+    {
+        return new IdentifiableValueLoader([
+            "entity_type" => [
+                static function (EntityClass $value) {
+                    return $value->getId();//...or any other ay to get id from EntityClass instance
+                },
+                static function (array $ids) {
+                    /** @var EntityClass[] $result */
+                    $result = []
+                    // load EntityClass instances for specified ids from database, external service, etc...
+                    return $result;
+                }
+            ]           
+        ])
+    }
+}
+```
+
+And then just add attribute to your handler: 
+
+```PHP
+namespace My;
+
+use Articus\PathHandler\Annotation as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * @PHA\Route(pattern="/entity/{entity_id:[1-9][0-9]*}")
+ * @PHA\Attribute(name="IdentifiableValueLoad", options={"id_attr":"entity_id","type":"entity_type","value_attr":"entity"})
+ */
+class Handler
+{
+    /**
+     * @PHA\Get()
+     */
+    public function handleGet(ServerRequestInterface $request)
+    {
+        /** @var EntityClass $entity */
+        $entity = $request->getAttribute('entity');//This attribute will store loaded identifiable value
+    }
+}
+```
+```PHP
+namespace My;
+
+use Articus\PathHandler\PhpAttribute as PHA;
+use Psr\Http\Message\ServerRequestInterface;
+
+#[PHA\Route("/entity/{entity_id:[1-9][0-9]*}")]
+#[PHA\Attribute("IdentifiableValueLoad", ["id_attr" => "entity_id", "type" => "entity_type", "value_attr" => "entity"])
+class Handler
+{
+    #[PHA\Get()]
+    public function handleGet(ServerRequestInterface $request)
+    {
+        /** @var EntityClass $entity */
+        $entity = $request->getAttribute('entity');//This attribute will store loaded identifiable value
+    }
+}
+```
+
+For details see available options: `Articus\PathHandler\Attribute\Options\IdentifiableValueLoad`.
+
+
+### `Transfer` usage
+
+Set up `Articus\DataTransfer\Service` (check [Data Transfer documentation](https://github.com/Articus/DataTransfer#how-to-use) for details) and then just add attribute to your handler: 
 
 ```PHP
 namespace My;
