@@ -14,14 +14,19 @@ class PluginManager extends AbstractPluginManager
 
 	protected $factories = [
 		IdentifiableValueLoad::class => Factory\IdentifiableValueLoad::class,
+		IdentifiableValueListLoad::class => Factory\IdentifiableValueListLoad::class,
 		Transfer::class => Factory\Transfer::class,
 	];
 
 	protected $aliases = [
 		'IdentifiableValueLoad' => IdentifiableValueLoad::class,
 		'identifiableValueLoad' => IdentifiableValueLoad::class,
+		'IdentifiableValueListLoad' => IdentifiableValueListLoad::class,
+		'identifiableValueListLoad' => IdentifiableValueListLoad::class,
 		'LoadById' => IdentifiableValueLoad::class,
 		'loadById' => IdentifiableValueLoad::class,
+		'LoadByIds' => IdentifiableValueListLoad::class,
+		'loadByIds' => IdentifiableValueListLoad::class,
 		'Transfer' => Transfer::class,
 		'transfer' => Transfer::class,
 	];
