@@ -55,25 +55,6 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_throws_on_data_transfer_from_invalid_parsed_body(DTService $dt, Request $in, Invokable $instanciator, \stdClass $object)
-	{
-		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
-		$subset = '';
-		$objectAttr = 'object';
-		$instanciatorArgAttrs = [];
-		$errorAttr = null;
-
-		$data = 123;
-
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
-
-		$dt->transferToTypedData($data, $object, $subset)->shouldNotBeCalled();
-
-		$this->beConstructedWith($dt, $source, $type, $subset, $objectAttr, $instanciator, $instanciatorArgAttrs, $errorAttr);
-		$this->shouldThrow(PH\Exception\BadRequest::class)->during('__invoke', [$in]);
-	}
-
 	public function it_transfers_data_from_headers(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_HEADER;

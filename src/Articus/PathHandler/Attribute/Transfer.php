@@ -120,10 +120,9 @@ class Transfer implements AttributeInterface
 
 	/**
 	 * @param Request $request
-	 * @return array
-	 * @throws Exception\BadRequest
+	 * @return mixed
 	 */
-	protected function getData(Request $request): array
+	protected function getData(Request $request)
 	{
 		$data = null;
 		switch ($this->source)
@@ -133,10 +132,6 @@ class Transfer implements AttributeInterface
 				break;
 			case self::SOURCE_POST:
 				$data = $request->getParsedBody();
-				if (!\is_array($data))
-				{
-					throw new Exception\BadRequest('Unexpected content');
-				}
 				break;
 			case self::SOURCE_ROUTE:
 				$routeResult = $request->getAttribute(RouteResult::class);
