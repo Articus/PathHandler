@@ -22,7 +22,7 @@ class AnnotationSpec extends ObjectBehavior
 		$configKey = PH\MetadataProvider\Annotation::class;
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 		$config->offsetExists($configKey)->shouldBeCalledOnce()->willReturn(true);
-		$config->offsetGet($configKey)->shouldBeCalledOnce();
+		$config->offsetGet($configKey)->shouldBeCalledOnce()->willReturn(null);
 
 		$service = $this->__invoke($container, '');
 		$service->shouldBeAnInstanceOf(PH\MetadataProvider\Annotation::class);
@@ -37,7 +37,7 @@ class AnnotationSpec extends ObjectBehavior
 		$configKey = 'test_config_key';
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 		$config->offsetExists($configKey)->shouldBeCalledOnce()->willReturn(true);
-		$config->offsetGet($configKey)->shouldBeCalledOnce();
+		$config->offsetGet($configKey)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($configKey);
 		$service = $this->__invoke($container, '');
@@ -53,7 +53,7 @@ class AnnotationSpec extends ObjectBehavior
 		$configKey = 'test_config_key';
 		$container->get('config')->shouldBeCalledOnce()->willReturn($config);
 		$config->offsetExists($configKey)->shouldBeCalledOnce()->willReturn(true);
-		$config->offsetGet($configKey)->shouldBeCalledOnce();
+		$config->offsetGet($configKey)->shouldBeCalledOnce()->willReturn(null);
 
 		$service = $this::__callStatic($configKey, [$container, '', null]);
 		$service->shouldBeAnInstanceOf(PH\MetadataProvider\Annotation::class);
