@@ -128,7 +128,7 @@ class AnnotationSpec extends ObjectBehavior
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\LogicException::class)->during('getHttpMethods', [$handlerName]);
+		$this->shouldThrow(\Throwable::class)->during('getHttpMethods', [$handlerName]);
 		$this->__destruct();
 	}
 
@@ -145,7 +145,7 @@ class AnnotationSpec extends ObjectBehavior
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\LogicException::class)->during('getHttpMethods', [$handlerName]);
+		$this->shouldThrow(\Throwable::class)->during('getHttpMethods', [$handlerName]);
 		$this->__destruct();
 	}
 
