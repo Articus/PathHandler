@@ -7,6 +7,7 @@
 composer.lock export-ignore
 composer.lock.* export-ignore
 composer.phar export-ignore
+composer.phar.* export-ignore
 mkdocs.yml export-ignore
 phpspec.yml export-ignore
 phpspec.yml.* export-ignore
