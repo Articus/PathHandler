@@ -3,21 +3,25 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Producer\Factory;
 
-use Articus\PathHandler as PH;
 use PhpSpec\ObjectBehavior;
-use Interop\Container\ContainerInterface;
-use Psr\Http\Message\StreamInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 class JsonSpec extends ObjectBehavior
 {
-	public function it_builds_json_producer(ContainerInterface $container, StreamInterface $stream)
+	public function it_builds_json_producer(ContainerInterface $container, StreamFactoryInterface $streamFactory)
 	{
-		$streamFactory = function () use ($stream)
-		{
-			return $stream;
-		};
+		$flags = 123;
+		$depth = 234;
+		$options = [
+			'flags' => $flags,
+			'depth' => $depth,
+		];
+		$container->get(StreamFactoryInterface::class)->shouldBeCalledOnce()->willReturn($streamFactory);
 
-		$container->get(StreamInterface::class)->shouldBeCalledOnce()->willReturn($streamFactory);
-		$this->__invoke($container, 'test', [])->shouldBeAnInstanceOf(PH\Producer\Json::class);
+		$service = $this->__invoke($container, 'test', $options);
+		$service->shouldHaveProperty('streamFactory', $streamFactory);
+		$service->shouldHaveProperty('encodeFlags', $flags);
+		$service->shouldHaveProperty('depth', $depth);
 	}
 }

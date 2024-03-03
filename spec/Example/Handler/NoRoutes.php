@@ -3,15 +3,12 @@ declare(strict_types=1);
 
 namespace spec\Example\Handler;
 
-use Articus\PathHandler\Annotation as PHA;
+use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class NoRoutes
 {
-	/**
-	 * @PHA\Get()
-	 * @param Request $request
-	 */
+	#[PHA\Get()]
 	public function read(Request $request)
 	{
 	}

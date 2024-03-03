@@ -3,9 +3,19 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Header;
 
+use InvalidArgumentException;
+use LogicException;
+use function count;
+use function ord;
+use function sprintf;
+use function str_split;
+use function strlen;
+use function substr;
+
 /**
  * A bit lengthy, but fairly optimized implementation of "Accept" HTTP header parser and matcher.
  * @see https://tools.ietf.org/html/rfc7231#section-5.3.2
+ * @psalm-type MediaRange = array{0: string, 1: string, 2: array<int, array{0: string, 1: string}>}
  */
 class Accept
 {
@@ -37,20 +47,20 @@ class Accept
 	protected const DEFAULT_CONTEXT = [[], '', '', [], '', ''];
 
 	/**
-	 * List of tuples (<type>, <subtype>, list of tuples (<parameter name>, <parameter value>))
-	 * @var array<int, array{0: string, 1: string, 2: array<int, array{0: string, 1: string}>}>
+	 * List of tuples ("type", "subtype", list of tuples ("parameter name", "parameter value"))
+	 * @var array<int, MediaRange>
 	 */
-	protected $mediaRanges;
+	protected array $mediaRanges;
 
 	/**
 	 * @var int
 	 */
-	protected $mediaRangeCount;
+	protected int $mediaRangeCount;
 
 	public function __construct(string $headerValue)
 	{
 		$this->mediaRanges = self::parseHeaderValue($headerValue);
-		$this->mediaRangeCount = \count($this->mediaRanges);
+		$this->mediaRangeCount = count($this->mediaRanges);
 	}
 
 	protected static function parseHeaderValue(string $headerValue): array
@@ -60,7 +70,7 @@ class Accept
 		//Initial state
 		$state = self::STATE_TYPE_HEAD;
 		//Process header value
-		foreach ((empty($headerValue) ? [] : \str_split($headerValue)) as $index => $symbol)
+		foreach ((empty($headerValue) ? [] : str_split($headerValue)) as $index => $symbol)
 		{
 			[$state, $action] = self::switchState($state, $index, $symbol);
 			switch ($action)
@@ -96,25 +106,25 @@ class Accept
 		switch ($state)
 		{
 			case self::STATE_TYPE_HEAD:
-				throw new \InvalidArgumentException('Invalid media range: empty type');
+				throw new InvalidArgumentException('Invalid media range: empty type');
 			case self::STATE_TYPE_TAIL:
-				throw new \InvalidArgumentException('Invalid media range: no subtype');
+				throw new InvalidArgumentException('Invalid media range: no subtype');
 			case self::STATE_SUBTYPE_HEAD:
-				throw new \InvalidArgumentException('Invalid media range: empty subtype');
+				throw new InvalidArgumentException('Invalid media range: empty subtype');
 			case self::STATE_SUBTYPE_TAIL:
 				//Correct finite state, complete last media range
 				$mediaRanges[] = [$type, $subtype, $params];
 				break;
 			case self::STATE_SPACE_AFTER_SUBTYPE:
-				throw new \InvalidArgumentException('Invalid header: ended with whitespace after subtype');
+				throw new InvalidArgumentException('Invalid header: ended with whitespace after subtype');
 			case self::STATE_SPACE_BEFORE_PARAM_NAME:
-				throw new \InvalidArgumentException('Invalid media range: no parameter');
+				throw new InvalidArgumentException('Invalid media range: no parameter');
 			case self::STATE_PARAM_NAME_TAIL:
-				throw new \InvalidArgumentException('Invalid media range parameter: no value');
+				throw new InvalidArgumentException('Invalid media range parameter: no value');
 			case self::STATE_PARAM_VALUE_HEAD:
-				throw new \InvalidArgumentException('Invalid media range parameter: empty unquoted value');
+				throw new InvalidArgumentException('Invalid media range parameter: empty unquoted value');
 			case self::STATE_PARAM_QUOTED_VALUE_BODY:
-				throw new \InvalidArgumentException('Invalid media range parameter: no closing quote for value');
+				throw new InvalidArgumentException('Invalid media range parameter: no closing quote for value');
 			case self::STATE_PARAM_UNQUOTED_VALUE_TAIL:
 			case self::STATE_PARAM_QUOTED_VALUE_TAIL:
 				//Correct finite state, complete last parameter and complete last media range
@@ -122,13 +132,13 @@ class Accept
 				$mediaRanges[] = [$type, $subtype, $params];
 				break;
 			case self::STATE_PARAM_QUOTED_VALUE_ESCAPED_SYMBOL:
-				throw new \InvalidArgumentException('Invalid media range parameter quoted value: no symbol to escape');
+				throw new InvalidArgumentException('Invalid media range parameter quoted value: no symbol to escape');
 			case self::STATE_SPACE_AFTER_PARAM_VALUE:
-				throw new \InvalidArgumentException('Invalid header: ended with whitespace after parameter value');
+				throw new InvalidArgumentException('Invalid header: ended with whitespace after parameter value');
 			case self::STATE_SPACE_BEFORE_TYPE:
-				throw new \InvalidArgumentException('Invalid header: no media range');
+				throw new InvalidArgumentException('Invalid header: no media range');
 			default:
-				throw new \LogicException(\sprintf('Unknown state %s', $state));
+				throw new LogicException(sprintf('Unknown state %s', $state));
 		}
 
 		return $mediaRanges;
@@ -153,7 +163,7 @@ class Accept
 					case "U": case "V": case "W": case "X": case "Y": case "Z":
 						return [self::STATE_TYPE_TAIL, self::ACTION_AUGMENT_TYPE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_TYPE_TAIL:
 				switch ($symbol)
@@ -172,7 +182,7 @@ class Accept
 					case "/":
 						return [self::STATE_SUBTYPE_HEAD, self::ACTION_NONE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_SUBTYPE_HEAD:
 				switch ($symbol)
@@ -189,7 +199,7 @@ class Accept
 					case "U": case "V": case "W": case "X": case "Y": case "Z":
 						return [self::STATE_SUBTYPE_TAIL, self::ACTION_AUGMENT_SUBTYPE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_SUBTYPE_TAIL:
 				switch ($symbol)
@@ -212,7 +222,7 @@ class Accept
 					case ",":
 						return [self::STATE_SPACE_BEFORE_TYPE, self::ACTION_COMPLETE_MEDIA_RANGE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_SPACE_AFTER_SUBTYPE:
 				switch ($symbol)
@@ -224,7 +234,7 @@ class Accept
 					case ",":
 						return [self::STATE_SPACE_BEFORE_TYPE, self::ACTION_COMPLETE_MEDIA_RANGE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_SPACE_BEFORE_PARAM_NAME:
 				switch ($symbol)
@@ -243,7 +253,7 @@ class Accept
 					case " ": case "\t":
 						return [$state, self::ACTION_NONE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_PARAM_NAME_TAIL:
 				switch ($symbol)
@@ -262,7 +272,7 @@ class Accept
 					case "=":
 						return [self::STATE_PARAM_VALUE_HEAD, self::ACTION_NONE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_PARAM_VALUE_HEAD:
 				switch ($symbol)
@@ -281,7 +291,7 @@ class Accept
 					case '"':
 						return [self::STATE_PARAM_QUOTED_VALUE_BODY, self::ACTION_NONE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_PARAM_UNQUOTED_VALUE_TAIL:
 				switch ($symbol)
@@ -304,7 +314,7 @@ class Accept
 					case ",":
 						return [self::STATE_SPACE_BEFORE_TYPE, self::ACTION_COMPLETE_PARAM_AND_MEDIA_RANGE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_PARAM_QUOTED_VALUE_BODY:
 				switch ($symbol)
@@ -347,7 +357,7 @@ class Accept
 					case '"':
 						return [self::STATE_PARAM_QUOTED_VALUE_TAIL, self::ACTION_NONE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_PARAM_QUOTED_VALUE_ESCAPED_SYMBOL:
 				switch ($symbol)
@@ -355,7 +365,7 @@ class Accept
 					case '"': case "\\":
 						return [self::STATE_PARAM_QUOTED_VALUE_BODY, self::ACTION_AUGMENT_PARAM_VALUE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_PARAM_QUOTED_VALUE_TAIL:
 				switch ($symbol)
@@ -367,7 +377,7 @@ class Accept
 					case ",":
 						return [self::STATE_SPACE_BEFORE_TYPE, self::ACTION_COMPLETE_PARAM_AND_MEDIA_RANGE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_SPACE_AFTER_PARAM_VALUE:
 				switch ($symbol)
@@ -379,7 +389,7 @@ class Accept
 					case ",":
 						return [self::STATE_SPACE_BEFORE_TYPE, self::ACTION_COMPLETE_PARAM_AND_MEDIA_RANGE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			case self::STATE_SPACE_BEFORE_TYPE:
 				switch ($symbol)
@@ -398,10 +408,10 @@ class Accept
 					case " ": case "\t":
 						return [$state, self::ACTION_NONE];
 					default:
-						throw new \InvalidArgumentException(\sprintf('Position %s: unexpected symbol code %s', $step, \ord($symbol)));
+						throw new InvalidArgumentException(sprintf('Position %s: unexpected symbol code %s', $step, ord($symbol)));
 				}
 			default:
-				throw new \LogicException(\sprintf('Unknown state %s', $state));
+				throw new LogicException(sprintf('Unknown state %s', $state));
 		}
 	}
 
@@ -426,13 +436,13 @@ class Accept
 							break;
 						default:
 							$prefix = $type . '/';
-							$result = ($prefix === \substr($mediaType, 0, \strlen($prefix)));
+							$result = ($prefix === substr($mediaType, 0, strlen($prefix)));
 							break;
 					}
 					break;
 				default:
 					$prefix = $type . '/' . $subtype;
-					switch (\substr($mediaType, 0, \strlen($prefix) + 1))
+					switch (substr($mediaType, 0, strlen($prefix) + 1))
 					{
 						case $prefix:
 						case $prefix . ' ':
@@ -448,7 +458,7 @@ class Accept
 	}
 
 	/**
-	 * @return array
+	 * @return array<int, MediaRange>
 	 */
 	public function getMediaRanges(): array
 	{

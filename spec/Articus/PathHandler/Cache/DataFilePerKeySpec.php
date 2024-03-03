@@ -4,9 +4,20 @@ declare(strict_types=1);
 namespace spec\Articus\PathHandler\Cache;
 
 use Articus\PathHandler as PH;
+use FilesystemIterator;
+use InvalidArgumentException;
 use PhpSpec\Exception\Example\SkippingException;
 use PhpSpec\ObjectBehavior;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use spec\Utility\GlobalFunctionMock;
+use function file_put_contents;
+use function is_dir;
+use function realpath;
+use function rmdir;
+use function sprintf;
+use function str_replace;
+use function unlink;
 
 class DataFilePerKeySpec extends ObjectBehavior
 {
@@ -25,24 +36,24 @@ CACHE_CONTENT;
 		GlobalFunctionMock::tearDown();
 		//Have to place here - "let" invokes constructor :(
 		$folder = self::TEST_CACHE_FOLDER;
-		if (\is_dir($folder))
+		if (is_dir($folder))
 		{
-			$files = new \RecursiveIteratorIterator(
-				new \RecursiveDirectoryIterator($folder, \FilesystemIterator::SKIP_DOTS),
-				\RecursiveIteratorIterator::CHILD_FIRST
+			$files = new RecursiveIteratorIterator(
+				new RecursiveDirectoryIterator($folder, FilesystemIterator::SKIP_DOTS),
+				RecursiveIteratorIterator::CHILD_FIRST
 			);
 			foreach ($files as $name => $file)
 			{
 				if ($file->isDir())
 				{
-					\rmdir($name);
+					rmdir($name);
 				}
 				else
 				{
-					\unlink($name);
+					unlink($name);
 				}
 			}
-			\rmdir($folder);
+			rmdir($folder);
 		}
 	}
 
@@ -54,7 +65,7 @@ CACHE_CONTENT;
 		}
 		$key = self::TEST_CACHE_KEY;
 		$folder = self::TEST_CACHE_FOLDER;
-		$exception = new \InvalidArgumentException(\sprintf('The directory "%s" does not exist and could not be created.', $folder));
+		$exception = new InvalidArgumentException(sprintf('The directory "%s" does not exist and could not be created.', $folder));
 
 		GlobalFunctionMock::shouldReceive('is_dir')->with($folder)->andReturn(false);
 		GlobalFunctionMock::shouldReceive('mkdir')->with($folder, 0775, true)->andReturn(false);
@@ -70,7 +81,7 @@ CACHE_CONTENT;
 		}
 		$key = self::TEST_CACHE_KEY;
 		$folder = self::TEST_CACHE_FOLDER;
-		$exception = new \InvalidArgumentException(\sprintf('The directory "%s" is not writable.', $folder));
+		$exception = new InvalidArgumentException(sprintf('The directory "%s" is not writable.', $folder));
 
 		GlobalFunctionMock::shouldReceive('is_dir')->with($folder)->andReturn(false);
 		GlobalFunctionMock::shouldReceive('mkdir')->with($folder, 0775, true)->andReturn(true);
@@ -98,7 +109,7 @@ CACHE_CONTENT;
 
 		$this->beConstructedWith($otherKey, $folder);
 		$this->shouldBeAnInstanceOf(PH\Cache\DataFilePerKey::class);//Call constructor
-		\file_put_contents(self::TEST_CACHE_FILE, self::TEST_CACHE_CONTENT);
+		file_put_contents(self::TEST_CACHE_FILE, self::TEST_CACHE_CONTENT);
 		$this->get($key, $defaultValue)->shouldBe($defaultValue);
 	}
 
@@ -121,7 +132,7 @@ CACHE_CONTENT;
 
 		$this->beConstructedWith($key, $folder);
 		$this->shouldBeAnInstanceOf(PH\Cache\DataFilePerKey::class);//Call constructor
-		\file_put_contents(self::TEST_CACHE_FILE, self::TEST_CACHE_CONTENT);
+		file_put_contents(self::TEST_CACHE_FILE, self::TEST_CACHE_CONTENT);
 		$this->get($key, $defaultValue)->shouldBe(self::TEST_CACHE_DATA);
 	}
 
@@ -179,7 +190,7 @@ CACHE_CONTENT;
 		GlobalFunctionMock::shouldReceive('tempnam')->withArgs(
 			function (string $directory, string $prefix) use ($folder)
 			{
-				return (($directory === \realpath($folder)) && ($prefix === 'swap'));
+				return (($directory === realpath($folder)) && ($prefix === 'swap'));
 			}
 		)->andReturn($temporaryFile);
 		GlobalFunctionMock::shouldReceive('file_put_contents')->with($temporaryFile, self::TEST_CACHE_CONTENT)->andReturn(false);
@@ -202,7 +213,7 @@ CACHE_CONTENT;
 		GlobalFunctionMock::shouldReceive('tempnam')->withArgs(
 			function (string $directory, string $prefix) use ($folder)
 			{
-				return (($directory === \realpath($folder)) && ($prefix === 'swap'));
+				return (($directory === realpath($folder)) && ($prefix === 'swap'));
 			}
 		)->andReturn($temporaryFile);
 		GlobalFunctionMock::shouldReceive('file_put_contents')->with($temporaryFile, self::TEST_CACHE_CONTENT)->andReturn(true);
@@ -210,7 +221,7 @@ CACHE_CONTENT;
 		GlobalFunctionMock::shouldReceive('rename')->withArgs(
 			function (string $from, string $to) use ($temporaryFile, $folder, $file)
 			{
-				return (($from === $temporaryFile) && ($to === \str_replace($folder, \realpath($folder), $file)));
+				return (($from === $temporaryFile) && ($to === str_replace($folder, realpath($folder), $file)));
 			}
 		)->andReturn(false);
 		GlobalFunctionMock::shouldReceive('unlink')->with($temporaryFile)->andReturn(true);

@@ -3,85 +3,57 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler;
 
+use Articus\PluginManager\PluginManagerInterface;
+use LogicException;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Laminas\ServiceManager\PluginManagerInterface;
+use Throwable;
+use function count;
+use function sprintf;
 
 class Middleware implements MiddlewareInterface, RequestHandlerInterface
 {
 	/**
-	 * @var string
-	 */
-	protected $handlerName;
-
-	/**
-	 * @var MetadataProviderInterface
-	 */
-	protected $metadataProvider;
-
-	/**
-	 * @var PluginManagerInterface
-	 */
-	protected $handlerPluginManager;
-
-	/**
-	 * @var PluginManagerInterface
-	 */
-	protected $consumerPluginManager;
-
-	/**
-	 * @var PluginManagerInterface
-	 */
-	protected $attributePluginManager;
-
-	/**
-	 * @var PluginManagerInterface
-	 */
-	protected $producerPluginManager;
-
-	/**
-	 * @var callable
-	 */
-	protected $responseGenerator;
-
-	/**
-	 * @var string
-	 */
-	protected $defaultProducer;
-
-	/**
-	 * Middleware constructor.
 	 * @param string $handlerName
 	 * @param MetadataProviderInterface $metadataProvider
-	 * @param PluginManagerInterface $handlerPluginManager
-	 * @param PluginManagerInterface $consumerPluginManager
-	 * @param PluginManagerInterface $attributePluginManager
-	 * @param PluginManagerInterface $producerPluginManager
-	 * @param callable $responseGenerator
-	 * @param array $defaultProducer tuple (<media type>, <producer name>, <producer options>)
- */
+	 * @param PluginManagerInterface<object> $handlerManager
+	 * @param PluginManagerInterface<Consumer\ConsumerInterface> $consumerManager
+	 * @param PluginManagerInterface<Attribute\AttributeInterface> $attributeManager
+	 * @param PluginManagerInterface<Producer\ProducerInterface> $producerManager
+	 * @param ResponseFactoryInterface $responseFactory
+	 * @param array{0: string, 1: string, 2: array} $defaultProducer tuple ("media type", "producer name", "producer options")
+	 */
 	public function __construct(
-		string $handlerName,
-		MetadataProviderInterface $metadataProvider,
-		PluginManagerInterface $handlerPluginManager,
-		PluginManagerInterface $consumerPluginManager,
-		PluginManagerInterface $attributePluginManager,
-		PluginManagerInterface $producerPluginManager,
-		callable $responseGenerator,
-		array $defaultProducer
+		protected string $handlerName,
+		protected MetadataProviderInterface $metadataProvider,
+		/**
+		 * @var PluginManagerInterface<object>
+		 */
+		protected PluginManagerInterface $handlerManager,
+		/**
+		 * @var PluginManagerInterface<Consumer\ConsumerInterface>
+		 */
+		protected PluginManagerInterface $consumerManager,
+		/**
+		 * @var PluginManagerInterface<Attribute\AttributeInterface>
+		 */
+		protected PluginManagerInterface $attributeManager,
+		/**
+		 * @var PluginManagerInterface<Producer\ProducerInterface>
+		 */
+		protected PluginManagerInterface $producerManager,
+		protected ResponseFactoryInterface $responseFactory,
+		/**
+		 * Tuple ("media type", "producer name", "producer options")
+		 * @var array{0: string, 1: string, 2: array}
+		 */
+		protected array $defaultProducer
 	)
 	{
-		$this->handlerName = $handlerName;
-		$this->metadataProvider = $metadataProvider;
-		$this->handlerPluginManager = $handlerPluginManager;
-		$this->consumerPluginManager = $consumerPluginManager;
-		$this->attributePluginManager = $attributePluginManager;
-		$this->producerPluginManager = $producerPluginManager;
-		$this->responseGenerator = $responseGenerator;
-		$this->defaultProducer = $defaultProducer;
 	}
 
 	/**
@@ -97,7 +69,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	 */
 	public function handle(Request $request): Response
 	{
-		$result = $this->generateEmptyResponse();
+		$result = $this->responseFactory->createResponse();
 		try
 		{
 			$httpMethod = $request->getMethod();
@@ -111,10 +83,10 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 				{
 					if ($accept->match($mediaType))
 					{
-						$producer = $this->producerPluginManager->build($name, $options);
+						$producer = ($this->producerManager)($name, $options);
 						if (!($producer instanceof Producer\ProducerInterface))
 						{
-							throw new \LogicException(\sprintf('Invalid producer %s.', $name));
+							throw new LogicException(sprintf('Invalid producer %s.', $name));
 						}
 						$result = $result->withHeader('Content-Type', $mediaType);
 						break;
@@ -137,10 +109,10 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 					{
 						if ($contentType->match($mediaRange))
 						{
-							$consumer = $this->consumerPluginManager->build($name, $options);
+							$consumer = ($this->consumerManager)($name, $options);
 							if (!($consumer instanceof Consumer\ConsumerInterface))
 							{
-								throw new \LogicException(\sprintf('Invalid consumer %s.', $name));
+								throw new LogicException(sprintf('Invalid consumer %s.', $name));
 							}
 							$request = $request->withParsedBody(
 								$consumer->parse(
@@ -161,15 +133,15 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 				//Calculate attributes
 				foreach ($this->metadataProvider->getAttributes($this->handlerName, $httpMethod) as [$name, $options])
 				{
-					$attribute = $this->attributePluginManager->build($name, $options);
+					$attribute = ($this->attributeManager)($name, $options);
 					if (!($attribute instanceof Attribute\AttributeInterface))
 					{
-						throw new \LogicException(\sprintf('Invalid attribute %s.', $name));
+						throw new LogicException(sprintf('Invalid attribute %s.', $name));
 					}
 					$request = $attribute($request);
 				}
 				//Handle request
-				$handler = $this->handlerPluginManager->get($this->handlerName);
+				$handler = ($this->handlerManager)($this->handlerName, []);
 				$data = $this->metadataProvider->executeHandlerMethod($this->handlerName, $httpMethod, $handler, $request);
 				$result = $this->populateResponseWithData($data, $result, $producer);
 			}
@@ -187,16 +159,6 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	}
 
 	/**
-	 * Generate empty response object.
-	 * Using separate method just because there is no return type declaration for callable.
-	 * @return Response
-	 */
-	protected function generateEmptyResponse(): Response
-	{
-		return ($this->responseGenerator)();
-	}
-
-	/**
 	 * Makes Accept header object from PSR-7 request
 	 * @param Request $request
 	 * @return Header\Accept
@@ -209,7 +171,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 			$headerValue = $request->getHeaderLine('Accept') ?: '*/*';
 			return new Header\Accept($headerValue);
 		}
-		catch (\Exception $e)
+		catch (Throwable $e)
 		{
 			throw new Exception\BadRequest('Invalid Accept header', $e);
 		}
@@ -228,7 +190,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		{
 			throw new Exception\BadRequest('Content-Type header should be declared');
 		}
-		if (\count($request->getHeader($headerName)) > 1)
+		if (count($request->getHeader($headerName)) > 1)
 		{
 			throw new Exception\BadRequest('Multiple Content-Type headers are not allowed');
 		}
@@ -236,7 +198,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 		{
 			return new Header\ContentType($request->getHeaderLine($headerName));
 		}
-		catch (\Exception $e)
+		catch (Throwable $e)
 		{
 			throw new Exception\BadRequest('Invalid Content-Type header', $e);
 		}
@@ -244,20 +206,16 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 
 	/**
 	 * Populates response with data using producer
-	 * @param mixed $data
-	 * @param Response $response
-	 * @param null|Producer\ProducerInterface $producer
-	 * @return Response
 	 */
-	protected function populateResponseWithData($data, Response $response, ?Producer\ProducerInterface $producer): Response
+	protected function populateResponseWithData(mixed $data, Response $response, null|Producer\ProducerInterface $producer): Response
 	{
 		if ($producer === null)
 		{
 			[$mediaType, $name, $options] = $this->defaultProducer;
-			$producer = $this->producerPluginManager->build($name, $options);
+			$producer = ($this->producerManager)($name, $options);
 			if (!($producer instanceof Producer\ProducerInterface))
 			{
-				throw new \LogicException(\sprintf('Invalid default producer %s.', $name));
+				throw new LogicException(sprintf('Invalid default producer %s.', $name));
 			}
 			$response = $response->withHeader('Content-Type', $mediaType);
 		}
@@ -284,9 +242,7 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 	 * @param null|Producer\ProducerInterface $producer
 	 * @return Response
 	 */
-	protected function populateResponseWithException(
-		Exception\HttpCode $exception, Response $response, ?Producer\ProducerInterface $producer
-	): Response
+	protected function populateResponseWithException(Exception\HttpCode $exception, Response $response, null|Producer\ProducerInterface $producer): Response
 	{
 		$response = $this->populateResponseWithData($exception->getPayload(), $response, $producer);
 		if ($exception instanceof Exception\HeaderInterface)

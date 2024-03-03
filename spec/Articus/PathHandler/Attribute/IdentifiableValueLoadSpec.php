@@ -5,6 +5,7 @@ namespace spec\Articus\PathHandler\Attribute;
 
 use Articus\DataTransfer\IdentifiableValueLoader;
 use Articus\PathHandler as PH;
+use LogicException;
 use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -19,7 +20,7 @@ class IdentifiableValueLoadSpec extends ObjectBehavior
 		$request->getAttribute($idAttr)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($loader, $type, $idAttr, $valueAttr);
-		$this->shouldThrow(\LogicException::class)->during('__invoke', [$request]);
+		$this->shouldThrow(LogicException::class)->during('__invoke', [$request]);
 	}
 
 	public function it_throws_on_invalid_id(IdentifiableValueLoader $loader, Request $request, $id)
@@ -31,7 +32,7 @@ class IdentifiableValueLoadSpec extends ObjectBehavior
 		$request->getAttribute($idAttr)->shouldBeCalledOnce()->willReturn($id);
 
 		$this->beConstructedWith($loader, $type, $idAttr, $valueAttr);
-		$this->shouldThrow(\LogicException::class)->during('__invoke', [$request]);
+		$this->shouldThrow(LogicException::class)->during('__invoke', [$request]);
 	}
 
 	public function it_throws_if_there_is_no_value(IdentifiableValueLoader $loader, Request $request)

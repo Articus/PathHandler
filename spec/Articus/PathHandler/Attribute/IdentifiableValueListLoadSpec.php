@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Attribute;
 
+use LogicException;
 use spec\Example\InstanciatorInterface as Invokable;
 use Articus\DataTransfer\IdentifiableValueLoader;
 use Articus\PathHandler as PH;
@@ -31,7 +32,7 @@ class IdentifiableValueListLoadSpec extends ObjectBehavior
 				$tuple = yield;
 				if ($tuple !== [$index, $id, $values[$index]])
 				{
-					throw new \LogicException('Invalid tuple');
+					throw new LogicException('Invalid tuple');
 				}
 			}
 			return $list;
@@ -72,7 +73,7 @@ class IdentifiableValueListLoadSpec extends ObjectBehavior
 				$tuple = yield;
 				if ($tuple !== [$index, $id, $values[$index]])
 				{
-					throw new \LogicException('Invalid tuple');
+					throw new LogicException('Invalid tuple');
 				}
 			}
 			return $list;
@@ -102,8 +103,7 @@ class IdentifiableValueListLoadSpec extends ObjectBehavior
 		Invokable $emitter,
 		Invokable $receiverFactory,
 		$list,
-		Request $in,
-		Request $out
+		Request $in
 	)
 	{
 		$type = 'test_type';
@@ -119,7 +119,7 @@ class IdentifiableValueListLoadSpec extends ObjectBehavior
 					$tuple = yield;
 					if ($tuple !== [$index, $id, $values[$index]])
 					{
-						throw new \LogicException('Invalid tuple');
+						throw new LogicException('Invalid tuple');
 					}
 				}
 			}

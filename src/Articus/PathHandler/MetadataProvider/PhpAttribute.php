@@ -3,12 +3,23 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\MetadataProvider;
 
-use Articus\PathHandler\PhpAttribute as PHA;
 use Articus\PathHandler\MetadataProviderInterface;
+use Articus\PathHandler\PhpAttribute as PHA;
+use Articus\PluginManager\PluginManagerInterface;
+use Generator;
+use InvalidArgumentException;
+use Laminas\Stdlib\FastPriorityQueue;
+use LogicException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\SimpleCache\CacheInterface;
-use Laminas\ServiceManager\PluginManagerInterface;
-use Laminas\Stdlib\FastPriorityQueue;
+use ReflectionClass;
+use ReflectionMethod;
+use Throwable;
+use function array_keys;
+use function get_class;
+use function get_debug_type;
+use function is_object;
+use function sprintf;
 
 /**
  * Provider that gets handler metadata from handler class PHP attributes
@@ -20,46 +31,41 @@ class PhpAttribute implements MetadataProviderInterface
 	protected bool $needCacheUpdate = false;
 
 	/**
-	 * Map <handler name> -> <handler class name>
-	 * @psalm-var array<string, string>
+	 * Map "handler name" -> "handler class name"
+	 * @var array<string, string>
 	 */
 	protected array $handlerClassNames;
 
 	/**
-	 * Map <handler class name> -> <sorted list of routes>
-	 * @psalm-var array<string, array>
+	 * Map "handler class name" -> "sorted list of routes"
+	 * @var array<string, array<array{0: string, 1: string, 2: array}>>
 	 */
 	protected array $routes;
 
 	/**
-	 * Map <handler class name> -> <http method> -> <handler method name>
-	 * @psalm-var array<string, array<string, string>>
+	 * Map "handler class name" -> "http method" -> "handler method name"
+	 * @var array<string, array<string, string>>
 	 */
 	protected array $handlerMethodNames;
 
 	/**
-	 * Map <handler class name> -> <handler method name> -> <sorted list of consumers>
-	 * @psalm-var array<string, array<string, array>>
+	 * Map "handler class name" -> "handler method name" -> "sorted list of consumers"
+	 * @var array<string, array<string, array<array{0: string, 1: string, 2: array}>>>
 	 */
 	protected array $consumers;
 
 	/**
-	 * Map <handler class name> -> <handler method name> -> <sorted list of attributes>
-	 * @psalm-var array<string, array<string, array>>
+	 * Map "handler class name" -> "handler method name" -> "sorted list of attributes"
+	 * @var array<string, array<string, array<array{0: string, 1: array}>>>
 	 */
 	protected array $attributes;
 
 	/**
-	 * Map <handler class name> -> <handler method name> -> <sorted list of producers>
-	 * @psalm-var array<string, array<string, array>>
+	 * Map "handler class name" -> "handler method name" -> "sorted list of producers"
+	 * @var array<string, array<string, array<array{0: string, 1: string, 2: array}>>>
 	 */
 	protected array $producers;
 
-	/**
-	 * MetadataProvider constructor.
-	 * @param PluginManagerInterface $handlerPluginManager
-	 * @param CacheInterface $cache
-	 */
 	public function __construct(
 		protected PluginManagerInterface $handlerPluginManager,
 		protected CacheInterface $cache
@@ -102,13 +108,13 @@ class PhpAttribute implements MetadataProviderInterface
 	{
 		$this->ascertainMetadata($handlerName);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
-		return \array_keys($this->handlerMethodNames[$handlerClassName]);
+		return array_keys($this->handlerMethodNames[$handlerClassName]);
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	public function getRoutes(string $handlerName): \Generator
+	public function getRoutes(string $handlerName): Generator
 	{
 		$this->ascertainMetadata($handlerName);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
@@ -129,7 +135,7 @@ class PhpAttribute implements MetadataProviderInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function getConsumers(string $handlerName, string $httpMethod): \Generator
+	public function getConsumers(string $handlerName, string $httpMethod): Generator
 	{
 		$this->ascertainMetadata($handlerName, $httpMethod);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
@@ -140,7 +146,7 @@ class PhpAttribute implements MetadataProviderInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function getAttributes(string $handlerName, string $httpMethod): \Generator
+	public function getAttributes(string $handlerName, string $httpMethod): Generator
 	{
 		$this->ascertainMetadata($handlerName, $httpMethod);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
@@ -162,7 +168,7 @@ class PhpAttribute implements MetadataProviderInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function getProducers(string $handlerName, string $httpMethod): \Generator
+	public function getProducers(string $handlerName, string $httpMethod): Generator
 	{
 		$this->ascertainMetadata($handlerName, $httpMethod);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
@@ -173,7 +179,7 @@ class PhpAttribute implements MetadataProviderInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function executeHandlerMethod(string $handlerName, string $httpMethod, $handler, ServerRequestInterface $request)
+	public function executeHandlerMethod(string $handlerName, string $httpMethod, object $handler, ServerRequestInterface $request): mixed
 	{
 		$this->ascertainMetadata($handlerName, $httpMethod);
 		$handlerClassName = $this->handlerClassNames[$handlerName];
@@ -182,10 +188,8 @@ class PhpAttribute implements MetadataProviderInterface
 		//TODO replace with pregenerated code
 		if (!($handler instanceof $handlerClassName))
 		{
-			throw new \InvalidArgumentException(\sprintf(
-				'Invalid handler object: expecting %s, not %s.',
-				$handlerClassName,
-				\is_object($handler) ? \get_class($handler) : \gettype($handler)
+			throw new InvalidArgumentException(sprintf(
+				'Invalid handler object: expecting %s, not %s.', $handlerClassName, get_debug_type($handler)
 			));
 		}
 		return $handler->{$handlerMethodName}($request);
@@ -194,10 +198,8 @@ class PhpAttribute implements MetadataProviderInterface
 	/**
 	 * Ensures that metadata for specified handler name was loaded
 	 * and optionally checks if this metadata contains information about specified HTTP method
-	 * @param string $handlerName
-	 * @param string|null $httpMethod
 	 */
-	protected function ascertainMetadata(string $handlerName, ?string $httpMethod = null): void
+	protected function ascertainMetadata(string $handlerName, null|string $httpMethod = null): void
 	{
 		if (empty($this->handlerClassNames[$handlerName]))
 		{
@@ -206,7 +208,7 @@ class PhpAttribute implements MetadataProviderInterface
 				$this->loadMetadata($handlerName);
 				$this->needCacheUpdate = true;
 			}
-			catch (\Throwable $e)
+			catch (Throwable $e)
 			{
 				//Reset all metadata
 				[
@@ -223,7 +225,7 @@ class PhpAttribute implements MetadataProviderInterface
 
 		if (($httpMethod !== null) && empty($this->handlerMethodNames[$this->handlerClassNames[$handlerName]][$httpMethod]))
 		{
-			throw new \InvalidArgumentException(\sprintf(
+			throw new InvalidArgumentException(sprintf(
 				'Handler %s is not configured to handle %s-method.', $handlerName, $httpMethod
 			));
 		}
@@ -231,16 +233,15 @@ class PhpAttribute implements MetadataProviderInterface
 
 	/**
 	 * Loads metadata for specified handler name
-	 * @param string $handlerName
 	 */
 	protected function loadMetadata(string $handlerName): void
 	{
-		$handler = $this->handlerPluginManager->get($handlerName);
-		if (!\is_object($handler))
+		$handler = ($this->handlerPluginManager)($handlerName, []);
+		if (!is_object($handler))
 		{
-			throw new \InvalidArgumentException(\sprintf('Handler %s is %s, not object.', $handlerName, \gettype($handler)));
+			throw new InvalidArgumentException(sprintf('Handler %s is %s, not object.', $handlerName, get_debug_type($handler)));
 		}
-		$handlerClassName = \get_class($handler);
+		$handlerClassName = get_class($handler);
 		$this->handlerClassNames[$handlerName] = $handlerClassName;
 
 		$routes = new FastPriorityQueue();
@@ -249,14 +250,18 @@ class PhpAttribute implements MetadataProviderInterface
 		$commonAttributes = new FastPriorityQueue();
 		$commonProducers = new FastPriorityQueue();
 
-		$classReflection = new \ReflectionClass($handlerClassName);
+		$classReflection = new ReflectionClass($handlerClassName);
 
 		//Process class annotations
 		foreach ($classReflection->getAttributes() as $phpAttributeReflection)
 		{
 			$phpAttribute = match ($phpAttributeReflection->getName())
 			{
-				PHA\Route::class, PHA\Consumer::class, PHA\Attribute::class, PHA\Producer::class => $phpAttributeReflection->newInstance(),
+				PHA\Route::class,
+				PHA\Consumer::class,
+				PHA\Attribute::class,
+				PHA\Producer::class
+					=> $phpAttributeReflection->newInstance(),
 				default => null,
 			};
 			switch (true)
@@ -277,12 +282,12 @@ class PhpAttribute implements MetadataProviderInterface
 		}
 		if ($routes->isEmpty())
 		{
-			throw new \LogicException(\sprintf('Invalid metadata for %s: no route.', $handlerClassName));
+			throw new LogicException(sprintf('Invalid metadata for %s: no route.', $handlerClassName));
 		}
 		$this->routes[$handlerClassName] = $routes->toArray();
 
 		//Process public method annotations
-		foreach ($classReflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $methodReflection)
+		foreach ($classReflection->getMethods(ReflectionMethod::IS_PUBLIC) as $methodReflection)
 		{
 			$handlerMethodName = $methodReflection->getName();
 			$hasMetadata = false;
@@ -311,7 +316,7 @@ class PhpAttribute implements MetadataProviderInterface
 						$httpMethod = $phpAttribute->name;
 						if (!empty($handlerMethodNames[$httpMethod]))
 						{
-							throw new \LogicException(\sprintf(
+							throw new LogicException(sprintf(
 								'Invalid metadata for %s: both %s and %s are declared to handle %s-method.',
 								$handlerClassName,
 								$handlerMethodNames[$httpMethod],
@@ -340,7 +345,7 @@ class PhpAttribute implements MetadataProviderInterface
 			{
 				if ($methodReflection->getNumberOfRequiredParameters() > 1)
 				{
-					throw new \LogicException(\sprintf(
+					throw new LogicException(sprintf(
 						'Invalid method %s with metadata for %s: more than one required parameter.',
 						$handlerMethodName,
 						$handlerClassName
@@ -353,7 +358,7 @@ class PhpAttribute implements MetadataProviderInterface
 		}
 		if (empty($handlerMethodNames))
 		{
-			throw new \LogicException(\sprintf('Invalid metadata for %s: no HTTP methods.', $handlerClassName));
+			throw new LogicException(sprintf('Invalid metadata for %s: no HTTP methods.', $handlerClassName));
 		}
 		$this->handlerMethodNames[$handlerClassName] = $handlerMethodNames;
 	}

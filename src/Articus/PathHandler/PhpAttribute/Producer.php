@@ -15,13 +15,13 @@ class Producer
 		 */
 		public string $mediaType,
 		/**
-		 * Name that should be passed to PluginManager::build
+		 * Name that should be passed to producer plugin manager
 		 */
 		public string $name,
 		/**
-		 * Options that should be passed to PluginManager::build
+		 * Options that should be passed to producer plugin manager
 		 */
-		public null|array $options = null,
+		public array $options = [],
 		/**
 		 * Priority in which media type for producer should check against request. The higher - the earlier.
 		 * If two producers have equal priority, the one declared earlier will be checked earlier.

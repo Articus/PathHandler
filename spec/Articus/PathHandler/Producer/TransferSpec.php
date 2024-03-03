@@ -7,84 +7,66 @@ use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler as PH;
 use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\StreamInterface;
+use stdClass;
 
 class TransferSpec extends ObjectBehavior
 {
 	protected const SUBSET = 'testSubset';
 
-	public function let(DTService $dt, StreamInterface $stream)
-	{
-		$streamFactory = function () use ($stream)
-		{
-			return $stream->getWrappedObject();
-		};
-
-		$this->beConstructedWith($streamFactory, $dt, self::SUBSET);
-		$this->shouldImplement(PH\Producer\ProducerInterface::class);
-	}
-
-	public function it_transfers_null_to_json(DTService $dt, StreamInterface $stream)
+	public function it_passes_null_to_producer(PH\Producer\ProducerInterface $producer, DTService $dt, StreamInterface $stream)
 	{
 		$objectOrArray = null;
-		$json = 'null';
 
 		$dt->extractFromTypedData()->shouldNotBeCalled();
+		$producer->assemble($objectOrArray)->shouldBeCalledOnce()->willReturn($stream);
 
-		$stream->write($json)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-
+		$this->beConstructedWith($producer, $dt, self::SUBSET);
 		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
-	public function it_transfers_scalar_to_json(DTService $dt, StreamInterface $stream)
+	public function it_passes_scalar_to_producer(PH\Producer\ProducerInterface $producer, DTService $dt, StreamInterface $stream)
 	{
 		$objectOrArray = 123;
-		$json = '123';
 
 		$dt->extractFromTypedData()->shouldNotBeCalled();
+		$producer->assemble($objectOrArray)->shouldBeCalledOnce()->willReturn($stream);
 
-		$stream->write($json)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-
+		$this->beConstructedWith($producer, $dt, self::SUBSET);
 		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
-	public function it_transfers_object_to_json(DTService $dt, StreamInterface $stream)
+	public function it_transfers_object_and_passes_data_to_producer(PH\Producer\ProducerInterface $producer, DTService $dt, StreamInterface $stream)
 	{
-		$objectOrArray = new \stdClass();
-		$json = '[]';
+		$objectOrArray = new stdClass();
+		$data = ['test' => 123];
 
-		$dt->extractFromTypedData($objectOrArray, self::SUBSET)->shouldBeCalledOnce()->willReturn([]);
+		$dt->extractFromTypedData($objectOrArray, self::SUBSET)->shouldBeCalledOnce()->willReturn($data);
+		$producer->assemble($data)->shouldBeCalledOnce()->willReturn($stream);
 
-		$stream->write($json)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-
+		$this->beConstructedWith($producer, $dt, self::SUBSET);
 		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
-	public function it_transfers_array_of_scalars_to_json(DTService $dt, StreamInterface $stream)
+	public function it_passes_array_of_scalars_to_producer(PH\Producer\ProducerInterface $producer, DTService $dt, StreamInterface $stream)
 	{
 		$objectOrArray = [123, 'qwer'];
-		$json = '[123,"qwer"]';
 
 		$dt->extractFromTypedData()->shouldNotBeCalled();
+		$producer->assemble($objectOrArray)->shouldBeCalledOnce()->willReturn($stream);
 
-		$stream->write($json)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-
+		$this->beConstructedWith($producer, $dt, self::SUBSET);
 		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 
-	public function it_transfers_array_of_objects_to_json(DTService $dt, StreamInterface $stream)
+	public function it_transfers_array_of_objects_and_passes_data_to_producer(PH\Producer\ProducerInterface $producer, DTService $dt, StreamInterface $stream)
 	{
-		$objectOrArray = [new \stdClass()];
-		$json = '[[]]';
+		$objectOrArray = [new stdClass()];
+		$data = [['test' => 123]];
 
-		$dt->extractFromTypedData($objectOrArray[0], self::SUBSET)->shouldBeCalledOnce()->willReturn([]);
+		$dt->extractFromTypedData($objectOrArray[0], self::SUBSET)->shouldBeCalledOnce()->willReturn($data[0]);
+		$producer->assemble($data)->shouldBeCalledOnce()->willReturn($stream);
 
-		$stream->write($json)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-
+		$this->beConstructedWith($producer, $dt, self::SUBSET);
 		$this->assemble($objectOrArray)->shouldBe($stream);
 	}
 }

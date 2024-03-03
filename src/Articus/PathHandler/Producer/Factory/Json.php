@@ -3,18 +3,20 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer\Factory;
 
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
-use Psr\Http\Message\StreamInterface;
-use Laminas\ServiceManager\Factory\FactoryInterface;
+use Articus\PathHandler\Producer;
+use Articus\PluginManager\PluginFactoryInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
-class Json implements FactoryInterface
+class Json implements PluginFactoryInterface
 {
-	/**
-	 * @inheritdoc
-	 */
-	public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+	public function __invoke(ContainerInterface $container, string $name, array $options = []): Producer\Json
 	{
-		return new PH\Producer\Json($container->get(StreamInterface::class));
+		$parsedOptions = new Producer\Options\Json($options);
+		return new Producer\Json(
+			$container->get(StreamFactoryInterface::class),
+			$parsedOptions->encodeFlags,
+			$parsedOptions->depth
+		);
 	}
 }

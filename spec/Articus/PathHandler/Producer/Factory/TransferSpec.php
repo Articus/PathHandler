@@ -5,32 +5,32 @@ namespace spec\Articus\PathHandler\Producer\Factory;
 
 use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
+use Articus\PluginManager as PM;
 use PhpSpec\ObjectBehavior;
-use Psr\Http\Message\StreamInterface;
+use Psr\Container\ContainerInterface;
 
 class TransferSpec extends ObjectBehavior
 {
-	public function it_builds_transfer_producer_without_subset(ContainerInterface $container, DTService $dt, StreamInterface $stream)
+	public function it_builds_transfer_producer(
+		ContainerInterface $container, DTService $dt, PM\PluginManagerInterface $producerManager, PH\Producer\ProducerInterface $producer
+	)
 	{
-		$streamFactory = function () use ($stream)
-		{
-			return $stream;
-		};
-		$container->get(StreamInterface::class)->shouldBeCalledOnce()->willReturn($streamFactory);
-		$container->get(DTService::class)->shouldBeCalledOnce()->willReturn($dt);
-		$this->__invoke($container, 'test', [])->shouldBeAnInstanceOf(PH\Producer\Transfer::class);
-	}
+		$subset = 'test_subset';
+		$producerName = 'test_producer';
+		$producerOptions = ['test' => 123];
+		$options =[
+			'subset' => $subset,
+			'name' => $producerName,
+			'options' => $producerOptions,
+		];
 
-	public function it_builds_transfer_producer_with_subset(ContainerInterface $container, DTService $dt, StreamInterface $stream)
-	{
-		$streamFactory = function () use ($stream)
-		{
-			return $stream;
-		};
-		$subset = 'testSubset';
-		$container->get(StreamInterface::class)->shouldBeCalledOnce()->willReturn($streamFactory);
 		$container->get(DTService::class)->shouldBeCalledOnce()->willReturn($dt);
-		$this->__invoke($container, 'test', ['subset' => $subset])->shouldBeAnInstanceOf(PH\Producer\Transfer::class);
+		$container->get(PH\RouteInjectionFactory::DEFAULT_PRODUCER_PLUGIN_MANAGER)->shouldBeCalledOnce()->willReturn($producerManager);
+		$producerManager->__invoke($producerName, $producerOptions)->shouldBeCalledOnce()->willReturn($producer);
+
+		$service = $this->__invoke($container, 'test', $options);
+		$service->shouldHaveProperty('dt', $dt);
+		$service->shouldHaveProperty('producer', $producer);
+		$service->shouldHaveProperty('subset', $subset);
 	}
 }

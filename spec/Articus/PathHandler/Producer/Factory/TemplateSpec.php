@@ -3,23 +3,25 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Producer\Factory;
 
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
-use PhpSpec\ObjectBehavior;
-use Psr\Http\Message\StreamInterface;
 use Mezzio\Template\TemplateRendererInterface;
+use PhpSpec\ObjectBehavior;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 class TemplateSpec extends ObjectBehavior
 {
-	public function it_builds_template_producer(ContainerInterface $container, TemplateRendererInterface $renderer, StreamInterface $stream)
+	public function it_builds_template_producer(ContainerInterface $container, TemplateRendererInterface $renderer, StreamFactoryInterface $streamFactory)
 	{
-		$streamFactory = function () use ($stream)
-		{
-			return $stream;
-		};
-		$container->get(TemplateRendererInterface::class)->shouldBeCalledOnce()->willReturn($renderer);
-		$container->get(StreamInterface::class)->shouldBeCalledOnce()->willReturn($streamFactory);
-		$this->__invoke($container, 'test', [])->shouldBeAnInstanceOf(PH\Producer\Template::class);
+		$rendererName = 'test_renderer';
+		$defaultTemplate = 'test_default_template';
+		$options = ['renderer' => $rendererName, 'default_template' => $defaultTemplate];
+
+		$container->get(StreamFactoryInterface::class)->shouldBeCalledOnce()->willReturn($streamFactory);
+		$container->get($rendererName)->shouldBeCalledOnce()->willReturn($renderer);
+
+		$service = $this->__invoke($container, 'test', $options);
+		$service->shouldHaveProperty('streamFactory', $streamFactory);
+		$service->shouldHaveProperty('renderer', $renderer);
+		$service->shouldHaveProperty('defaultTemplate', $defaultTemplate);
 	}
 }
-

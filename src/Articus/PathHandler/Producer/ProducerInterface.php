@@ -15,5 +15,5 @@ interface ProducerInterface
 	 * @param mixed $data
 	 * @return null|StreamInterface
 	 */
-	public function assemble($data): ?StreamInterface;
+	public function assemble(mixed $data): null|StreamInterface;
 }

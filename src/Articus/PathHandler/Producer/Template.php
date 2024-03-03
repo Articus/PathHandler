@@ -3,38 +3,35 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer;
 
-use Mezzio\Response\ServerRequestErrorResponseGenerator;
 use Mezzio\Template\TemplateRendererInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
+use function is_array;
+use function is_string;
 
 /**
  * Simple producer that uses provided data to render template
+ * @see Options\Template for details
  */
-class Template extends AbstractProducer
+class Template implements ProducerInterface
 {
-	/**
-	 * @var TemplateRendererInterface
-	 */
-	protected $renderer;
-
-	/**
-	 * @param callable $streamFactory
-	 * @param TemplateRendererInterface $renderer
-	 */
-	public function __construct(callable $streamFactory, TemplateRendererInterface $renderer)
+	public function __construct(
+		protected StreamFactoryInterface $streamFactory,
+		protected TemplateRendererInterface $renderer,
+		protected string $defaultTemplate
+	)
 	{
-		parent::__construct($streamFactory);
-		$this->renderer = $renderer;
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	protected function stringify($data): string
+	public function assemble(mixed $data): null|StreamInterface
 	{
 		$name = null;
 		$params = [];
 
-		if (\is_array($data) && isset($data[0], $data[1]))
+		if (is_array($data) && isset($data[0], $data[1]))
 		{
 			[$name, $params] = $data;
 		}
@@ -43,13 +40,13 @@ class Template extends AbstractProducer
 			$name = $data;
 		}
 
-		if (empty($name) || (!\is_string($name)))
+		if (empty($name) || (!is_string($name)))
 		{
-			//TODO make default template configurable
-			$name = ServerRequestErrorResponseGenerator::TEMPLATE_DEFAULT;
+			$name = $this->defaultTemplate;
 			$params['data'] = $data;
 		}
 
-		return $this->renderer->render($name, $params);
+		$content = $this->renderer->render($name, $params);
+		return $this->streamFactory->createStream($content);
 	}
 }

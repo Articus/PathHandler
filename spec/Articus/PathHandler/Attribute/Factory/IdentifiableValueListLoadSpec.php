@@ -4,10 +4,9 @@ declare(strict_types=1);
 namespace spec\Articus\PathHandler\Attribute\Factory;
 
 use Articus\DataTransfer\IdentifiableValueLoader;
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
 use PhpSpec\ObjectBehavior;
 use PhpSpec\Wrapper\Subject;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class IdentifiableValueListLoadSpec extends ObjectBehavior
@@ -26,10 +25,7 @@ class IdentifiableValueListLoadSpec extends ObjectBehavior
 			'type' => $type,
 			'identifierEmitter' => 'test_emitter',
 		];
-		$emitter = static function (string $type, Request $request)
-		{
-			return $request->getAttribute('ids');
-		};
+		$emitter = static fn (string $type, Request $request) => $request->getAttribute('ids');
 
 		$container->get(IdentifiableValueLoader::class)->shouldBeCalledOnce()->willReturn($loader);
 		$container->get('test_emitter')->shouldBeCalledOnce()->willReturn($emitter);
@@ -42,7 +38,9 @@ class IdentifiableValueListLoadSpec extends ObjectBehavior
 
 		/** @var Subject $wrapper */
 		$wrapper = $this->__invoke($container, 'test', $options);
-		$wrapper->shouldBeAnInstanceOf(PH\Attribute\IdentifiableValueListLoad::class);
+		$wrapper->shouldHaveProperty('loader', $loader);
+		$wrapper->shouldHaveProperty('type', $type);
+		$wrapper->shouldHaveProperty('identifierEmitter', $emitter);
 		$wrapper->callOnWrappedObject('__invoke', [$in])->shouldBe($out);
 	}
 }

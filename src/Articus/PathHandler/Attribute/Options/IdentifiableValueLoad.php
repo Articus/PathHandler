@@ -6,22 +6,20 @@ namespace Articus\PathHandler\Attribute\Options;
 class IdentifiableValueLoad
 {
 	/**
-	 * Type of identifiable values registered in Articus\DataTransfer\IdentifiableValueLoader service
-	 * @var string
+	 * Type of identifiable values registered in \Articus\DataTransfer\IdentifiableValueLoader service
+	 * @see \Articus\DataTransfer\IdentifiableValueLoader
 	 */
-	public $type;
+	public string $type;
 
 	/**
 	 * Name of the request attribute that contains value identifier
-	 * @var string
 	 */
-	public $identifierAttr = 'id';
+	public string $identifierAttr = 'id';
 
 	/**
 	 * Name of the request attribute to store loaded identifiable value
-	 * @var string
 	 */
-	public $valueAttr = 'value';
+	public string $valueAttr = 'value';
 
 	public function __construct(iterable $options)
 	{
@@ -43,10 +41,6 @@ class IdentifiableValueLoad
 					$this->valueAttr = $value;
 					break;
 			}
-		}
-		if ($this->type === null)
-		{
-			throw new \LogicException('Option "type" is not set');
 		}
 	}
 }

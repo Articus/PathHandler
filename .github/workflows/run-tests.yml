@@ -9,32 +9,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - php: '7.1'
-            has_unique_composer: true
-            has_unique_dependencies: true
-            has_unique_phpspec_tests: true
-          - php: '7.2'
-            has_unique_dependencies: true
-            has_unique_phpspec_tests: true
-          - php: '7.3'
-            has_unique_dependencies: true
-            has_unique_phpspec_tests: true
-          - php: '7.4'
-            has_unique_dependencies: true
-            has_unique_phpspec_tests: true
-          - php: '8.0'
-            has_unique_dependencies: true
           - php: '8.1'
+            has_unique_dependencies: true
           - php: '8.2'
+          - php: '8.3'
             upload_coverage: true
-    container: ghcr.io/articus/phpdbg-coveralls:${{ matrix.php }}_2.5.3_2022-12-10
+    container: ghcr.io/articus/phpdbg-coveralls:${{ matrix.php }}_2.7.0_2024-01-08
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Workaround for https://git-scm.com/docs/git-config/2.39.2#Documentation/git-config.txt-safedirectory
+        run: chown root:root ./
 
-      - name: Use unique Composer
-        if: matrix.has_unique_composer
-        run: cp ./composer.phar.${{ matrix.php }} ./composer.phar
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Use unique composer.lock
         if: matrix.has_unique_dependencies
@@ -45,10 +31,6 @@ jobs:
 
       - name: Install dependencies via Composer
         run: php ./composer.phar install --no-interaction --no-progress --prefer-dist --classmap-authoritative
-
-      - name: Use unique phpspec.yml
-        if: matrix.has_unique_phpspec_tests
-        run: cp ./phpspec.yml.$(echo ${{ matrix.php }} | cut -d . -f 1) ./phpspec.yml
 
       - name: Run PhpSpec tests
         run: phpdbg -qrr ./vendor/phpspec/phpspec/bin/phpspec run

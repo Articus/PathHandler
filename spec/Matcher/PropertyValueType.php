@@ -3,9 +3,20 @@ declare(strict_types=1);
 
 namespace spec\Matcher;
 
+use LogicException;
 use PhpSpec\Exception\Example\FailureException;
 use PhpSpec\Matcher\Matcher;
 use PhpSpec\Wrapper\DelayedCall;
+use ReflectionClass;
+use function count;
+use function explode;
+use function get_class;
+use function get_debug_type;
+use function implode;
+use function is_array;
+use function is_object;
+use function is_string;
+use function sprintf;
 
 /**
  * Allows to check what type has value of non-public property
@@ -21,9 +32,9 @@ class PropertyValueType implements Matcher
 	 */
 	public function supports(string $name, $subject, array $arguments): bool
 	{
-		return ($name === 'havePropertyOfType') && \is_object($subject)
-			&& (2 == \count($arguments)) && \is_string($arguments[0]) && \is_string($arguments[1])
-		;
+		return ($name === 'havePropertyOfType') && is_object($subject)
+			&& (2 == count($arguments)) && is_string($arguments[0]) && is_string($arguments[1])
+			;
 	}
 
 	public function getPriority(): int
@@ -36,10 +47,10 @@ class PropertyValueType implements Matcher
 		[$propertyName, $expectedPropertyValueType, $actualPropertyValueType] = $this->processProperty($subject, $arguments);
 		if ($actualPropertyValueType !== $expectedPropertyValueType)
 		{
-			throw new FailureException(\sprintf(
+			throw new FailureException(sprintf(
 				'Expected "%s" property value of %s instance to have type %s, but got %s.',
 				$propertyName,
-				\get_class($subject),
+				get_class($subject),
 				$expectedPropertyValueType,
 				$actualPropertyValueType
 			));
@@ -52,30 +63,44 @@ class PropertyValueType implements Matcher
 		[$propertyName, $expectedPropertyValueType, $actualPropertyValueType] = $this->processProperty($subject, $arguments);
 		if ($actualPropertyValueType === $expectedPropertyValueType)
 		{
-			throw new FailureException(\sprintf(
+			throw new FailureException(sprintf(
 				'Did not expect "%s" property value of %s instance to be %s, but got one.',
 				$propertyName,
-				\get_class($subject),
+				get_class($subject),
 				$expectedPropertyValueType
 			));
 		}
 		return null;
 	}
 
-	/**
-	 * @param object $subject
-	 * @param array $arguments
-	 * @return array
-	 * @throws \ReflectionException
-	 */
-	protected function processProperty($subject, array $arguments): array
+	protected function processProperty(object $subject, array $arguments): array
 	{
-		[$propertyName, $expectedPropertyValueType] = $arguments;
-		$classReflection = new \ReflectionClass($subject);
-		$propertyReflection = $classReflection->getProperty($propertyName);
-		$propertyReflection->setAccessible(true);
-		$actualPropertyValue = $propertyReflection->getValue($subject);
-		$actualPropertyValueType = \is_object($actualPropertyValue) ? \get_class($actualPropertyValue) : \gettype($actualPropertyValue);
+		[$propertyNameOrPath, $expectedPropertyValueType] = $arguments;
+		$propertyPath = is_array($propertyNameOrPath) ? $propertyNameOrPath : explode('.', $propertyNameOrPath);
+		$propertyName = implode('.', $propertyPath);
+		$actualPropertyValue = $subject;
+		foreach ($propertyPath as $index => $propertyPathStep)
+		{
+			if (is_array($actualPropertyValue))
+			{
+				$actualPropertyValue = $actualPropertyValue[$propertyPathStep];
+			}
+			elseif (is_object($actualPropertyValue))
+			{
+				$classReflection = new ReflectionClass($actualPropertyValue);
+				if (!$classReflection->hasProperty($propertyPathStep))
+				{
+					throw new LogicException(sprintf('Class %s does not have property %s (%s)', $classReflection->getName(), $propertyPathStep, $index));
+				}
+				$propertyReflection = $classReflection->getProperty($propertyPathStep);
+				$actualPropertyValue = $propertyReflection->getValue($actualPropertyValue);
+			}
+			else
+			{
+				throw new LogicException(sprintf('Can not get property/item %s (%s) from non object/non array', $propertyPathStep, $index));
+			}
+		}
+		$actualPropertyValueType = get_debug_type($actualPropertyValue);
 		return [$propertyName, $expectedPropertyValueType, $actualPropertyValueType];
 	}
 }

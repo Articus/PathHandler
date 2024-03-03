@@ -3,15 +3,15 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Consumer\Factory;
 
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\Factory\FactoryInterface;
+use Articus\PathHandler\Consumer;
+use Articus\PluginManager\PluginFactoryInterface;
+use Psr\Container\ContainerInterface;
 
-class Json implements FactoryInterface
+class Json implements PluginFactoryInterface
 {
-	public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+	public function __invoke(ContainerInterface $container, string $name, array $options = []): Consumer\Json
 	{
-		$parseAsStdClass = $options['parse_as_std_class'] ?? false;
-		return new PH\Consumer\Json($parseAsStdClass);
+		$parsedOptions = new Consumer\Options\Json($options);
+		return new Consumer\Json($parsedOptions->decodeFlags, $parsedOptions->depth);
 	}
 }

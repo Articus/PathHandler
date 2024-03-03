@@ -3,18 +3,15 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Producer\Factory;
 
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
-use Psr\Http\Message\StreamInterface;
-use Laminas\ServiceManager\Factory\FactoryInterface;
+use Articus\PathHandler\Producer;
+use Articus\PluginManager\PluginFactoryInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
-class Text implements FactoryInterface
+class Text implements PluginFactoryInterface
 {
-	/**
-	 * @inheritdoc
-	 */
-	public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+	public function __invoke(ContainerInterface $container, string $name, array $options = []): Producer\Text
 	{
-		return new PH\Producer\Text($container->get(StreamInterface::class));
+		return new Producer\Text($container->get(StreamFactoryInterface::class));
 	}
 }

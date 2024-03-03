@@ -9,9 +9,9 @@ namespace Articus\PathHandler\Producer;
 interface HeaderInterface
 {
 	/**
-	 * Should yield header name => header value
+	 * Should return or yield headers to set
 	 * @param mixed $data
-	 * @return \Generator
+	 * @return iterable<string, string> map "header name" -> "header value"
 	 */
-	public function assembleHeaders($data): \Generator;
+	public function assembleHeaders(mixed $data): iterable;
 }

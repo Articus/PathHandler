@@ -6,49 +6,46 @@ namespace Articus\PathHandler\Attribute\Options;
 class IdentifiableValueListLoad
 {
 	/**
-	 * Type of identifiable values registered in Articus\DataTransfer\IdentifiableValueLoader service
-	 * @var string
+	 * Type of identifiable values registered in \Articus\DataTransfer\IdentifiableValueLoader service
+	 * @see \Articus\DataTransfer\IdentifiableValueLoader
 	 */
-	public $type;
+	public string $type;
 
 	/**
 	 * Name of the service that should be used to emit identifiers of list values.
 	 * Service is invoked with type name and either request object or specified request attributes values,
 	 * so callable(string, mixed...): array<int|string> is expected.
-	 * @var string
 	 */
-	public $identifierEmitter;
+	public string $identifierEmitter;
 
 	/**
 	 * Names of request attributes that should be passed to identifier emitter.
 	 * If it is empty whole request is passed.
 	 * @var string[]
 	 */
-	public $identifierEmitterArgAttrs = [];
+	public array $identifierEmitterArgAttrs = [];
 
 	/**
 	 * Name of the service that should be used to instanciate "value receiver".
 	 * Service is invoked with type name and either request object or specified request attributes values,
-	 * so callable(string, mixed...): Generator<int, null, null|array{0:int|string,1:int|string,2:object|resource|array|string|int|float|bool},iterable<int|string, object|resource|array|string|int|float|bool>> is expected.
+	 * so callable(string, mixed...): Generator<int, null, null|array{0:int|string,1:int|string,2:object|resource|array|scalar},iterable<int|string, object|resource|array|scalar>> is expected.
 	 * The generator instanciated with this service ("value receiver") is expected
 	 * to receive tuples ("identifier index", "identifier", "value corresponding to identifier") until null is sent
 	 * and to return value list that should be stored in request.
-	 * @var string|null
 	 */
-	public $valueReceiverFactory = null;
+	public null|string $valueReceiverFactory = null;
 
 	/**
 	 * Names of request attributes that should be passed to value receiver factory.
 	 * If it is empty whole request is passed.
 	 * @var string[]
 	 */
-	public $valueReceiverFactoryArgAttrs = [];
+	public array $valueReceiverFactoryArgAttrs = [];
 
 	/**
 	 * Name of the request attribute to store value list
-	 * @var string
 	 */
-	public $valueListAttr = 'list';
+	public string $valueListAttr = 'list';
 
 	public function __construct(iterable $options)
 	{
@@ -86,13 +83,6 @@ class IdentifiableValueListLoad
 					$this->valueListAttr = $value;
 					break;
 			}
-		}
-		switch (true)
-		{
-			case ($this->type === null):
-				throw new \LogicException('Option "type" is not set');
-			case ($this->identifierEmitter === null):
-				throw new \LogicException('Option "identifierEmitter" is not set');
 		}
 	}
 }

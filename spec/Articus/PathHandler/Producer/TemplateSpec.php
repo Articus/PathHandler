@@ -3,68 +3,55 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Producer;
 
-use Articus\PathHandler as PH;
-use PhpSpec\ObjectBehavior;
-use Psr\Http\Message\StreamInterface;
-use Mezzio\Response\ServerRequestErrorResponseGenerator;
 use Mezzio\Template\TemplateRendererInterface;
+use PhpSpec\ObjectBehavior;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
 
 class TemplateSpec extends ObjectBehavior
 {
-	public function it_renders_template_with_name_and_params_from_tuple(TemplateRendererInterface $renderer, StreamInterface $stream)
+	public function it_renders_template_with_name_and_params_from_tuple(
+		TemplateRendererInterface $renderer, StreamFactoryInterface $streamFactory, StreamInterface $stream
+	)
 	{
+		$defaultTemplate = 'test_default_template';
 		$data = ['test', ['test' => 123]];
 		$out = 'test template render';
 
-		$streamFactory = function () use ($stream)
-		{
-			return $stream->getWrappedObject();
-		};
-		$stream->write($out)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-
 		$renderer->render($data[0], $data[1])->shouldBeCalledOnce()->willReturn($out);
+		$streamFactory->createStream($out)->shouldBeCalledOnce()->willReturn($stream);
 
-		$this->beConstructedWith($streamFactory, $renderer);
-		$this->shouldImplement(PH\Producer\ProducerInterface::class);
+		$this->beConstructedWith($streamFactory, $renderer, $defaultTemplate);
 		$this->assemble($data)->shouldBe($stream);
 	}
 
-	public function it_renders_template_with_name_from_string(TemplateRendererInterface $renderer, StreamInterface $stream)
+	public function it_renders_template_with_name_from_string(
+		TemplateRendererInterface $renderer, StreamFactoryInterface $streamFactory, StreamInterface $stream
+	)
 	{
+		$defaultTemplate = 'test_default_template';
 		$data = 'test';
 		$out = 'test template render';
 
-		$streamFactory = function () use ($stream)
-		{
-			return $stream->getWrappedObject();
-		};
-		$stream->write($out)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-
 		$renderer->render($data, [])->shouldBeCalledOnce()->willReturn($out);
+		$streamFactory->createStream($out)->shouldBeCalledOnce()->willReturn($stream);
 
-		$this->beConstructedWith($streamFactory, $renderer);
-		$this->shouldImplement(PH\Producer\ProducerInterface::class);
+		$this->beConstructedWith($streamFactory, $renderer, $defaultTemplate);
 		$this->assemble($data)->shouldBe($stream);
 	}
 
-	public function it_renders_error_template_with_data_param_from_non_tuple_and_non_string(TemplateRendererInterface $renderer, StreamInterface $stream)
+	public function it_renders_error_template_with_data_param_from_non_tuple_and_non_string(
+		TemplateRendererInterface $renderer, StreamFactoryInterface $streamFactory, StreamInterface $stream
+	)
 	{
+		$defaultTemplate = 'test_default_template';
 		$data = 123;
 		$out = 'test template render';
 
-		$streamFactory = function () use ($stream)
-		{
-			return $stream->getWrappedObject();
-		};
-		$stream->write($out)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
+		$renderer->render($defaultTemplate, ['data' => $data])->shouldBeCalledOnce()->willReturn($out);
+		$streamFactory->createStream($out)->shouldBeCalledOnce()->willReturn($stream);
 
-		$renderer->render(ServerRequestErrorResponseGenerator::TEMPLATE_DEFAULT, ['data' => $data])->shouldBeCalledOnce()->willReturn($out);
-
-		$this->beConstructedWith($streamFactory, $renderer);
-		$this->shouldImplement(PH\Producer\ProducerInterface::class);
+		$this->beConstructedWith($streamFactory, $renderer, $defaultTemplate);
 		$this->assemble($data)->shouldBe($stream);
 	}
 }

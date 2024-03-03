@@ -12,8 +12,8 @@ interface AttributeInterface
 {
 	/**
 	 * Modifies initial request
-	 * @param Request $request
-	 * @return Request
+	 * @param Request $request initial request
+	 * @return Request modified request
 	 */
 	public function __invoke(Request $request): Request;
 }

@@ -10,7 +10,10 @@ use Psr\Http\Message\StreamInterface;
  */
 class Internal implements ConsumerInterface
 {
-	public function parse(StreamInterface $body, $preParsedBody, string $mediaType, array $parameters)
+	/**
+	 * @inheritdoc
+	 */
+	public function parse(StreamInterface $body, null|array|object $preParsedBody, string $mediaType, array $parameters): null|array|object
 	{
 		return $preParsedBody;
 	}

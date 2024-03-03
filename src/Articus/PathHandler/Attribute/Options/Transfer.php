@@ -4,54 +4,53 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Attribute\Options;
 
 use Articus\PathHandler\Attribute;
+use LogicException;
+use function class_exists;
+use function sprintf;
 
 class Transfer
 {
 	/**
-	 * Source of data to transfer
-	 * @var string
+	 * Source of data to transfer, should be one of \Articus\PathHandler\Attribute\Transfer::SOURCE_* constants
 	 */
-	public $source = Attribute\Transfer::SOURCE_POST;
+	public string $source = Attribute\Transfer::SOURCE_POST;
 
 	/**
 	 * Class name for hydrated object
-	 * @var string
+	 * @var class-string
 	 */
-	public $type;
+	public string $type;
 
 	/**
 	 * Name of the data subset that should be transferred
-	 * @var string
 	 */
-	public $subset = '';
+	public string $subset = '';
 
 	/**
 	 * Name of the request attribute to store hydrated object
-	 * @var string
 	 */
-	public $objectAttr = 'object';
+	public string $objectAttr = 'object';
 
 	/**
 	 * Name of the service that should be used to instanciate new object if request does not contain one.
 	 * If it is null type constructor is called without arguments.
-	 * Service is invoked with type name and either request object or specified request attributes values.
-	 * @var string|null
+	 * Service is invoked with type name and either request object or specified request attributes values
+	 * so callable(class-string, mixed...): object is expected.
 	 */
-	public $instanciator;
+	public null|string $instanciator = null;
 
 	/**
 	 * Names of request attributes that should be passed to instanciator to create new object.
 	 * If it is empty whole request is passed.
 	 * @var string[]
 	 */
-	public $instanciatorArgAttrs = [];
+	public array $instanciatorArgAttrs = [];
 
 	/**
 	 * Name of the request attribute to store validation errors.
-	 * If it is empty Exception\UnprocessableEntity is raised.
-	 * @var string|null
+	 * If it is empty \Articus\PathHandler\Exception\UnprocessableEntity is raised.
 	 */
-	public $errorAttr = null;
+	public null|string $errorAttr = null;
 
 	public function __construct(iterable $options)
 	{
@@ -60,9 +59,24 @@ class Transfer
 			switch ($key)
 			{
 				case 'source':
-					$this->source = $value;
+					switch ($value)
+					{
+						case Attribute\Transfer::SOURCE_GET:
+						case Attribute\Transfer::SOURCE_POST:
+						case Attribute\Transfer::SOURCE_ROUTE:
+						case Attribute\Transfer::SOURCE_HEADER:
+						case Attribute\Transfer::SOURCE_ATTRIBUTE:
+							$this->source = $value;
+							break;
+						default:
+							throw new LogicException(sprintf('Value "%s" for option "source" is not supported.', $value));
+					}
 					break;
 				case 'type':
+					if (!class_exists($value))
+					{
+						throw new LogicException(sprintf('Option "type" should be a valid class name, not "%s".', $value));
+					}
 					$this->type = $value;
 					break;
 				case 'subset':
@@ -84,10 +98,6 @@ class Transfer
 					$this->errorAttr = $value;
 					break;
 			}
-		}
-		if ($this->type === null)
-		{
-			throw new \LogicException('Option "type" is not set');
 		}
 	}
 }

@@ -5,80 +5,62 @@ namespace Articus\PathHandler\Attribute;
 
 use Articus\DataTransfer\IdentifiableValueLoader;
 use Articus\PathHandler\Exception;
+use Generator;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use function implode;
+use function sprintf;
 
 /**
  * Simple attribute that loads list of values by their identifiers from request and stores this list as request attribute.
- * View Options\IdentifiableValueListLoad for details.
+ * @see Options\IdentifiableValueListLoad for details.
+ * @psalm-type IdentifierEmitter = callable(string, mixed...): array<int|string>
+ * @psalm-type NotNull = object|resource|array|scalar
+ * @psalm-type ValueReceiver = Generator<mixed, null, array{0: array-key, 1: int|string, 2: NotNull}, iterable<NotNull>>
+ * @psalm-type ValueReceiverFactory = callable(string, mixed...): ValueReceiver
  */
 class IdentifiableValueListLoad implements AttributeInterface
 {
 	/**
-	 * @var IdentifiableValueLoader
-	 */
-	protected $loader;
-
-	/**
-	 * @var string
-	 */
-	protected $type;
-
-	/**
-	 * @var callable(string, mixed...): array<int|string>
+	 * @var IdentifierEmitter
 	 */
 	protected $identifierEmitter;
 
 	/**
-	 * @var string[]
-	 */
-	protected $identifierEmitterArgAttrs;
-
-	/**
-	 * @var callable(string, mixed...): \Generator
+	 * @var ValueReceiverFactory
 	 */
 	protected $valueReceiverFactory;
 
 	/**
-	 * @var string[]
-	 */
-	protected $valueReceiverFactoryArgAttrs;
-
-	/**
-	 * @var string
-	 */
-	protected $valueListAttr;
-
-	/**
 	 * @param IdentifiableValueLoader $loader
 	 * @param string $type
-	 * @param callable $identifierEmitter
+	 * @param IdentifierEmitter $identifierEmitter
 	 * @param string[] $identifierEmitterArgAttrs
-	 * @param callable $valueReceiverFactory
+	 * @param ValueReceiverFactory $valueReceiverFactory
 	 * @param string[] $valueReceiverFactoryArgAttrs
 	 * @param string $valueListAttr
 	 */
 	public function __construct(
-		IdentifiableValueLoader $loader,
-		string $type,
+		protected IdentifiableValueLoader $loader,
+		protected string $type,
 		callable $identifierEmitter,
-		array $identifierEmitterArgAttrs,
+		/**
+		 * @var string[]
+		 */
+		protected array $identifierEmitterArgAttrs,
 		callable $valueReceiverFactory,
-		array $valueReceiverFactoryArgAttrs,
-		string $valueListAttr
+		/**
+		 * @var string[]
+		 */
+		protected array $valueReceiverFactoryArgAttrs,
+		protected string $valueListAttr
 	)
 	{
-		$this->loader = $loader;
-		$this->type = $type;
 		$this->identifierEmitter = $identifierEmitter;
-		$this->identifierEmitterArgAttrs = $identifierEmitterArgAttrs;
 		$this->valueReceiverFactory = $valueReceiverFactory;
-		$this->valueReceiverFactoryArgAttrs = $valueReceiverFactoryArgAttrs;
-		$this->valueListAttr = $valueListAttr;
 	}
 
 	/**
-	 * @param Request $request
-	 * @return Request
+	 * @inheritdoc
 	 * @throws Exception\UnprocessableEntity
 	 */
 	public function __invoke(Request $request): Request
@@ -105,13 +87,17 @@ class IdentifiableValueListLoad implements AttributeInterface
 		if (!empty($unknownIds))
 		{
 			throw new Exception\UnprocessableEntity([
-				'unknownIdentifiers' => \sprintf('Unknown identifier(s): %s', \implode(', ', $unknownIds))
+				'unknownIdentifiers' => sprintf('Unknown identifier(s): %s', implode(', ', $unknownIds))
 			]);
 		}
 
 		return $request->withAttribute($this->valueListAttr, $valueReceiver->getReturn());
 	}
 
+	/**
+	 * @param Request $request
+	 * @return array<int|string>
+	 */
 	protected function getIdentifiers(Request $request): array
 	{
 		$emitterArgs = [$request];
@@ -126,7 +112,11 @@ class IdentifiableValueListLoad implements AttributeInterface
 		return ($this->identifierEmitter)($this->type, ...$emitterArgs);
 	}
 
-	protected function getValueReceiver(Request $request): \Generator
+	/**
+	 * @param Request $request
+	 * @return ValueReceiver
+	 */
+	protected function getValueReceiver(Request $request): Generator
 	{
 		$receiverArgs = [$request];
 		if (!empty($this->valueReceiverFactoryArgAttrs))

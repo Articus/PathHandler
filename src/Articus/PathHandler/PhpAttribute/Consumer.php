@@ -15,13 +15,13 @@ class Consumer
 		 */
 		public string $mediaRange,
 		/**
-		 * Name that should be passed to PluginManager::build
+		 * Name that should be passed to consumer plugin manager
 		 */
 		public string $name,
 		/**
-		 * Options that should be passed to PluginManager::build
+		 * Options that should be passed to consumer plugin manager
 		 */
-		public null|array $options = null,
+		public array $options = [],
 		/**
 		 * Priority in which media type for consumer should check against request. The higher - the earlier.
 		 * If two consumers have equal priority, the one declared earlier will be checked earlier.

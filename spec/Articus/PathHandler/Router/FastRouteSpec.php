@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace spec\Articus\PathHandler\Router;
 
 use Articus\PathHandler as PH;
+use InvalidArgumentException;
 use PhpSpec\Exception\Example\FailureException;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
@@ -13,7 +14,9 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\SimpleCache\CacheInterface;
 use Mezzio\Router\Route;
 use Mezzio\Router\RouteResult;
-
+use function get_debug_type;
+use function implode;
+use function sprintf;
 
 class FastRouteSpec extends ObjectBehavior
 {
@@ -24,24 +27,22 @@ class FastRouteSpec extends ObjectBehavior
 			{
 				if (!($subject instanceof RouteResult))
 				{
-					throw new FailureException(\sprintf(
-						'Invalid route result: expecting %s, not %s.',
-						RouteResult::class,
-						\is_object($subject) ? \get_class($subject) : \gettype($subject)
+					throw new FailureException(sprintf(
+						'Invalid route result: expecting %s, not %s.', RouteResult::class, get_debug_type($subject)
 					));
 				}
 				if ($subject->isSuccess() !== $success)
 				{
-					throw new FailureException(\sprintf(
+					throw new FailureException(sprintf(
 						'Invalid route result success: expecting %s.', $success ? 'true' : 'false'
 					));
 				}
 				if ($subject->getAllowedMethods() !== $allowedMethods)
 				{
-					throw new FailureException(\sprintf(
+					throw new FailureException(sprintf(
 						'Invalid route result allowed HTTP methods: expecting %s, not %s.',
-						\implode(',', $allowedMethods ?? ['null']),
-						\implode(',', $subject->getAllowedMethods() ?? ['null'])
+						implode(',', $allowedMethods ?? ['null']),
+						implode(',', $subject->getAllowedMethods() ?? ['null'])
 					));
 				}
 				if (($route !== null) && ($subject->getMatchedRoute() !== $route))
@@ -344,8 +345,8 @@ class FastRouteSpec extends ObjectBehavior
 		$route2 = new Route('/test/2', $middleware->getWrappedObject(), ['TEST2'], $name);
 
 		$this->addRoute($route1);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('addRoute', [$route1]);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('addRoute', [$route2]);
+		$this->shouldThrow(InvalidArgumentException::class)->during('addRoute', [$route1]);
+		$this->shouldThrow(InvalidArgumentException::class)->during('addRoute', [$route2]);
 	}
 
 	public function it_generates_uri_for_static_route_that_was_registered(CacheInterface $cache, MiddlewareInterface $middleware)
@@ -406,7 +407,7 @@ class FastRouteSpec extends ObjectBehavior
 
 	public function it_throws_on_uri_generation_for_route_that_was_not_registered()
 	{
-		$this->shouldThrow(\InvalidArgumentException::class)->during('generateUri', ['test']);
+		$this->shouldThrow(InvalidArgumentException::class)->during('generateUri', ['test']);
 	}
 
 	public function it_throws_on_uri_generation_for_variable_route_without_all_substitutions(
@@ -422,7 +423,7 @@ class FastRouteSpec extends ObjectBehavior
 		$cache->set(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->addRoute($route);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('generateUri', [$route->getName()]);
+		$this->shouldThrow(InvalidArgumentException::class)->during('generateUri', [$route->getName()]);
 	}
 
 	public function it_throws_on_uri_generation_for_masked_variable_route_if_substitution_does_not_match_mask(
@@ -438,7 +439,6 @@ class FastRouteSpec extends ObjectBehavior
 		$cache->set(PH\Router\FastRoute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->addRoute($route);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('generateUri', [$route->getName(), ['test' => 'qwer']]);
+		$this->shouldThrow(InvalidArgumentException::class)->during('generateUri', [$route->getName(), ['test' => 'qwer']]);
 	}
-
 }

@@ -3,57 +3,44 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Producer;
 
-use Articus\PathHandler as PH;
-use PhpSpec\Exception\Example\SkippingException;
+use InvalidArgumentException;
 use PhpSpec\ObjectBehavior;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
+use Stringable;
 
 class TextSpec extends ObjectBehavior
 {
-	public function let(StreamInterface $stream)
+	public function it_produces_empty_string_from_null_data(StreamFactoryInterface $streamFactory, StreamInterface $stream)
 	{
-		$streamFactory = function () use ($stream)
-		{
-			return $stream->getWrappedObject();
-		};
+		$streamFactory->createStream('')->shouldBeCalledOnce()->willReturn($stream);
 		$this->beConstructedWith($streamFactory);
-		$this->shouldImplement(PH\Producer\ProducerInterface::class);
-	}
-
-	public function it_produces_empty_string_from_null_data(StreamInterface $stream)
-	{
-		$stream->write('')->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
 		$this->assemble(null)->shouldBe($stream);
 	}
 
-	public function it_produces_string_from_string(StreamInterface $stream)
+	public function it_produces_string_from_string(StreamFactoryInterface $streamFactory, StreamInterface $stream)
 	{
 		$data = 'test123';
-		$stream->write($data)->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
+		$streamFactory->createStream($data)->shouldBeCalledOnce()->willReturn($stream);
+		$this->beConstructedWith($streamFactory);
 		$this->assemble($data)->shouldBe($stream);
 	}
 
-	public function it_produces_string_from_stringable_object(StreamInterface $stream)
+	public function it_produces_string_from_stringable_object(StreamFactoryInterface $streamFactory, StreamInterface $stream)
 	{
-		if (\PHP_MAJOR_VERSION < 8)
+		$data = new class () implements Stringable
 		{
-			throw new SkippingException('PHP 8+ is required');
-		}
-		$data = new class () implements \Stringable
-		{
-			public function __toString()
+			public function __toString(): string
 			{
 				return 'test123';
 			}
 		};
-		$stream->write($data->__toString())->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
+		$streamFactory->createStream($data->__toString())->shouldBeCalledOnce()->willReturn($stream);
+		$this->beConstructedWith($streamFactory);
 		$this->assemble($data)->shouldBe($stream);
 	}
 
-	public function it_produces_string_from_object_with_magic_method(StreamInterface $stream)
+	public function it_produces_string_from_object_with_magic_method(StreamFactoryInterface $streamFactory, StreamInterface $stream)
 	{
 		$data = new class ()
 		{
@@ -62,32 +49,36 @@ class TextSpec extends ObjectBehavior
 				return 'test123';
 			}
 		};
-		$stream->write($data->__toString())->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
+		$streamFactory->createStream($data->__toString())->shouldBeCalledOnce()->willReturn($stream);
+		$this->beConstructedWith($streamFactory);
 		$this->assemble($data)->shouldBe($stream);
 	}
 
-	public function it_throws_on_bool()
+	public function it_throws_on_bool(StreamFactoryInterface $streamFactory)
 	{
 		$data = true;
-		$this->shouldThrow(\InvalidArgumentException::class)->during('assemble', [$data]);
+		$this->beConstructedWith($streamFactory);
+		$this->shouldThrow(InvalidArgumentException::class)->during('assemble', [$data]);
 	}
 
-	public function it_throws_on_int()
+	public function it_throws_on_int(StreamFactoryInterface $streamFactory)
 	{
 		$data = 123;
-		$this->shouldThrow(\InvalidArgumentException::class)->during('assemble', [$data]);
+		$this->beConstructedWith($streamFactory);
+		$this->shouldThrow(InvalidArgumentException::class)->during('assemble', [$data]);
 	}
 
-	public function it_throws_on_float()
+	public function it_throws_on_float(StreamFactoryInterface $streamFactory)
 	{
 		$data = 123.456;
-		$this->shouldThrow(\InvalidArgumentException::class)->during('assemble', [$data]);
+		$this->beConstructedWith($streamFactory);
+		$this->shouldThrow(InvalidArgumentException::class)->during('assemble', [$data]);
 	}
 
-	public function it_throws_on_array()
+	public function it_throws_on_array(StreamFactoryInterface $streamFactory)
 	{
 		$data = [123];
-		$this->shouldThrow(\InvalidArgumentException::class)->during('assemble', [$data]);
+		$this->beConstructedWith($streamFactory);
+		$this->shouldThrow(InvalidArgumentException::class)->during('assemble', [$data]);
 	}
 }

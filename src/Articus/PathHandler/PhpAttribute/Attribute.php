@@ -11,15 +11,15 @@ class Attribute
 {
 	public function __construct(
 		/**
-		 * Name that should be passed to PluginManager::build
+		 * Name that should be passed to attribute plugin manager
 		 */
 		public string $name,
 		/**
-		 * Options that should be passed to PluginManager::build
+		 * Options that should be passed to attribute plugin manager
 		 */
-		public null|array $options = null,
+		public array $options = [],
 		/**
-		 * Priority in which attribute should added to request. The higher - the earlier.
+		 * Priority in which attribute should be executed against request. The higher - the earlier.
 		 * If two attributes have equal priority, the one declared earlier will be added earlier.
 		 */
 		public int $priority = 1,

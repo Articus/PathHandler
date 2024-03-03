@@ -3,72 +3,84 @@ declare(strict_types=1);
 
 namespace Articus\PathHandler\Cache;
 
+use Closure;
+use DateInterval;
+use InvalidArgumentException;
+use LogicException;
 use Psr\SimpleCache\CacheInterface;
+use function chmod;
+use function file_put_contents;
+use function is_array;
+use function is_dir;
+use function is_writable;
+use function mkdir;
+use function realpath;
+use function rename;
+use function restore_error_handler;
+use function set_error_handler;
+use function sprintf;
+use function tempnam;
+use function unlink;
+use function var_export;
+use const DIRECTORY_SEPARATOR;
 
 /**
  * Incomplete implementation of PSR-16 optimized to store single array of non-object data.
- * Data for key "my_key" is stored as plain PHP array in file <directory>/my_key.php
+ * Data for key "my_key" is stored as plain PHP array in file "directory"/my_key.php
  */
 class DataFilePerKey implements CacheInterface
 {
 	/**
 	 * Key to access data
-	 * @var string
 	 */
-	protected $key;
+	protected string $key;
+
 	/**
 	 * Root folder to store data
-	 * @var string|null
 	 */
-	protected $directory;
+	protected null|string $directory = null;
+
 	/**
 	 * Permissions that should be removed from file used to store data.
 	 * Similar to https://www.php.net/manual/en/function.umask.php
-	 * @var int
 	 */
-	protected $umask;
-	/**
-	 * @var \Closure
-	 */
-	protected static $emptyErrorHandler;
+	protected int $umask;
 
-	/**
-	 * @param string|null $directory
-	 * @param int $umask
-	 */
-	public function __construct(string $key, ?string $directory, int $umask = 0002)
+	protected static Closure $emptyErrorHandler;
+
+	public function __construct(string $key, null|string $directory, int $umask = 0002)
 	{
 		$this->key = $key;
 		$this->umask = $umask;
 		if ($directory !== null)
 		{
-			if (!(\is_dir($directory) || @\mkdir($directory, 0777 & (~$this->umask), true)))
+			if (!(is_dir($directory) || @mkdir($directory, 0777 & (~$this->umask), true)))
 			{
-				throw new \InvalidArgumentException(\sprintf('The directory "%s" does not exist and could not be created.', $directory));
+				throw new InvalidArgumentException(sprintf('The directory "%s" does not exist and could not be created.', $directory));
 			}
-			if (!\is_writable($directory))
+			if (!is_writable($directory))
 			{
-				throw new \InvalidArgumentException(\sprintf('The directory "%s" is not writable.', $directory));
+				throw new InvalidArgumentException(sprintf('The directory "%s" is not writable.', $directory));
 			}
-			$this->directory = \realpath($directory);
+			$this->directory = realpath($directory);
 		}
 		self::$emptyErrorHandler = static function () {};
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function get($key, $default = null)
+	public function get(string $key, mixed $default = null): mixed
 	{
 		$result = $default;
 		if (($this->directory !== null) && ($this->key === $key))
 		{
 			$filename = $this->getFilename();
 			// note: error suppression is still faster than `file_exists`, `is_file` and `is_readable`
-			\set_error_handler(self::$emptyErrorHandler);
+			set_error_handler(self::$emptyErrorHandler);
 			$value = include $filename;
-			\restore_error_handler();
-			if (\is_array($value))
+			restore_error_handler();
+			if (is_array($value))
 			{
 				$result = $value;
 			}
@@ -77,87 +89,87 @@ class DataFilePerKey implements CacheInterface
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function set($key, $value, $ttl = null)
+	public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
 	{
 		$result = false;
-		if (($this->directory !== null) && ($this->key === $key) && \is_array($value) && ($ttl === null))
+		if (($this->directory !== null) && ($this->key === $key) && is_array($value) && ($ttl === null))
 		{
 			$filename = $this->getFilename();
-			$content = \sprintf('<?php return %s;', \var_export($value, true));
+			$content = sprintf('<?php return %s;', var_export($value, true));
 			$result = $this->writeFile($filename, $content);
 		}
 		return $result;
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function delete($key)
+	public function delete(string $key): bool
 	{
-		throw new \LogicException('Not implemented');
+		throw new LogicException('Not implemented');
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function clear()
+	public function clear(): bool
 	{
-		throw new \LogicException('Not implemented');
+		throw new LogicException('Not implemented');
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function getMultiple($keys, $default = null)
+	public function getMultiple(iterable $keys, mixed $default = null): iterable
 	{
-		throw new \LogicException('Not implemented');
+		throw new LogicException('Not implemented');
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function setMultiple($values, $ttl = null)
+	public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
 	{
-		throw new \LogicException('Not implemented');
+		throw new LogicException('Not implemented');
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function deleteMultiple($keys)
+	public function deleteMultiple(iterable $keys): bool
 	{
-		throw new \LogicException('Not implemented');
+		throw new LogicException('Not implemented');
 	}
 
 	/**
-	 * @inheritDoc
+	 * @inheritdoc
 	 */
-	public function has($key)
+	public function has(string $key): bool
 	{
-		throw new \LogicException('Not implemented');
+		throw new LogicException('Not implemented');
 	}
 
 	protected function getFilename(): string
 	{
-		return $this->directory . \DIRECTORY_SEPARATOR . $this->key . '.php';
+		return $this->directory . DIRECTORY_SEPARATOR . $this->key . '.php';
 	}
 
 	protected function writeFile(string $filename, string $content): bool
 	{
 		$result = false;
-		$temporaryFilename = \tempnam($this->directory, 'swap');
-		if (\file_put_contents($temporaryFilename, $content) !== false)
+		$temporaryFilename = tempnam($this->directory, 'swap');
+		if (file_put_contents($temporaryFilename, $content) !== false)
 		{
-			@\chmod($temporaryFilename, 0666 & (~$this->umask));
-			if (@\rename($temporaryFilename, $filename))
+			@chmod($temporaryFilename, 0666 & (~$this->umask));
+			if (@rename($temporaryFilename, $filename))
 			{
 				$result = true;
 			}
 			else
 			{
-				@\unlink($temporaryFilename);
+				@unlink($temporaryFilename);
 			}
 		}
 		return $result;

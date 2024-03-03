@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Header;
 
+use InvalidArgumentException;
 use PhpSpec\ObjectBehavior;
+use function ord;
+use function sprintf;
 
 class AcceptSpec extends ObjectBehavior
 {
@@ -24,49 +27,49 @@ TCHAR;
 
 	public function it_throws_on_empty_string()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range: empty type');
+		$exception = new InvalidArgumentException('Invalid media range: empty type');
 		$this->beConstructedWith('');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_starts_with_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 0: unexpected symbol code %s', \ord(' ')));;
+		$exception = new InvalidArgumentException(sprintf('Position 0: unexpected symbol code %s', ord(' ')));;
 		$this->beConstructedWith(' ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_on_non_tchar_symbol_in_type()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 1: unexpected symbol code %s', \ord(' ')));;
+		$exception = new InvalidArgumentException(sprintf('Position 1: unexpected symbol code %s', ord(' ')));;
 		$this->beConstructedWith('a ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_contains_only_type()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range: no subtype');
+		$exception = new InvalidArgumentException('Invalid media range: no subtype');
 		$this->beConstructedWith(self::TCHAR);
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_on_empty_subtype()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range: empty subtype');
+		$exception = new InvalidArgumentException('Invalid media range: empty subtype');
 		$this->beConstructedWith('a/');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_subtype_starts_with_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 2: unexpected symbol code %s', \ord(' ')));;
+		$exception = new InvalidArgumentException(sprintf('Position 2: unexpected symbol code %s', ord(' ')));;
 		$this->beConstructedWith('a/ ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_subtype_contains_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 3: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 3: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b@');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
@@ -79,84 +82,84 @@ TCHAR;
 
 	public function it_throws_if_string_ends_with_whitespace_after_subtype()
 	{
-		$exception = new \InvalidArgumentException('Invalid header: ended with whitespace after subtype');
+		$exception = new InvalidArgumentException('Invalid header: ended with whitespace after subtype');
 		$this->beConstructedWith('a/b ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_non_delimiter_after_subtype_and_whitespace()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 4: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 4: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b @');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_semicolon()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range: no parameter');
+		$exception = new InvalidArgumentException('Invalid media range: no parameter');
 		$this->beConstructedWith('a/b;');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_comma()
 	{
-		$exception = new \InvalidArgumentException('Invalid header: no media range');
+		$exception = new InvalidArgumentException('Invalid header: no media range');
 		$this->beConstructedWith('a/b,');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_whitespace_after_semicolon()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range: no parameter');
+		$exception = new InvalidArgumentException('Invalid media range: no parameter');
 		$this->beConstructedWith('a/b ; ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_whitespace_after_comma()
 	{
-		$exception = new \InvalidArgumentException('Invalid header: no media range');
+		$exception = new InvalidArgumentException('Invalid header: no media range');
 		$this->beConstructedWith('a/b , ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_parameter_name_starts_with_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 6: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 6: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b ; @');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_parameter_name_contains_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 7: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 7: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b ; c@');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_parameter_name()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range parameter: no value');
+		$exception = new InvalidArgumentException('Invalid media range parameter: no value');
 		$this->beConstructedWith('a/b ; c');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_on_empty_unquoted_parameter_value()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range parameter: empty unquoted value');
+		$exception = new InvalidArgumentException('Invalid media range parameter: empty unquoted value');
 		$this->beConstructedWith('a/b; c=');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_unquoted_parameter_value_starts_with_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 7: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 7: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b; c=@');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_unquoted_parameter_value_contains_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 8: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 8: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b; c=d@');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
@@ -169,21 +172,21 @@ TCHAR;
 
 	public function it_throws_if_string_ends_with_whitespace_after_unquoted_parameter()
 	{
-		$exception = new \InvalidArgumentException('Invalid header: ended with whitespace after parameter value');
+		$exception = new InvalidArgumentException('Invalid header: ended with whitespace after parameter value');
 		$this->beConstructedWith('a/b; c=d ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_non_delimiter_after_unquoted_parameter_and_whitespace()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 9: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 9: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b; c=d @');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_on_no_closing_quote_for_empty_parameter_value()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range parameter: no closing quote for value');
+		$exception = new InvalidArgumentException('Invalid media range parameter: no closing quote for value');
 		$this->beConstructedWith('a/b; c="');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
@@ -196,21 +199,21 @@ TCHAR;
 
 	public function it_throws_on_no_closing_quote_for_non_empty_parameter_value()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range parameter: no closing quote for value');
+		$exception = new InvalidArgumentException('Invalid media range parameter: no closing quote for value');
 		$this->beConstructedWith('a/b; c="d');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_on_non_qdtext_symbol_in_quoted_parameter_value()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 8: unexpected symbol code %s', \ord("\n")));;
+		$exception = new InvalidArgumentException(sprintf('Position 8: unexpected symbol code %s', ord("\n")));;
 		$this->beConstructedWith("a/b; c=\"\n\"");
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_on_excessively_escaped_symbol_in_quoted_parameter_value()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 9: unexpected symbol code %s', \ord('d')));;
+		$exception = new InvalidArgumentException(sprintf('Position 9: unexpected symbol code %s', ord('d')));;
 		$this->beConstructedWith('a/b; c="\\d"');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
@@ -224,28 +227,28 @@ TCHAR;
 
 	public function it_throws_if_string_ends_with_escape_symbol_in_quoted_parameter()
 	{
-		$exception = new \InvalidArgumentException('Invalid media range parameter quoted value: no symbol to escape');
+		$exception = new InvalidArgumentException('Invalid media range parameter quoted value: no symbol to escape');
 		$this->beConstructedWith('a/b; c="\\');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_whitespace_after_quoted_parameter()
 	{
-		$exception = new \InvalidArgumentException('Invalid header: ended with whitespace after parameter value');
+		$exception = new InvalidArgumentException('Invalid header: ended with whitespace after parameter value');
 		$this->beConstructedWith('a/b; c="d" ');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_on_neither_delimiter_not_whitespace_after_quoted_parameter()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 10: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 10: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b; c="d"@');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
 
 	public function it_throws_if_string_ends_with_non_delimiter_after_quoted_parameter_and_whitespace()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 11: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 11: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b; c="d" @');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}
@@ -264,7 +267,7 @@ TCHAR;
 
 	public function it_throws_if_type_starts_with_non_tchar_symbol()
 	{
-		$exception = new \InvalidArgumentException(\sprintf('Position 6: unexpected symbol code %s', \ord('@')));;
+		$exception = new InvalidArgumentException(sprintf('Position 6: unexpected symbol code %s', ord('@')));;
 		$this->beConstructedWith('a/b , @');
 		$this->shouldThrow($exception)->duringInstantiation();
 	}

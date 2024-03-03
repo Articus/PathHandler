@@ -4,11 +4,21 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Router;
 
 use FastRoute as FR;
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\SimpleCache\CacheInterface;
 use Mezzio\Router\Route;
 use Mezzio\Router\RouteResult;
 use Mezzio\Router\RouterInterface;
+use function array_diff_key;
+use function array_keys;
+use function array_merge;
+use function array_reverse;
+use function implode;
+use function is_string;
+use function preg_match;
+use function rawurldecode;
+use function sprintf;
 
 /**
  * Router based on nikic/fast-route, alternative for mezzio/mezzio-fastroute
@@ -16,30 +26,24 @@ use Mezzio\Router\RouterInterface;
 class FastRoute implements RouterInterface
 {
 	public const CACHE_KEY = 'fast-route';
-	/**
-	 * @var CacheInterface
-	 */
-	protected $cache;
 
 	/**
-	 * Map <route name> -> <route data>
-	 * @var Route[] Map<string, Route>
+	 * Map "route name" -> "route data"
+	 * @var array<string, Route>
 	 */
-	protected $routes = [];
+	protected array $routes = [];
+
+	protected FR\Dispatcher $dispatcher;
 
 	/**
-	 * @var FR\Dispatcher
+	 * @var array<string, mixed>
 	 */
-	protected $dispatcher;
+	protected array $parsedRoutes;
 
-	/**
-	 * @var array
-	 */
-	protected $parsedRoutes;
-
-	public function __construct(CacheInterface $cache)
+	public function __construct(
+		protected CacheInterface $cache
+	)
 	{
-		$this->cache = $cache;
 	}
 
 	/**
@@ -50,7 +54,7 @@ class FastRoute implements RouterInterface
 		$routeName = $route->getName();
 		if (isset($this->routes[$routeName]))
 		{
-			throw new \InvalidArgumentException(\sprintf('Route %s has already been registered.', $routeName));
+			throw new InvalidArgumentException(sprintf('Route %s has already been registered.', $routeName));
 		}
 		$this->routes[$routeName] = $route;
 	}
@@ -62,13 +66,13 @@ class FastRoute implements RouterInterface
 	{
 		$this->ascertainRoutingData();
 
-		$path = \rawurldecode($request->getUri()->getPath());
+		$path = rawurldecode($request->getUri()->getPath());
 		$match = $this->dispatcher->dispatch($request->getMethod(), $path);
 		switch ($match[0])
 		{
 			case FR\Dispatcher::FOUND:
 				$route = $this->routes[$match[1]];
-				$params = \array_merge($route->getOptions()['defaults'] ?? [], $match[2]);
+				$params = array_merge($route->getOptions()['defaults'] ?? [], $match[2]);
 				return RouteResult::fromRoute($route, $params);
 			case FR\Dispatcher::METHOD_NOT_ALLOWED:
 				return RouteResult::fromRouteFailure($match[1]);
@@ -80,24 +84,25 @@ class FastRoute implements RouterInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function generateUri(string $routeName, array $substitutions = [], array $options = []): string
+	public function generateUri(string $name, array $substitutions = [], array $options = []): string
 	{
+		$routeName = $name;
 		$this->ascertainRoutingData($routeName);
 
 		//Gather all parameters that can be used to substitute route parts
-		$parameters = \array_merge(
+		$parameters = array_merge(
 			$this->routes[$routeName]->getOptions()['defaults'] ?? [],
 			$options['defaults'] ?? [],
 			$substitutions
 		);
 		//Look for longest route that can be assembled with parameters
 		$parts = [];
-		foreach (\array_reverse($this->parsedRoutes[$routeName]) as $segments)
+		foreach (array_reverse($this->parsedRoutes[$routeName]) as $segments)
 		{
 			$parts = [];
 			foreach ($segments as $segment)
 			{
-				if (\is_string($segment))
+				if (is_string($segment))
 				{
 					$parts[] = $segment;
 				}
@@ -110,9 +115,9 @@ class FastRoute implements RouterInterface
 						$parts = [];
 						break;
 					}
-					elseif (!\preg_match('~^' . $mask . '$~', $parameters[$segmentName]))
+					elseif (!preg_match('~^' . $mask . '$~', $parameters[$segmentName]))
 					{
-						throw new \InvalidArgumentException(\sprintf(
+						throw new InvalidArgumentException(sprintf(
 							'Value for parameter "%s" does not match route mask "%s"', $segmentName, $mask
 						));
 					}
@@ -130,31 +135,30 @@ class FastRoute implements RouterInterface
 		}
 		if (empty($parts))
 		{
-			throw new \InvalidArgumentException(\sprintf(
+			throw new InvalidArgumentException(sprintf(
 				'Failed to generate URI from route "%s": parameter list (%s) is incomplete.',
 				$routeName,
-				\implode(', ', \array_keys($parameters))
+				implode(', ', array_keys($parameters))
 			));
 		}
-		return \implode('', $parts);
+		return implode('', $parts);
 	}
 
 	/**
 	 * Ensures that all data required for routing is loaded and valid
-	 * @param null|string $routeName
 	 */
-	protected function ascertainRoutingData(?string $routeName = null): void
+	protected function ascertainRoutingData(null|string $routeName = null): void
 	{
 		if (($routeName !== null) && empty($this->routes[$routeName]))
 		{
-			throw new \InvalidArgumentException(\sprintf('Route %s is not registered.', $routeName));
+			throw new InvalidArgumentException(sprintf('Route %s is not registered.', $routeName));
 		}
 
-		if (($this->dispatcher === null) || ($this->parsedRoutes === null) || (!empty(\array_diff_key($this->routes, $this->parsedRoutes))))
+		if (!(isset($this->dispatcher) && isset($this->parsedRoutes) && empty(array_diff_key($this->routes, $this->parsedRoutes))))
 		{
 			$routingData = $this->cache->get(self::CACHE_KEY);
 			//Check if cached routing data corresponds with added routes
-			if (($routingData !== null) && (!empty(\array_diff_key($this->routes, $routingData[1]))))
+			if (($routingData !== null) && (!empty(array_diff_key($this->routes, $routingData[1]))))
 			{
 				$routingData = null;
 			}
@@ -170,8 +174,8 @@ class FastRoute implements RouterInterface
 	}
 
 	/**
-	 * Generates data for routing: (<data required for dispatcher construction>, <data about parsed routes for URI generation>)
-	 * @return array
+	 * Generates data for routing: ("data required for dispatcher construction", "data about parsed routes for URI generation")
+	 * @return array{0: array, 1: array}
 	 */
 	protected function generateRoutingData(): array
 	{

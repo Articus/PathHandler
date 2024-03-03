@@ -5,96 +5,61 @@ namespace Articus\PathHandler\Attribute;
 
 use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler\Exception;
+use LogicException;
 use Mezzio\Router\RouteResult;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use function count;
 
 /**
  * Simple attribute that transfer data from specified source to newly created or existing object.
  * View Options\Transfer for details.
+ * @psalm-type Instanciator = callable(class-string, mixed...): object
  */
 class Transfer implements AttributeInterface
 {
-	const SOURCE_GET = 'get';
-	const SOURCE_POST = 'post';
-	const SOURCE_ROUTE = 'route';
-	const SOURCE_HEADER = 'header';
-	const SOURCE_ATTRIBUTE = 'attribute';
+	public const SOURCE_GET = 'get';
+	public const SOURCE_POST = 'post';
+	public const SOURCE_ROUTE = 'route';
+	public const SOURCE_HEADER = 'header';
+	public const SOURCE_ATTRIBUTE = 'attribute';
 
 	/**
-	 * @var DTService
-	 */
-	protected $dtService;
-
-	/**
-	 * @var string
-	 */
-	protected $source;
-
-	/**
-	 * @var string
-	 */
-	protected $type;
-
-	/**
-	 * @var string
-	 */
-	protected $subset;
-
-	/**
-	 * @var string
-	 */
-	protected $objectAttr;
-
-	/**
-	 * @var callable
+	 * @var Instanciator
 	 */
 	protected $instanciator;
 
 	/**
-	 * @var string[]
-	 */
-	protected $instanciatorArgAttrs;
-
-	/**
-	 * @var string|null
-	 */
-	protected $errorAttr;
-
-	/**
 	 * @param DTService $dtService
 	 * @param string $source
-	 * @param string $type
+	 * @param class-string $type
 	 * @param string $subset
 	 * @param string $objectAttr
-	 * @param callable $instanciator
+	 * @param Instanciator $instanciator
 	 * @param string[] $instanciatorArgAttrs
 	 * @param null|string $errorAttr
 	 */
 	public function __construct(
-		DTService $dtService,
-		string $source,
-		string $type,
-		string $subset,
-		string $objectAttr,
+		protected DTService $dtService,
+		protected string $source,
+		/**
+		 * @var class-string
+		 */
+		protected string $type,
+		protected string $subset,
+		protected string $objectAttr,
 		callable $instanciator,
-		array $instanciatorArgAttrs,
-		?string $errorAttr
+		/**
+		 * @var string[]
+		 */
+		protected array $instanciatorArgAttrs,
+		protected null|string $errorAttr
 	)
 	{
-		$this->dtService = $dtService;
-		$this->source = $source;
-		$this->type = $type;
-		$this->subset = $subset;
-		$this->objectAttr = $objectAttr;
 		$this->instanciator = $instanciator;
-		$this->instanciatorArgAttrs = $instanciatorArgAttrs;
-		$this->errorAttr = $errorAttr;
 	}
 
 	/**
-	 * @param Request $request
-	 * @return Request
-	 * @throws Exception\BadRequest
+	 * @inheritdoc
 	 * @throws Exception\UnprocessableEntity
 	 */
 	public function __invoke(Request $request): Request
@@ -118,56 +83,40 @@ class Transfer implements AttributeInterface
 		return $request;
 	}
 
-	/**
-	 * @param Request $request
-	 * @return mixed
-	 */
-	protected function getData(Request $request)
+	protected function getData(Request $request): mixed
 	{
-		$data = null;
-		switch ($this->source)
+		return match($this->source)
 		{
-			case self::SOURCE_GET:
-				$data = $request->getQueryParams();
-				break;
-			case self::SOURCE_POST:
-				$data = $request->getParsedBody();
-				break;
-			case self::SOURCE_ROUTE:
-				$routeResult = $request->getAttribute(RouteResult::class);
-				if (!($routeResult instanceof RouteResult))
-				{
-					throw new \LogicException('Failed to find routing result.');
-				}
-				$data = $routeResult->getMatchedParams();
-				break;
-			case self::SOURCE_HEADER:
-				$data = [];
-				foreach ($request->getHeaders() as $name => $values)
-				{
-					$data[$name] = (\count($values) === 1) ? $values[0] : $values;
-				}
-				break;
-			case self::SOURCE_ATTRIBUTE:
-				$data = $request->getAttributes();
-				break;
-			default:
-				throw new \InvalidArgumentException(\sprintf('Unknown source %s.', $this->source));
+			self::SOURCE_GET => $request->getQueryParams(),
+			self::SOURCE_POST => $request->getParsedBody(),
+			self::SOURCE_ROUTE => $this->getRouteData($request),
+			self::SOURCE_HEADER => $this->getHeaderData($request),
+			self::SOURCE_ATTRIBUTE => $request->getAttributes(),
+		};
+	}
+
+	protected function getRouteData(Request $request): array
+	{
+		$routeResult = $request->getAttribute(RouteResult::class);
+		if (!($routeResult instanceof RouteResult))
+		{
+			throw new LogicException('Failed to find routing result.');
+		}
+		return $routeResult->getMatchedParams();
+	}
+
+	protected function getHeaderData(Request $request): array
+	{
+		$data = [];
+		foreach ($request->getHeaders() as $name => $values)
+		{
+			$data[$name] = (count($values) === 1) ? $values[0] : $values;
 		}
 		return $data;
 	}
 
-	/**
-	 * @param Request $request
-	 * @return object
-	 */
-	protected function getObject(Request $request)
+	protected function getObject(Request $request): object
 	{
-		if (!\class_exists($this->type))
-		{
-			throw new \InvalidArgumentException(\sprintf('Unknown class %s.', $this->type));
-		}
-
 		$result = $request->getAttribute($this->objectAttr);
 		if (!($result instanceof $this->type))
 		{

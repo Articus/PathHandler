@@ -9,8 +9,8 @@ namespace Articus\PathHandler\Exception;
 interface HeaderInterface
 {
 	/**
-	 * Should yield header name => header value(s)
-	 * @return \Generator
+	 * Should return or yield additional headers
+	 * @return iterable<string, string|string[]> map "header name" -> "header value(s)"
 	 */
-	public function getHeaders(): \Generator;
+	public function getHeaders(): iterable;
 }

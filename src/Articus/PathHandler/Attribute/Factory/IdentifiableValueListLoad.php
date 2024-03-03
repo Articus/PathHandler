@@ -4,20 +4,19 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Attribute\Factory;
 
 use Articus\DataTransfer\IdentifiableValueLoader;
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\Factory\FactoryInterface;
+use Articus\PathHandler\Attribute;
+use Articus\PluginManager\PluginFactoryInterface;
+use Closure;
+use Generator;
+use Psr\Container\ContainerInterface;
 
-class IdentifiableValueListLoad implements FactoryInterface
+class IdentifiableValueListLoad implements PluginFactoryInterface
 {
-	/**
-	 * @var callable
-	 */
-	protected static $defaultValueReceiverFactory;
+	protected static Closure $defaultValueReceiverFactory;
 
 	public function __construct()
 	{
-		self::$defaultValueReceiverFactory = static function ()
+		self::$defaultValueReceiverFactory = static function (): Generator
 		{
 			$result = [];
 			while (($tuple = yield) !== null)
@@ -29,21 +28,18 @@ class IdentifiableValueListLoad implements FactoryInterface
 		};
 	}
 
-	/**
-	 * @inheritdoc
-	 */
-	public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+	public function __invoke(ContainerInterface $container, string $name, array $options = []): Attribute\IdentifiableValueListLoad
 	{
-		$options = new PH\Attribute\Options\IdentifiableValueListLoad($options);
-		$valueReceiverFactory = ($options->valueReceiverFactory === null) ? self::$defaultValueReceiverFactory : $container->get($options->valueReceiverFactory);
-		$result = new PH\Attribute\IdentifiableValueListLoad(
+		$parsedOptions = new Attribute\Options\IdentifiableValueListLoad($options);
+		$valueReceiverFactory = ($parsedOptions->valueReceiverFactory === null) ? self::$defaultValueReceiverFactory : $container->get($parsedOptions->valueReceiverFactory);
+		$result = new Attribute\IdentifiableValueListLoad(
 			$container->get(IdentifiableValueLoader::class),
-			$options->type,
-			$container->get($options->identifierEmitter),
-			$options->identifierEmitterArgAttrs,
+			$parsedOptions->type,
+			$container->get($parsedOptions->identifierEmitter),
+			$parsedOptions->identifierEmitterArgAttrs,
 			$valueReceiverFactory,
-			$options->valueReceiverFactoryArgAttrs,
-			$options->valueListAttr
+			$parsedOptions->valueReceiverFactoryArgAttrs,
+			$parsedOptions->valueListAttr
 		);
 		return $result;
 	}

@@ -3,20 +3,21 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Attribute;
 
-use spec\Example\InstanciatorInterface as Invokable;
 use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler as PH;
-use PhpSpec\ObjectBehavior;
-use Prophecy\Argument;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use LogicException;
 use Mezzio\Router\RouteResult;
+use PhpSpec\ObjectBehavior;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use spec\Example\InstanciatorInterface as Invokable;
+use stdClass;
 
 class TransferSpec extends ObjectBehavior
 {
-	public function it_transfers_data_from_query(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_transfers_data_from_query(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_GET;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -34,10 +35,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_transfers_data_from_parsed_body(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_transfers_data_from_parsed_body(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -55,10 +56,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_transfers_data_from_headers(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_transfers_data_from_headers(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_HEADER;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -77,10 +78,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_transfers_data_from_routing(DTService $dt, Request $in, Request $out, Invokable $instanciator, RouteResult $routing, \stdClass $object)
+	public function it_transfers_data_from_routing(DTService $dt, Request $in, Request $out, Invokable $instanciator, RouteResult $routing, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_ROUTE;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -100,10 +101,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_throws_on_data_transfer_from_routing_if_there_is_no_routing_result(DTService $dt, Request $in, Invokable $instanciator, \stdClass $object)
+	public function it_throws_on_data_transfer_from_routing_if_there_is_no_routing_result(DTService $dt, Request $in, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_ROUTE;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -116,13 +117,13 @@ class TransferSpec extends ObjectBehavior
 		$dt->transferToTypedData($data, $object, $subset)->shouldNotBeCalled();
 
 		$this->beConstructedWith($dt, $source, $type, $subset, $objectAttr, $instanciator, $instanciatorArgAttrs, $errorAttr);
-		$this->shouldThrow(\LogicException::class)->during('__invoke', [$in]);
+		$this->shouldThrow(LogicException::class)->during('__invoke', [$in]);
 	}
 
-	public function it_transfers_data_from_attributes(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_transfers_data_from_attributes(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_ATTRIBUTE;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -140,23 +141,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_throws_on_invalid_data_source(DTService $dt, Request $in, Invokable $instanciator)
-	{
-		$source = 'invalid';
-		$type = \stdClass::class;
-		$subset = '';
-		$objectAttr = 'object';
-		$instanciatorArgAttrs = [];
-		$errorAttr = null;
-
-		$this->beConstructedWith($dt, $source, $type, $subset, $objectAttr, $instanciator, $instanciatorArgAttrs, $errorAttr);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('__invoke', [$in]);
-	}
-
-	public function it_transfers_custom_subset_of_data(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_transfers_custom_subset_of_data(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = 'testSubset';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -174,10 +162,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_saves_object_to_attribute_with_custom_name(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_saves_object_to_attribute_with_custom_name(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'test';
 		$instanciatorArgAttrs = [];
@@ -195,10 +183,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_creates_object_with_instanciator_passing_request_if_object_attribute_is_empty(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_creates_object_with_instanciator_passing_request_if_object_attribute_is_empty(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -217,10 +205,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_creates_object_with_instanciator_passing_specified_attributes_if_object_attribute_is_empty(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_creates_object_with_instanciator_passing_specified_attributes_if_object_attribute_is_empty(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = ['test1', 'test2'];
@@ -242,27 +230,10 @@ class TransferSpec extends ObjectBehavior
 		$this->__invoke($in)->shouldBe($out);
 	}
 
-	public function it_throws_on_invalid_object_type(DTService $dt, Request $in, Invokable $instanciator)
+	public function it_throws_on_transfer_error_if_error_attribute_name_is_not_set(DTService $dt, Request $in, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = 'invalid';
-		$subset = '';
-		$objectAttr = 'object';
-		$instanciatorArgAttrs = [];
-		$errorAttr = null;
-
-		$data = ['test' => 123];
-
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
-
-		$this->beConstructedWith($dt, $source, $type, $subset, $objectAttr, $instanciator, $instanciatorArgAttrs, $errorAttr);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('__invoke', [$in]);
-	}
-
-	public function it_throws_on_transfer_error_if_error_attribute_name_is_not_set(DTService $dt, Request $in, Invokable $instanciator, \stdClass $object)
-	{
-		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];
@@ -281,10 +252,10 @@ class TransferSpec extends ObjectBehavior
 		$this->shouldThrow($exception)->during('__invoke', [$in]);
 	}
 
-	public function it_saves_transfer_error_to_error_attribute_if_its_name_is_set(DTService $dt, Request $in, Request $out, Invokable $instanciator, \stdClass $object)
+	public function it_saves_transfer_error_to_error_attribute_if_its_name_is_set(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
-		$type = \stdClass::class;
+		$type = stdClass::class;
 		$subset = '';
 		$objectAttr = 'object';
 		$instanciatorArgAttrs = [];

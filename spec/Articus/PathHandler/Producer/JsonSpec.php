@@ -3,40 +3,42 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\Producer;
 
-use Articus\PathHandler as PH;
+use InvalidArgumentException;
+use PhpSpec\Exception\Example\SkippingException;
 use PhpSpec\ObjectBehavior;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
+use spec\Utility\GlobalFunctionMock;
+use stdClass;
+use const JSON_UNESCAPED_UNICODE;
 
 class JsonSpec extends ObjectBehavior
 {
-	public function let(StreamInterface $stream)
+	public function it_produces_json_with_flags_and_depth(StreamInterface $stream, StreamFactoryInterface $streamFactory)
 	{
-		$streamFactory = function () use ($stream)
+		if (GlobalFunctionMock::disabled())
 		{
-			return $stream->getWrappedObject();
-		};
-		$this->beConstructedWith($streamFactory);
-		$this->shouldImplement(PH\Producer\ProducerInterface::class);
-	}
+			throw new SkippingException('No global function mock');
+		}
 
-	public function it_produces_json_null_from_null_data(StreamInterface $stream)
-	{
-		$stream->write(\json_encode(null))->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
-		$this->assemble(null)->shouldBe($stream);
-	}
+		$flags = 123;
+		$depth = 234;
+		$data = new stdClass();
+		$content = 'test_string';
 
-	public function it_produces_json_from_json_serializable_data(StreamInterface $stream)
-	{
-		$data = ['test' => 123];
-		$stream->write(\json_encode($data))->shouldBeCalledOnce();
-		$stream->rewind()->shouldBeCalledOnce();
+		GlobalFunctionMock::shouldReceive('json_encode')->with($data, $flags, $depth)->andReturn($content);
+		$streamFactory->createStream($content)->shouldBeCalledOnce()->willReturn($stream);
+
+		$this->beConstructedWith($streamFactory, $flags, $depth);
 		$this->assemble($data)->shouldBe($stream);
+
+		GlobalFunctionMock::tearDown();
 	}
 
-	public function it_throws_on_non_json_serializable_data()
+	public function it_throws_on_non_json_serializable_data(StreamFactoryInterface $streamFactory)
 	{
 		$data = "\xB1\x31";
-		$this->shouldThrow(\InvalidArgumentException::class)->during('assemble', [$data]);
+		$this->beConstructedWith($streamFactory, JSON_UNESCAPED_UNICODE, 512);
+		$this->shouldThrow(InvalidArgumentException::class)->during('assemble', [$data]);
 	}
 }

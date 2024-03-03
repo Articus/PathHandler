@@ -4,23 +4,20 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Attribute\Factory;
 
 use Articus\DataTransfer\IdentifiableValueLoader;
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\Factory\FactoryInterface;
+use Articus\PathHandler\Attribute;
+use Articus\PluginManager\PluginFactoryInterface;
+use Psr\Container\ContainerInterface;
 
-class IdentifiableValueLoad implements FactoryInterface
+class IdentifiableValueLoad implements PluginFactoryInterface
 {
-	/**
-	 * @inheritdoc
-	 */
-	public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+	public function __invoke(ContainerInterface $container, string $name, array $options = []): Attribute\IdentifiableValueLoad
 	{
-		$options = new PH\Attribute\Options\IdentifiableValueLoad($options);
-		$result = new PH\Attribute\IdentifiableValueLoad(
+		$parsedOptions = new Attribute\Options\IdentifiableValueLoad($options);
+		$result = new Attribute\IdentifiableValueLoad(
 			$container->get(IdentifiableValueLoader::class),
-			$options->type,
-			$options->identifierAttr,
-			$options->valueAttr
+			$parsedOptions->type,
+			$parsedOptions->identifierAttr,
+			$parsedOptions->valueAttr
 		);
 		return $result;
 	}

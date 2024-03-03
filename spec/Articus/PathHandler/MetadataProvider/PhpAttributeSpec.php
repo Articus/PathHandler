@@ -3,27 +3,22 @@ declare(strict_types=1);
 
 namespace spec\Articus\PathHandler\MetadataProvider;
 
-use PhpSpec\Exception\Example\SkippingException;
-use Prophecy\Argument;
-use spec\ExampleForPhp8 as Example;
 use Articus\PathHandler as PH;
+use Articus\PluginManager as PM;
+use InvalidArgumentException;
+use LogicException;
 use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\SimpleCache\CacheInterface;
-use Laminas\ServiceManager\PluginManagerInterface;
+use spec\Example;
+use function array_keys;
+use function is_array;
 
 class PhpAttributeSpec extends ObjectBehavior
 {
-	public function let()
-	{
-		if (\PHP_MAJOR_VERSION < 8)
-		{
-			throw new SkippingException('PHP 8+ is required');
-		}
-	}
-
 	public function it_returns_cached_http_methods_for_handler_if_cache_exists(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -48,7 +43,7 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_returns_http_methods_for_handler_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -59,12 +54,12 @@ class PhpAttributeSpec extends ObjectBehavior
 		$cacheChecker = function (array $cacheData) use ($handlerClassName, $httpMethods)
 		{
 			return ((!empty($cacheData[2][$handlerClassName]))
-				&& \is_array($cacheData[2][$handlerClassName])
-				&& (\array_keys($cacheData[2][$handlerClassName]) == $httpMethods)
+				&& is_array($cacheData[2][$handlerClassName])
+				&& (array_keys($cacheData[2][$handlerClassName]) == $httpMethods)
 			);
 		};
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
@@ -75,57 +70,57 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_throws_on_http_methods_return_for_invalid_handler(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn(null);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('getHttpMethods', [$handlerName]);
+		$this->shouldThrow(InvalidArgumentException::class)->during('getHttpMethods', [$handlerName]);
 		$this->__destruct();
 	}
 
 	public function it_throws_on_http_methods_return_for_handler_with_several_methods_handling_same_http_method(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\SeveralMethodsForSingleHttpMethod();
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\LogicException::class)->during('getHttpMethods', [$handlerName]);
+		$this->shouldThrow(LogicException::class)->during('getHttpMethods', [$handlerName]);
 		$this->__destruct();
 	}
 
 	public function it_throws_on_http_methods_return_for_handler_without_methods_handling_http_methods(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\NoMethodsHandlingHttpMethods();
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\LogicException::class)->during('getHttpMethods', [$handlerName]);
+		$this->shouldThrow(LogicException::class)->during('getHttpMethods', [$handlerName]);
 		$this->__destruct();
 	}
 
 	public function it_returns_cached_routes_for_handler_if_cache_exists(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -154,7 +149,7 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_returns_routes_for_handler_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -171,12 +166,9 @@ class PhpAttributeSpec extends ObjectBehavior
 			[null, '/7', ['test_7' => 123]],
 			['test_8', '/8', ['test_8' => 123]],
 		];
-		$cacheChecker = function (array $cacheData) use ($handlerClassName, $routes)
-		{
-			return ($cacheData[1][$handlerClassName] == $routes);
-		};
+		$cacheChecker = static fn (array $cacheData) => ($cacheData[1][$handlerClassName] == $routes);
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
 
@@ -187,40 +179,40 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_throws_on_routes_return_for_invalid_handler(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn(null);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->getRoutes($handlerName)->shouldThrow(\InvalidArgumentException::class)->during('current', []);
+		$this->getRoutes($handlerName)->shouldThrow(InvalidArgumentException::class)->during('current', []);
 		$this->__destruct();
 	}
 
 	public function it_throws_on_routes_return_for_handler_without_routes(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$handler = new Example\Handler\NoRoutes();
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->getRoutes($handlerName)->shouldThrow(\LogicException::class)->during('current', []);
+		$this->getRoutes($handlerName)->shouldThrow(LogicException::class)->during('current', []);
 		$this->__destruct();
 	}
 
 	public function it_checks_and_returns_cached_consumers_for_handler_method_if_cache_exists(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -272,7 +264,7 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_checks_and_returns_consumers_for_handler_method_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -285,48 +277,48 @@ class PhpAttributeSpec extends ObjectBehavior
 			$handlerClassNames[0] => [
 				$handlerMethods[0] => [],
 				$handlerMethods[1] => [
-					['*/*', 'test_1', null],
+					['*/*', 'test_1', []],
 					['*/*', 'test_2', ['test_2' => 123]],
-					['test/3', 'test_3', null],
+					['test/3', 'test_3', []],
 					['test/4', 'test_4', ['test_4' => 123]],
-					['*/*', 'test_5', null],
-					['test/6', 'test_6', null],
+					['*/*', 'test_5', []],
+					['test/6', 'test_6', []],
 					['*/*', 'test_7', ['test_7' => 123]],
 					['test/8', 'test_8', ['test_8' => 123]],
 				],
 			],
 			$handlerClassNames[1] => [
 				$handlerMethods[0] => [
-					['*/*', 'test_c1', null],
+					['*/*', 'test_c1', []],
 					['*/*', 'test_c2', ['test_c2' => 123]],
-					['test/c3', 'test_c3', null],
+					['test/c3', 'test_c3', []],
 					['test/c4', 'test_c4', ['test_c4' => 123]],
-					['*/*', 'test_c5', null],
-					['test/c6', 'test_c6', null],
+					['*/*', 'test_c5', []],
+					['test/c6', 'test_c6', []],
 					['*/*', 'test_c7', ['test_c7' => 123]],
 					['test/c8', 'test_c8', ['test_c8' => 123]],
 				],
 				$handlerMethods[1] => [
-					['*/*', 'test_c1', null],
+					['*/*', 'test_c1', []],
 					['*/*', 'test_c2', ['test_c2' => 123]],
-					['*/*', 'test_1', null],
+					['*/*', 'test_1', []],
 					['*/*', 'test_2', ['test_2' => 123]],
-					['test/c3', 'test_c3', null],
+					['test/c3', 'test_c3', []],
 					['test/c4', 'test_c4', ['test_c4' => 123]],
-					['test/3', 'test_3', null],
+					['test/3', 'test_3', []],
 					['test/4', 'test_4', ['test_4' => 123]],
-					['*/*', 'test_c5', null],
-					['test/c6', 'test_c6', null],
+					['*/*', 'test_c5', []],
+					['test/c6', 'test_c6', []],
 					['*/*', 'test_c7', ['test_c7' => 123]],
 					['test/c8', 'test_c8', ['test_c8' => 123]],
-					['*/*', 'test_5', null],
-					['test/6', 'test_6', null],
+					['*/*', 'test_5', []],
+					['test/6', 'test_6', []],
 					['*/*', 'test_7', ['test_7' => 123]],
 					['test/8', 'test_8', ['test_8' => 123]],
 				],
 			],
 		];
-		$cacheChecker = function (array $cacheData) use ($handlerClassNames, $handlerMethods, $consumers)
+		$cacheChecker = static function (array $cacheData) use ($handlerClassNames, $handlerMethods, $consumers)
 		{
 			$result = true;
 			foreach ([0, 1] as $i)
@@ -349,7 +341,7 @@ class PhpAttributeSpec extends ObjectBehavior
 
 		foreach ([0, 1] as $i)
 		{
-			$handlerManager->get($handlerNames[$i])->shouldBeCalledOnce()->willReturn($handlers[$i]);
+			$handlerManager->__invoke($handlerNames[$i], [])->shouldBeCalledOnce()->willReturn($handlers[$i]);
 
 			foreach ([0, 1] as $j)
 			{
@@ -362,25 +354,25 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_throws_on_consumers_check_and_return_for_invalid_handler(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$httpMethod = 'TEST';
 
-		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn(null);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledTimes(2)->willReturn(null);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('hasConsumers', [$handlerName, $httpMethod]);
-		$this->getConsumers($handlerName, $httpMethod)->shouldThrow(\InvalidArgumentException::class)->during('current', []);
+		$this->shouldThrow(InvalidArgumentException::class)->during('hasConsumers', [$handlerName, $httpMethod]);
+		$this->getConsumers($handlerName, $httpMethod)->shouldThrow(InvalidArgumentException::class)->during('current', []);
 		$this->__destruct();
 	}
 
 	public function it_throws_on_consumers_check_and_return_for_invalid_handler_method(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -388,21 +380,21 @@ class PhpAttributeSpec extends ObjectBehavior
 		$handler = new Example\Handler\ValidConsumers();
 		$httpMethod = 'UNKNOWN';
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('hasConsumers', [$handlerName, $httpMethod]);
-		$this->getConsumers($handlerName, $httpMethod)->shouldThrow(\InvalidArgumentException::class)->during('current', []);
+		$this->shouldThrow(InvalidArgumentException::class)->during('hasConsumers', [$handlerName, $httpMethod]);
+		$this->getConsumers($handlerName, $httpMethod)->shouldThrow(InvalidArgumentException::class)->during('current', []);
 
 		$this->__destruct();
 	}
 
 
 	public function it_returns_cached_attributes_for_handler_method_if_cache_exists(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -452,7 +444,7 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_returns_attributes_for_handler_method_and_saves_them_to_cache_if_cache_is_empty(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -465,39 +457,39 @@ class PhpAttributeSpec extends ObjectBehavior
 			$handlerClassNames[0] => [
 				$handlerMethods[0] => [],
 				$handlerMethods[1] => [
-					['test_1', null],
+					['test_1', []],
 					['test_2', ['test_2' => 123]],
-					['test_3', null],
+					['test_3', []],
 					['test_4', ['test_4' => 123]],
-					['test_5', null],
-					['test_6', null],
+					['test_5', []],
+					['test_6', []],
 					['test_7', ['test_7' => 123]],
 				],
 			],
 			$handlerClassNames[1] => [
 				$handlerMethods[0] => [
-					['test_c1', null],
+					['test_c1', []],
 					['test_c2', ['test_c2' => 123]],
-					['test_c3', null],
+					['test_c3', []],
 					['test_c4', ['test_c4' => 123]],
-					['test_c5', null],
-					['test_c6', null],
+					['test_c5', []],
+					['test_c6', []],
 					['test_c7', ['test_c7' => 123]],
 				],
 				$handlerMethods[1] => [
-					['test_c1', null],
+					['test_c1', []],
 					['test_c2', ['test_c2' => 123]],
-					['test_1', null],
+					['test_1', []],
 					['test_2', ['test_2' => 123]],
-					['test_c3', null],
+					['test_c3', []],
 					['test_c4', ['test_c4' => 123]],
-					['test_3', null],
+					['test_3', []],
 					['test_4', ['test_4' => 123]],
-					['test_c5', null],
-					['test_c6', null],
+					['test_c5', []],
+					['test_c6', []],
 					['test_c7', ['test_c7' => 123]],
-					['test_5', null],
-					['test_6', null],
+					['test_5', []],
+					['test_6', []],
 					['test_7', ['test_7' => 123]],
 				],
 			],
@@ -525,7 +517,7 @@ class PhpAttributeSpec extends ObjectBehavior
 
 		foreach ([0, 1] as $i)
 		{
-			$handlerManager->get($handlerNames[$i])->shouldBeCalledOnce()->willReturn($handlers[$i]);
+			$handlerManager->__invoke($handlerNames[$i], [])->shouldBeCalledOnce()->willReturn($handlers[$i]);
 
 			foreach ([0, 1] as $j)
 			{
@@ -537,24 +529,24 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_throws_on_attributes_return_for_invalid_handler(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$httpMethod = 'TEST';
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn(null);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->getAttributes($handlerName, $httpMethod)->shouldThrow(\InvalidArgumentException::class)->during('current', []);
+		$this->getAttributes($handlerName, $httpMethod)->shouldThrow(InvalidArgumentException::class)->during('current', []);
 		$this->__destruct();
 	}
 
 	public function it_throws_on_attributes_return_for_invalid_handler_method(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -562,20 +554,20 @@ class PhpAttributeSpec extends ObjectBehavior
 		$handler = new Example\Handler\ValidAttributes();
 		$httpMethod = 'UNKNOWN';
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->getAttributes($handlerName, $httpMethod)->shouldThrow(\InvalidArgumentException::class)->during('current', []);
+		$this->getAttributes($handlerName, $httpMethod)->shouldThrow(InvalidArgumentException::class)->during('current', []);
 
 		$this->__destruct();
 	}
 
 
 	public function it_checks_and_returns_cached_producers_for_handler_method_if_cache_exists(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -627,7 +619,7 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_checks_and_returns_producers_for_handler_method_and_saves_them_to_cache_on_destruct_if_cache_is_empty(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -640,39 +632,39 @@ class PhpAttributeSpec extends ObjectBehavior
 			$handlerClassNames[0] => [
 				$handlerMethods[0] => [],
 				$handlerMethods[1] => [
-					['test/1', 'test_1', null],
+					['test/1', 'test_1', []],
 					['test/2', 'test_2', ['test_2' => 123]],
-					['test/3', 'test_3', null],
+					['test/3', 'test_3', []],
 					['test/4', 'test_4', ['test_4' => 123]],
-					['test/5', 'test_5', null],
-					['test/6', 'test_6', null],
+					['test/5', 'test_5', []],
+					['test/6', 'test_6', []],
 					['test/7', 'test_7', ['test_7' => 123]],
 				],
 			],
 			$handlerClassNames[1] => [
 				$handlerMethods[0] => [
-					['test/c1', 'test_c1', null],
+					['test/c1', 'test_c1', []],
 					['test/c2', 'test_c2', ['test_c2' => 123]],
-					['test/c3', 'test_c3', null],
+					['test/c3', 'test_c3', []],
 					['test/c4', 'test_c4', ['test_c4' => 123]],
-					['test/c5', 'test_c5', null],
-					['test/c6', 'test_c6', null],
+					['test/c5', 'test_c5', []],
+					['test/c6', 'test_c6', []],
 					['test/c7', 'test_c7', ['test_c7' => 123]],
 				],
 				$handlerMethods[1] => [
-					['test/c1', 'test_c1', null],
+					['test/c1', 'test_c1', []],
 					['test/c2', 'test_c2', ['test_c2' => 123]],
-					['test/1', 'test_1', null],
+					['test/1', 'test_1', []],
 					['test/2', 'test_2', ['test_2' => 123]],
-					['test/c3', 'test_c3', null],
+					['test/c3', 'test_c3', []],
 					['test/c4', 'test_c4', ['test_c4' => 123]],
-					['test/3', 'test_3', null],
+					['test/3', 'test_3', []],
 					['test/4', 'test_4', ['test_4' => 123]],
-					['test/c5', 'test_c5', null],
-					['test/c6', 'test_c6', null],
+					['test/c5', 'test_c5', []],
+					['test/c6', 'test_c6', []],
 					['test/c7', 'test_c7', ['test_c7' => 123]],
-					['test/5', 'test_5', null],
-					['test/6', 'test_6', null],
+					['test/5', 'test_5', []],
+					['test/6', 'test_6', []],
 					['test/7', 'test_7', ['test_7' => 123]],
 				],
 			],
@@ -700,7 +692,7 @@ class PhpAttributeSpec extends ObjectBehavior
 
 		foreach ([0, 1] as $i)
 		{
-			$handlerManager->get($handlerNames[$i])->shouldBeCalledOnce()->willReturn($handlers[$i]);
+			$handlerManager->__invoke($handlerNames[$i], [])->shouldBeCalledOnce()->willReturn($handlers[$i]);
 
 			foreach ([0, 1] as $j)
 			{
@@ -713,25 +705,25 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_throws_on_producers_check_and_return_for_invalid_handler(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
 		$handlerName = 'test';
 		$httpMethod = 'TEST';
 
-		$handlerManager->get($handlerName)->shouldBeCalledTimes(2)->willReturn(null);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledTimes(2)->willReturn(null);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('hasProducers', [$handlerName, $httpMethod]);
-		$this->getProducers($handlerName, $httpMethod)->shouldThrow(\InvalidArgumentException::class)->during('current', []);
+		$this->shouldThrow(InvalidArgumentException::class)->during('hasProducers', [$handlerName, $httpMethod]);
+		$this->getProducers($handlerName, $httpMethod)->shouldThrow(InvalidArgumentException::class)->during('current', []);
 		$this->__destruct();
 	}
 
 	public function it_throws_on_producers_check_and_return_for_invalid_handler_method(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache
 	)
 	{
@@ -739,21 +731,21 @@ class PhpAttributeSpec extends ObjectBehavior
 		$handler = new Example\Handler\ValidProducers();
 		$httpMethod = 'UNKNOWN';
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)->during('hasProducers', [$handlerName, $httpMethod]);
-		$this->getProducers($handlerName, $httpMethod)->shouldThrow(\InvalidArgumentException::class)->during('current', []);
+		$this->shouldThrow(InvalidArgumentException::class)->during('hasProducers', [$handlerName, $httpMethod]);
+		$this->getProducers($handlerName, $httpMethod)->shouldThrow(InvalidArgumentException::class)->during('current', []);
 
 		$this->__destruct();
 	}
 
 
 	public function it_executes_cached_handler_method_if_cache_exists(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache,
 	 	Example\Handler\ValidMethod $handlerObject,
 		Request $request,
@@ -784,7 +776,7 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_executes_handler_method_and_saves_metadata_to_cache_on_destruct_if_cache_is_empty(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request,
@@ -805,7 +797,7 @@ class PhpAttributeSpec extends ObjectBehavior
 			);
 		};
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::that($cacheChecker))->shouldBeCalledOnce();
@@ -817,7 +809,7 @@ class PhpAttributeSpec extends ObjectBehavior
 	}
 
 	public function it_throws_on_handler_method_execute_for_invalid_handler(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request
@@ -826,19 +818,19 @@ class PhpAttributeSpec extends ObjectBehavior
 		$handlerName = 'test';
 		$httpMethod = 'TEST';
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn(null);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn(null);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)
+		$this->shouldThrow(InvalidArgumentException::class)
 			->during('executeHandlerMethod', [$handlerName, $httpMethod, $handlerObject, $request])
 		;
 		$this->__destruct();
 	}
 
 	public function it_throws_on_handler_method_execute_for_invalid_handler_method(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request
@@ -848,20 +840,20 @@ class PhpAttributeSpec extends ObjectBehavior
 		$httpMethod = 'UNKNOWN';
 		$handler = new Example\Handler\ValidMethod();
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)
+		$this->shouldThrow(InvalidArgumentException::class)
 			->during('executeHandlerMethod', [$handlerName, $httpMethod, $handlerObject, $request])
 		;
 		$this->__destruct();
 	}
 
 	public function it_throws_on_handler_method_execute_for_handler_method_having_several_required_parameters(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache,
 		Example\Handler\ValidMethod $handlerObject,
 		Request $request
@@ -871,19 +863,19 @@ class PhpAttributeSpec extends ObjectBehavior
 		$httpMethod = 'TEST';
 		$handler = new Example\Handler\SeveralRequiredParametersMethod();
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\LogicException::class)
+		$this->shouldThrow(LogicException::class)
 			->during('executeHandlerMethod', [$handlerName, $httpMethod, $handlerObject, $request])
 		;
 		$this->__destruct();
 	}
 
 	public function it_throws_on_handler_method_execute_for_invalid_handler_object(
-		PluginManagerInterface $handlerManager,
+		PM\PluginManagerInterface $handlerManager,
 		CacheInterface $cache,
 		$handlerObject,
 		Request $request
@@ -893,13 +885,13 @@ class PhpAttributeSpec extends ObjectBehavior
 		$httpMethod = 'TEST';
 		$handler = new Example\Handler\ValidMethod();
 
-		$handlerManager->get($handlerName)->shouldBeCalledOnce()->willReturn($handler);
+		$handlerManager->__invoke($handlerName, [])->shouldBeCalledOnce()->willReturn($handler);
 		$cache->get(PH\MetadataProvider\PhpAttribute::CACHE_KEY)->shouldBeCalledOnce()->willReturn(null);
 		$cache->set(PH\MetadataProvider\PhpAttribute::CACHE_KEY, Argument::any())->shouldBeCalledOnce();
 
 		$this->beConstructedWith($handlerManager, $cache);
 		$this->shouldImplement(PH\MetadataProviderInterface::class);
-		$this->shouldThrow(\InvalidArgumentException::class)
+		$this->shouldThrow(InvalidArgumentException::class)
 			->during('executeHandlerMethod', [$handlerName, $httpMethod, $handlerObject, $request])
 		;
 		$this->__destruct();

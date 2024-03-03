@@ -4,67 +4,54 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Producer;
 
 use Articus\DataTransfer\Service as DTService;
+use Psr\Http\Message\StreamInterface;
+use function is_array;
+use function is_object;
 
 /**
- * JSON producer extension that simplifies complex data structures with Articus\DataTransfer\Service before encoding
+ * Producer decorator that simplifies complex data structures with \Articus\DataTransfer\Service before passing it to underlying producer for assembling
+ * @see Options\Transfer for details
  */
-class Transfer extends Json
+class Transfer implements ProducerInterface
 {
-	/**
-	 * @var DTService
-	 */
-	protected $dtService;
-
-	/**
-	 * @var string
-	 */
-	protected $subset;
-
-	/**
-	 * @param callable $streamFactory
-	 * @param DTService $dtService
-	 * @param string $subset
-	 */
-	public function __construct(callable $streamFactory, DTService $dtService, string $subset)
+	public function __construct(
+		protected ProducerInterface $producer,
+		protected DTService $dt,
+		protected string $subset
+	)
 	{
-		parent::__construct($streamFactory);
-		$this->dtService = $dtService;
-		$this->subset = $subset;
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	protected function stringify($objectOrArray): string
+	public function assemble(mixed $data): null|StreamInterface
 	{
-		$data = $this->transfer($objectOrArray);
-		return parent::stringify($data);
+		return $this->producer->assemble($this->transfer($data));
 	}
 
 	/**
-	 * Tries to transfer data from specified object or array to multi-dimensional scalar array
-	 * @param mixed $objectOrArray
-	 * @return mixed transfered data
+	 * Tries to transfer data from specified object or array to multidimensional scalar array
 	 */
-	protected function transfer($objectOrArray)
+	protected function transfer(mixed $data): mixed
 	{
-		$data = null;
-		if (\is_object($objectOrArray))
+		$result = null;
+		if (is_object($data))
 		{
-			$data = $this->dtService->extractFromTypedData($objectOrArray, $this->subset);
+			$result = $this->dt->extractFromTypedData($data, $this->subset);
 		}
-		elseif (\is_array($objectOrArray))
+		elseif (is_array($data))
 		{
-			$data = [];
-			foreach ($objectOrArray as $index => $itemObjectOrArray)
+			$result = [];
+			foreach ($data as $itemIndex => $itemData)
 			{
-				$data[$index] = $this->transfer($itemObjectOrArray);
+				$result[$itemIndex] = $this->transfer($itemData);
 			}
 		}
 		else
 		{
-			$data = $objectOrArray;
+			$result = $data;
 		}
-		return $data;
+		return $result;
 	}
 }

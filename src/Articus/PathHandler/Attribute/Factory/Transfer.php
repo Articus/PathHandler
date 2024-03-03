@@ -4,41 +4,33 @@ declare(strict_types=1);
 namespace Articus\PathHandler\Attribute\Factory;
 
 use Articus\DataTransfer\Service as DTService;
-use Articus\PathHandler as PH;
-use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\Factory\FactoryInterface;
+use Articus\PathHandler\Attribute;
+use Articus\PluginManager\PluginFactoryInterface;
+use Closure;
+use Psr\Container\ContainerInterface;
 
-class Transfer implements FactoryInterface
+class Transfer implements PluginFactoryInterface
 {
-	/**
-	 * @var callable
-	 */
-	protected static $defaultInstanciator;
+	protected static Closure $defaultInstanciator;
 
 	public function __construct()
 	{
-		self::$defaultInstanciator = static function (string $type)
-		{
-			return new $type();
-		};
+		self::$defaultInstanciator = static fn (string $type): object => new $type();
 	}
 
-	/**
-	 * @inheritdoc
-	 */
-	public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+	public function __invoke(ContainerInterface $container, string $name, array $options = []): Attribute\Transfer
 	{
-		$options = new PH\Attribute\Options\Transfer($options);
-		$instanciator = ($options->instanciator === null) ? self::$defaultInstanciator : $container->get($options->instanciator);
-		$result = new PH\Attribute\Transfer(
+		$parsedOptions = new Attribute\Options\Transfer($options);
+		$instanciator = ($parsedOptions->instanciator === null) ? self::$defaultInstanciator : $container->get($parsedOptions->instanciator);
+		$result = new Attribute\Transfer(
 			$container->get(DTService::class),
-			$options->source,
-			$options->type,
-			$options->subset,
-			$options->objectAttr,
+			$parsedOptions->source,
+			$parsedOptions->type,
+			$parsedOptions->subset,
+			$parsedOptions->objectAttr,
 			$instanciator,
-			$options->instanciatorArgAttrs,
-			$options->errorAttr
+			$parsedOptions->instanciatorArgAttrs,
+			$parsedOptions->errorAttr
 		);
 		return $result;
 	}
