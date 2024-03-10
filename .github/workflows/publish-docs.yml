@@ -19,15 +19,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # TODO use custom artifact name when it is supported
       - name: Build documentation archive
         uses: JetBrains/writerside-github-action@v4
         with:
           instance: docs/docs
-          artifact: docs.zip
+          artifact: webHelpDOCS2-all.zip
           docker-version: '233.14389'
 
       - name: Unpack documentation archive
-        run: unzip ./artefacts/docs.zip -d ./_site
+        run: unzip ./artifacts/webHelpDOCS2-all.zip -d ./_site
 
       - name: Upload GitHub Pages artifact with documentation
         uses: actions/upload-pages-artifact@v3
