@@ -13,32 +13,11 @@ Library provides four producers out of the box:
 
 - `Text` for strings and stringable objects
 - `Json` to encode operation result as JSON string
-- `Transfer` - extension of `Json` producer that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to extract data from operation result before encoding
+- `Transfer` that uses [Data Transfer library](https://github.com/Articus/DataTransfer) to extract data from operation result and passes this data to another producer (`Json` by default)
 - `Template` that gets template name and data from operation result and uses `Mezzio\Template\TemplateRendererInterface` to render it 
 
 To use producer for operation in your handler you just need to annotate operation method:
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- */
-class Handler
-{
-    /**
-     * @PHA\Get()
-     * @PHA\Producer(name="Json", mediaType="application/json")
-     */
-    public function handleGet(ServerRequestInterface $request): array
-    {
-        return ['some' => 'thing']; 
-    }
-}
-```
 ```PHP
 namespace My;
 
@@ -63,28 +42,6 @@ Specify several producers if you want to allow client to choose how content will
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- */
-class Handler
-{
-    /**
-     * @PHA\Get()
-     * @PHA\Producer(name="Json", mediaType="application/json")
-     * @PHA\Producer(name="Template", mediaType="text/html")
-     */
-    public function handleGet(ServerRequestInterface $request): array
-    {
-        return ['success', ['some' => 'thing']]; 
-    }
-}
-```
-```PHP
-namespace My;
-
 use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -103,34 +60,6 @@ class Handler
 
 If all operations in your handler need same producer you can just annotate handler class insteadof annotating each method:
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- * @PHA\Producer(name="Json", mediaType="application/json")
- */
-class Handler
-{
-    /**
-     * @PHA\Post()
-     */
-    public function handlePost(ServerRequestInterface $request): array
-    {
-        return ['some' => 'thing']; 
-    }
-    /**
-     * @PHA\Patch()
-     */
-    public function handlePatch(ServerRequestInterface $request): array
-    {
-        return ['some' => 'thing']; 
-    }
-}
-```
 ```PHP
 namespace My;
 

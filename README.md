@@ -3,9 +3,9 @@
 [![GitHub Actions: Run tests](https://github.com/Articus/PathHandler/workflows/Run%20tests/badge.svg)](https://github.com/Articus/PathHandler/actions?query=workflow%3A%22Run+tests%22)
 [![Documentation](https://readthedocs.org/projects/pathhandler/badge/?version=latest)](http://pathhandler.readthedocs.io/en/latest/?badge=latest)
 [![Coveralls](https://coveralls.io/repos/github/Articus/PathHandler/badge.svg?branch=master)](https://coveralls.io/github/Articus/PathHandler?branch=master)
-[![Codacy](https://app.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://www.codacy.com/gh/Articus/PathHandler/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Articus/PathHandler&amp;utm_campaign=Badge_Grade)
+[![Codacy](https://app.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://app.codacy.com/gh/Articus/PathHandler/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-This library considerably simplifies API development with [Mezzio](https://docs.mezzio.dev/mezzio/) by reducing amount of boilerplate code you have to write for each API operation. The idea is to provide a more convenient way to deal with:
+This library considerably simplifies API development with [Mezzio](https://github.com/mezzio/mezzio) by reducing amount of boilerplate code you have to write for each API operation. The idea is to provide a more convenient way to deal with:
 
 - routing - routes for all operations are registered automatically
 - consuming - each operation may have unique algorithm to parse request body according its content type
@@ -18,52 +18,12 @@ So you can focus on handling your API operations and spend less time on writing 
 
 Just add `"articus/path-handler"` to your [composer.json](https://getcomposer.org/doc/04-schema.md#require) and check [packages suggested by the library](https://getcomposer.org/doc/04-schema.md#suggest) for extra dependencies of optional components you want to use.  
 
-> *Note* - library has [Laminas Service Manager](https://docs.laminas.dev/laminas-servicemanager/) as direct dependency but only because of [plugin managers](https://docs.laminas.dev/laminas-servicemanager/plugin-managers/). So you can use this library with any PSR-11 container you like.  
-
 ## How to use?
 
-First of all you need a project with Mezzio application. For example, you can generate one with [this installer](https://github.com/mezzio/mezzio-skeleton).  
+First of all you need a project with [Mezzio](https://github.com/mezzio/mezzio) application. For example, you can generate one with [this installer](https://github.com/mezzio/mezzio-skeleton).  
 
-Next you need to declare **handlers**. Each handler is a set of all **operations** that can be performed when some **path** of your API is accessed with distinct HTTP methods. Any class can be a handler, you just need to decorate it with special annotations:
+Next you need to declare **handlers**. Each handler is a set of all **operations** that can be performed when some **path** of your API is accessed with distinct HTTP methods. Any class can be a handler, you just need to decorate it with special PHP attributes:
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Articus\PathHandler\Exception;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * This is how you set path for handler operations
- * @PHA\Route(pattern="/entity")
- */
-class Handler
-{
-    /**
-     * This is how you declare HTTP method of the operation
-     * @PHA\Post()
-     * This is how you consume request body
-     * @PHA\Consumer(name="Json", mediaType="application/json")
-     * This is how you attribute request
-     * @PHA\Attribute(name="Transfer", options={"type":"My\DTO","objectAttr":"dto","errorAttr":"errors"})
-     * This is how you produce response body from returned value
-     * @PHA\Producer(name="Json", mediaType="application/json")
-     */
-    public function handlePost(ServerRequestInterface $request): \My\DTO
-    {
-        $errors = $request->getAttribute('errors');
-        if (!empty($errors))
-        {
-            //This is how you can return non-200 responses
-            throw new Exception\UnprocessableEntity($errors);
-        }
-        /* @var \My\DTO $dto */
-        $dto = $request->getAttribute('dto');
-        return $dto;
-    }
-}
-```
-...or special PHP attributes:
 ```PHP
 namespace My;
 
@@ -76,7 +36,7 @@ class Handler
 {
     #[PHA\Post()] //This is how you declare HTTP method of the operation
     #[PHA\Consumer('application/json', 'Json')] //This is how you consume request body
-    #[PHA\Attribute('Transfer', ['type'=>'My\DTO','objectAttr'=>'dto','errorAttr'=>'errors'])] //This is how you attribute request
+    #[PHA\Attribute('Transfer', ['type'=>'My\DTO','object_attr'=>'dto','error_attr'=>'errors'])] //This is how you attribute request
     #[PHA\Producer('application/json', 'Json')] //This is how you produce response body from returned value
     public function handlePost(ServerRequestInterface $request): \My\DTO
     {
@@ -93,16 +53,14 @@ class Handler
 }
 ```
 
-Finally you need to configure special factory for router service. Here is a sample configuration for [Laminas Service Manager](https://docs.laminas.dev/laminas-servicemanager/) (example is in YAML just for readability):
+Finally, you need to configure special factory for router service. Here is a sample configuration for [Laminas Service Manager](https://docs.laminas.dev/laminas-servicemanager/) (example is in YAML just for readability):
 
 ```YAML
 dependencies:
   factories:
     Mezzio\Router\RouterInterface: Articus\PathHandler\RouteInjectionFactory
-    Articus\PathHandler\MetadataProviderInterface: Articus\PathHandler\MetadataProvider\Factory\Annotation
-    # Replace previous line with this one if you want use PHP attributes as metadata source 
-    #Articus\PathHandler\MetadataProviderInterface: Articus\PathHandler\MetadataProvider\Factory\PhpAttribute
-    Articus\PathHandler\Handler\PluginManager: Articus\PathHandler\Handler\Factory\PluginManager
+    Articus\PathHandler\MetadataProviderInterface: Articus\PathHandler\MetadataProvider\Factory\PhpAttribute
+    Articus\PathHandler\Handler\PluginManager: [Articus\PluginManager\Factory\Laminas, Articus\PathHandler\Handler\PluginManager]
     Articus\PathHandler\Consumer\PluginManager: Articus\PathHandler\Consumer\Factory\PluginManager
     Articus\PathHandler\Attribute\PluginManager: Articus\PathHandler\Attribute\Factory\PluginManager
     Articus\PathHandler\Producer\PluginManager: Articus\PathHandler\Producer\Factory\PluginManager
@@ -120,8 +78,8 @@ Articus\PathHandler\Handler\PluginManager:
 
 For more details check [documentation](http://pathhandler.readthedocs.io/en/latest/).
 
-# Enjoy!
+## Enjoy!
 I hope this library will be useful for someone except me. 
-It is used for production purposes but it lacks lots of refinement, especially in terms of tests and documentation. 
+It is used for production purposes, but it lacks lots of refinement, especially in terms of tests and documentation. 
 
 If you have any suggestions, advices, questions or fixes feel free to submit issue or pull request.

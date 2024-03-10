@@ -31,27 +31,6 @@ To use attribute for operation in your handler you just need to annotate operati
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- */
-class Handler
-{
-    /**
-     * @PHA\Post()
-     * @PHA\Attribute(name="MyAttribute")
-     */
-    public function handlePost(ServerRequestInterface $request)
-    {
-        $value = $request->getAttribute('some');
-    }
-}
-```
-```PHP
-namespace My;
-
 use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -69,27 +48,6 @@ class Handler
 
 It is possible to pass configuration options to your attribute factory:
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- */
-class Handler
-{
-    /**
-     * @PHA\Post()
-     * @PHA\Attribute(name="MyAttribute", options={"key":"value"})
-     */
-    public function handlePost(ServerRequestInterface $request)
-    {
-        $value = $request->getAttribute('some'); 
-    }
-}
-```
 ```PHP
 namespace My;
 
@@ -113,34 +71,6 @@ If all operations in your handler need same attribute you can just annotate hand
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- * @PHA\Attribute(name="MyAttribute")
- */
-class Handler
-{
-    /**
-     * @PHA\Post()
-     */
-    public function handlePost(ServerRequestInterface $request)
-    {
-        $value = $request->getAttribute('some'); 
-    }
-    /**
-     * @PHA\Patch()
-     */
-    public function handlePatch(ServerRequestInterface $request)
-    {
-        $value = $request->getAttribute('some'); 
-    }
-}
-```
-```PHP
-namespace My;
-
 use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -161,31 +91,8 @@ class Handler
 }
 ```
 
-If you set multiple attributes for operation they will be invoked in the same order they appear in annotations:
+If you set multiple attributes for operation they will be invoked in the same order they appear in code:
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- * @PHA\Attribute(name="First")
- * @PHA\Attribute(name="Second")
- */
-class Handler
-{
-    /**
-     * @PHA\Post()
-     * @PHA\Attribute(name="Third")
-     * @PHA\Attribute(name="Fourth")
-     */
-    public function handlePost(ServerRequestInterface $request)
-    {
-    }
-}
-```
 ```PHP
 namespace My;
 
@@ -208,27 +115,6 @@ class Handler
 
 Or you can adjust this order with priority setting (default value is 1). Attributes with higher priority will be executed earlier:
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- */
-class Handler
-{
-    /**
-     * @PHA\Post()
-     * @PHA\Attribute(name="Second")
-     * @PHA\Attribute(name="First", priority=10)
-     */
-    public function handlePost(ServerRequestInterface $request)
-    {
-    }
-}
-```
 ```PHP
 namespace My;
 
@@ -287,28 +173,6 @@ class LoaderFactory
 
 And then just add attribute to your handler: 
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity/{entity_id:[1-9][0-9]*}")
- * @PHA\Attribute(name="IdentifiableValueLoad", options={"id_attr":"entity_id","type":"entity_type","value_attr":"entity"})
- */
-class Handler
-{
-    /**
-     * @PHA\Get()
-     */
-    public function handleGet(ServerRequestInterface $request)
-    {
-        /** @var EntityClass $entity */
-        $entity = $request->getAttribute('entity');//This attribute will store loaded identifiable value
-    }
-}
-```
 ```PHP
 namespace My;
 
@@ -386,28 +250,6 @@ And then just add attribute to your handler:
 ```PHP
 namespace My;
 
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entities")
- * @PHA\Attribute(name="IdentifiableValueListLoad", options={"id_emitter":"entity_id_emitter","type":"entity_type","list_attr":"entity_list"})
- */
-class Handler
-{
-    /**
-     * @PHA\Get()
-     */
-    public function handleGet(ServerRequestInterface $request)
-    {
-        /** @var EntityClass[] $entities */
-        $entities = $request->getAttribute('entity_list');//This attribute will store list of loaded identifiable values
-    }
-}
-```
-```PHP
-namespace My;
-
 use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -430,32 +272,6 @@ For details see available options: `Articus\PathHandler\Attribute\Options\Identi
 
 Set up `Articus\DataTransfer\Service` (check [Data Transfer documentation](https://github.com/Articus/DataTransfer#how-to-use) for details) and then just add attribute to your handler: 
 
-```PHP
-namespace My;
-
-use Articus\PathHandler\Annotation as PHA;
-use Psr\Http\Message\ServerRequestInterface;
-
-/**
- * @PHA\Route(pattern="/entity")
- */
-class Handler
-{
-    /**
-     * @PHA\Post()
-     * @PHA\Attribute(name="Transfer", options={"type":DTO::class,"subset":"part","source":"get","objectAttr":"dto","errorAttr":"errors"})
-     */
-    public function handlePost(ServerRequestInterface $request)
-    {
-        $errors = $request->getAttribute('errors');//This attribute will store validation errors
-        if (empty($errors))
-        {
-            /** @var DTO $dto */
-            $dto = $request->getAttribute('dto');//Valid DTO filled with data from query params
-        }
-    }
-}
-```
 ```PHP
 namespace My;
 
