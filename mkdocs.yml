@@ -1,8 +1,0 @@
-site_name: Path Handler
-pages:
-  - About: index.md
-  - Routing: routing.md
-  - Consuming: consuming.md
-  - Attributing: attributing.md
-  - Producing: producing.md
-theme: readthedocs
