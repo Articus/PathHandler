@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE instance-profile SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
 
-<instance-profile id="docs" name="Documentation" start-page="index.md">
+<instance-profile id="docs" name="Path Handler Documentation" start-page="index.md">
     <toc-element topic="index.md" toc-title="About"/>
     <toc-element topic="routing.md"/>
     <toc-element topic="consuming.md"/>

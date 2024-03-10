@@ -76,7 +76,7 @@ Articus\PathHandler\Handler\PluginManager:
     My\Handler: My\HandlerFactory
 ```
 
-For more details check [documentation](http://pathhandler.readthedocs.io/en/latest/).
+For more details check [documentation](https://articus.github.io/PathHandler/).
 
 ## Enjoy!
 I hope this library will be useful for someone except me. 
