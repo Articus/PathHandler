@@ -3,6 +3,8 @@
     <build-profile instance="docs">
         <variables>
             <noindex-content>false</noindex-content>
+            <header-logo>https://avatars.githubusercontent.com/u/358544</header-logo>
+            <product-web-url>https://github.com/Articus/PathHandler</product-web-url>
         </variables>
     </build-profile>
 </buildprofiles>

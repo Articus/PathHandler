@@ -1,7 +1,7 @@
 # Path Handler
 
-[![GitHub Actions: Run tests](https://github.com/Articus/PathHandler/workflows/Run%20tests/badge.svg)](https://github.com/Articus/PathHandler/actions?query=workflow%3A%22Run+tests%22)
-[![Documentation](https://readthedocs.org/projects/pathhandler/badge/?version=latest)](http://pathhandler.readthedocs.io/en/latest/?badge=latest)
+[![Run tests](https://github.com/Articus/PathHandler/actions/workflows/run-tests.yml/badge.svg)](https://github.com/Articus/PathHandler/actions/workflows/run-tests.yml)
+[![Publish docs](https://github.com/Articus/PathHandler/actions/workflows/publish-docs.yml/badge.svg)](https://github.com/Articus/PathHandler/actions/workflows/publish-docs.yml)
 [![Coveralls](https://coveralls.io/repos/github/Articus/PathHandler/badge.svg?branch=master)](https://coveralls.io/github/Articus/PathHandler?branch=master)
 [![Codacy](https://app.codacy.com/project/badge/Grade/02dc4cfb69e34079ab380593fe5f4f70)](https://app.codacy.com/gh/Articus/PathHandler/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
