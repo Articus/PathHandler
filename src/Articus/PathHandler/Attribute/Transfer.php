@@ -5,10 +5,10 @@ namespace Articus\PathHandler\Attribute;
 
 use Articus\DataTransfer\Service as DTService;
 use Articus\PathHandler\Exception;
+use Articus\PathHandler\Middleware;
 use LogicException;
 use Mezzio\Router\RouteResult;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use function count;
 
 /**
  * Simple attribute that transfer data from specified source to newly created or existing object.
@@ -21,8 +21,6 @@ class Transfer implements AttributeInterface
 	public const SOURCE_POST = 'post';
 	public const SOURCE_ROUTE = 'route';
 	public const SOURCE_HEADER = 'header';
-	public const SOURCE_ATTRIBUTE = 'attribute';
-
 	/**
 	 * @var Instanciator
 	 */
@@ -88,10 +86,9 @@ class Transfer implements AttributeInterface
 		return match($this->source)
 		{
 			self::SOURCE_GET => $request->getQueryParams(),
-			self::SOURCE_POST => $request->getParsedBody(),
+			self::SOURCE_POST => $request->getAttribute(Middleware::PARSED_BODY_ATTR_NAME),
 			self::SOURCE_ROUTE => $this->getRouteData($request),
-			self::SOURCE_HEADER => $this->getHeaderData($request),
-			self::SOURCE_ATTRIBUTE => $request->getAttributes(),
+			self::SOURCE_HEADER => $request->getHeaders(),
 		};
 	}
 
@@ -103,16 +100,6 @@ class Transfer implements AttributeInterface
 			throw new LogicException('Failed to find routing result.');
 		}
 		return $routeResult->getMatchedParams();
-	}
-
-	protected function getHeaderData(Request $request): array
-	{
-		$data = [];
-		foreach ($request->getHeaders() as $name => $values)
-		{
-			$data[$name] = (count($values) === 1) ? $values[0] : $values;
-		}
-		return $data;
 	}
 
 	protected function getObject(Request $request): object

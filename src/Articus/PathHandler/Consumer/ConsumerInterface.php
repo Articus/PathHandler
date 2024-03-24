@@ -16,7 +16,7 @@ interface ConsumerInterface
 	 * @param null|array|object $preParsedBody content of the request body that was parsed before the consumer (for some content types it is done internally)
 	 * @param string $mediaType media type supplied in Content-Type header of the request
 	 * @param array $parameters parameters supplied in Content-Type header of the request
-	 * @return null|array|object parsed content of the request body
+	 * @return mixed parsed content of the request body
 	 */
-	public function parse(StreamInterface $body, null|array|object $preParsedBody, string $mediaType, array $parameters): null|array|object;
+	public function parse(StreamInterface $body, null|array|object $preParsedBody, string $mediaType, array $parameters): mixed;
 }

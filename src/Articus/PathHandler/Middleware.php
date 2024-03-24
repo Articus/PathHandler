@@ -18,6 +18,13 @@ use function sprintf;
 class Middleware implements MiddlewareInterface, RequestHandlerInterface
 {
 	/**
+	 * Attribute name for parsed body so consumers may return data other than null, object or array.
+	 * Workaround for PSR-7 restriction on \Psr\Http\Message\ServerRequestInterface::getParsedBody return type
+	 * that is enforced by most PSR-7 implementations.
+	 */
+	public const PARSED_BODY_ATTR_NAME = 'Articus\PathHandler\ParsedBody';
+
+	/**
 	 * @param string $handlerName
 	 * @param MetadataProviderInterface $metadataProvider
 	 * @param PluginManagerInterface<object> $handlerManager
@@ -114,7 +121,8 @@ class Middleware implements MiddlewareInterface, RequestHandlerInterface
 							{
 								throw new LogicException(sprintf('Invalid consumer %s.', $name));
 							}
-							$request = $request->withParsedBody(
+							$request = $request->withAttribute(
+								self::PARSED_BODY_ATTR_NAME,
 								$consumer->parse(
 									$request->getBody(),
 									$request->getParsedBody(),

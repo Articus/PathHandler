@@ -5,10 +5,9 @@ namespace Articus\PathHandler\Attribute\Options;
 
 use Articus\PathHandler\Attribute;
 use LogicException;
-use function class_exists;
 use function sprintf;
 
-class Transfer
+class AnonymousTransfer
 {
 	/**
 	 * Source of data to transfer, should be one of \Articus\PathHandler\Attribute\Transfer::SOURCE_* constants
@@ -16,35 +15,21 @@ class Transfer
 	public string $source = Attribute\Transfer::SOURCE_POST;
 
 	/**
-	 * Class name for hydrated object
-	 * @var class-string
-	 */
-	public string $type;
-
-	/**
-	 * Name of the data subset that should be transferred
-	 */
-	public string $subset = '';
-
-	/**
 	 * Name of the request attribute to store hydrated object
 	 */
 	public string $objectAttr = 'object';
 
 	/**
-	 * Name of the service that should be used to instanciate new object if request does not contain one.
-	 * If it is null type constructor is called without arguments.
-	 * Service is invoked with type name and either request object or specified request attributes values
-	 * so callable(class-string, mixed...): object is expected.
+	 * Declaration of the strategy to transfer data from source
+	 * @var array{0: string, 1: array} tuple ("name for data transfer strategy plugin manager", "options for data transfer strategy plugin manager")
 	 */
-	public null|string $instanciator = null;
+	public array $strategy;
 
 	/**
-	 * Names of request attributes that should be passed to instanciator to create new object.
-	 * If it is empty whole request is passed.
-	 * @var string[]
+	 * Declaration of the validator to transfer data from source
+	 * @var array{0: string, 1: array} tuple ("name for data transfer validator plugin manager", "options for data transfer validator plugin manager")
 	 */
-	public array $instanciatorArgAttrs = [];
+	public array $validator;
 
 	/**
 	 * Name of the request attribute to store validation errors.
@@ -71,26 +56,15 @@ class Transfer
 							throw new LogicException(sprintf('Value "%s" for option "source" is not supported.', $value));
 					}
 					break;
-				case 'type':
-					if (!class_exists($value))
-					{
-						throw new LogicException(sprintf('Option "type" should be a valid class name, not "%s".', $value));
-					}
-					$this->type = $value;
+				case 'strategy':
+					$this->strategy = $value;
 					break;
-				case 'subset':
-					$this->subset = $value;
+				case 'validator':
+					$this->validator = $value;
 					break;
 				case 'objectAttr':
 				case 'object_attr':
 					$this->objectAttr = $value;
-					break;
-				case 'instanciator':
-					$this->instanciator = $value;
-					break;
-				case 'instanciatorArgAttrs':
-				case 'instanciator_arg_attrs':
-					$this->instanciatorArgAttrs = $value;
 					break;
 				case 'errorAttr':
 				case 'error_attr':

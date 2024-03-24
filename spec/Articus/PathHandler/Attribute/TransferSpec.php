@@ -46,7 +46,7 @@ class TransferSpec extends ObjectBehavior
 
 		$data = ['test' => 123];
 
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME)->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($objectAttr, $object)->shouldBeCalledOnce()->willReturn($out);
 
@@ -66,13 +66,12 @@ class TransferSpec extends ObjectBehavior
 		$errorAttr = null;
 
 		$data = ['test1' => [123], 'test2' => [123, 456]];
-		$transferData = ['test1' => 123, 'test2' => [123, 456]];
 
 		$in->getHeaders()->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($objectAttr, $object)->shouldBeCalledOnce()->willReturn($out);
 
-		$dt->transferToTypedData($transferData, $object, $subset)->shouldBeCalledOnce()->willReturn([]);
+		$dt->transferToTypedData($data, $object, $subset)->shouldBeCalledOnce()->willReturn([]);
 
 		$this->beConstructedWith($dt, $source, $type, $subset, $objectAttr, $instanciator, $instanciatorArgAttrs, $errorAttr);
 		$this->__invoke($in)->shouldBe($out);
@@ -120,27 +119,6 @@ class TransferSpec extends ObjectBehavior
 		$this->shouldThrow(LogicException::class)->during('__invoke', [$in]);
 	}
 
-	public function it_transfers_data_from_attributes(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
-	{
-		$source = PH\Attribute\Transfer::SOURCE_ATTRIBUTE;
-		$type = stdClass::class;
-		$subset = '';
-		$objectAttr = 'object';
-		$instanciatorArgAttrs = [];
-		$errorAttr = null;
-
-		$data = ['test' => 123];
-
-		$in->getAttributes()->shouldBeCalledOnce()->willReturn($data);
-		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn($object);
-		$in->withAttribute($objectAttr, $object)->shouldBeCalledOnce()->willReturn($out);
-
-		$dt->transferToTypedData($data, $object, $subset)->shouldBeCalledOnce()->willReturn([]);
-
-		$this->beConstructedWith($dt, $source, $type, $subset, $objectAttr, $instanciator, $instanciatorArgAttrs, $errorAttr);
-		$this->__invoke($in)->shouldBe($out);
-	}
-
 	public function it_transfers_custom_subset_of_data(DTService $dt, Request $in, Request $out, Invokable $instanciator, stdClass $object)
 	{
 		$source = PH\Attribute\Transfer::SOURCE_POST;
@@ -152,7 +130,7 @@ class TransferSpec extends ObjectBehavior
 
 		$data = ['test' => 123];
 
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME)->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($objectAttr, $object)->shouldBeCalledOnce()->willReturn($out);
 
@@ -173,7 +151,7 @@ class TransferSpec extends ObjectBehavior
 
 		$data = ['test' => 123];
 
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME)->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($objectAttr, $object)->shouldBeCalledOnce()->willReturn($out);
 
@@ -194,7 +172,7 @@ class TransferSpec extends ObjectBehavior
 
 		$data = ['test' => 123];
 
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME)->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn(null);
 		$instanciator->__invoke($type, $in)->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($objectAttr, $object)->shouldBeCalledOnce()->willReturn($out);
@@ -217,7 +195,7 @@ class TransferSpec extends ObjectBehavior
 		$data = ['test' => 123];
 		$instanciatorArgAttrValues = ['value1', 'value2'];
 
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME)->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn(null);
 		$in->getAttribute($instanciatorArgAttrs[0])->shouldBeCalledOnce()->willReturn($instanciatorArgAttrValues[0]);
 		$in->getAttribute($instanciatorArgAttrs[1])->shouldBeCalledOnce()->willReturn($instanciatorArgAttrValues[1]);
@@ -243,7 +221,7 @@ class TransferSpec extends ObjectBehavior
 		$error = ['wrong' => 456];
 		$exception = new PH\Exception\UnprocessableEntity($error);
 
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME)->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn($object);
 
 		$dt->transferToTypedData($data, $object, $subset)->shouldBeCalledOnce()->willReturn($error);
@@ -264,7 +242,7 @@ class TransferSpec extends ObjectBehavior
 		$data = ['test' => 123];
 		$error = ['wrong' => 456];
 
-		$in->getParsedBody()->shouldBeCalledOnce()->willReturn($data);
+		$in->getAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME)->shouldBeCalledOnce()->willReturn($data);
 		$in->getAttribute($objectAttr)->shouldBeCalledOnce()->willReturn($object);
 		$in->withAttribute($errorAttr, $error)->shouldBeCalledOnce()->willReturn($out);
 

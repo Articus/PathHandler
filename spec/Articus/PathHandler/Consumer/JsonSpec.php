@@ -25,25 +25,28 @@ class JsonSpec extends ObjectBehavior
 	public function it_throws_on_valid_json_int_in_body(StreamInterface $body)
 	{
 		$this->beConstructedWith(JSON_OBJECT_AS_ARRAY, 512);
+		$data = 123;
 		$json = '123';
 		$body->getContents()->shouldBeCalledOnce()->willReturn($json);
-		$this->shouldThrow(PH\Exception\UnprocessableEntity::class)->during('parse', [$body, null, 'mime/test', []]);
+		$this->parse($body, null, 'mime/test', [])->shouldBe($data);
 	}
 
 	public function it_throws_on_valid_json_float_in_body(StreamInterface $body)
 	{
 		$this->beConstructedWith(JSON_OBJECT_AS_ARRAY, 512);
+		$data = 123.456;
 		$json = '123.456';
 		$body->getContents()->shouldBeCalledOnce()->willReturn($json);
-		$this->shouldThrow(PH\Exception\UnprocessableEntity::class)->during('parse', [$body, null, 'mime/test', []]);
+		$this->parse($body, null, 'mime/test', [])->shouldBe($data);
 	}
 
 	public function it_throws_on_valid_json_string_in_body(StreamInterface $body)
 	{
 		$this->beConstructedWith(JSON_OBJECT_AS_ARRAY, 512);
+		$data = 'qwer';
 		$json = '"qwer"';
 		$body->getContents()->shouldBeCalledOnce()->willReturn($json);
-		$this->shouldThrow(PH\Exception\UnprocessableEntity::class)->during('parse', [$body, null, 'mime/test', []]);
+		$this->parse($body, null, 'mime/test', [])->shouldBe($data);
 	}
 
 	public function it_parses_valid_json_array_from_body(StreamInterface $body)

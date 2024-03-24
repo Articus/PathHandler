@@ -875,7 +875,7 @@ class MiddlewareSpec extends ObjectBehavior
 		$request->getHeaderLine('Content-Type')->shouldBeCalledOnce()->willReturn($consumerMetadata[1][0]);
 		$request->getBody()->shouldBeCalledOnce()->willReturn($requestBody);
 		$request->getParsedBody()->shouldBeCalledOnce()->willReturn($requestData);
-		$request->withParsedBody($consumerData)->shouldBeCalledOnce()->willReturn($request);
+		$request->withAttribute(PH\Middleware::PARSED_BODY_ATTR_NAME, $consumerData)->shouldBeCalledOnce()->willReturn($request);
 
 		$consumer->parse($requestBody, $requestData, $consumerMetadata[1][0], [])->shouldBeCalledOnce()->willReturn($consumerData);
 

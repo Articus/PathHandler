@@ -7,6 +7,7 @@ use Articus\PathHandler\Attribute;
 use Articus\PathHandler\RouteInjectionFactory;
 use Articus\PluginManager as PM;
 use Psr\Container\ContainerInterface;
+use function array_merge_recursive;
 
 class PluginManager extends PM\Factory\Simple
 {
@@ -22,6 +23,7 @@ class PluginManager extends PM\Factory\Simple
 				Attribute\IdentifiableValueLoad::class => IdentifiableValueLoad::class,
 				Attribute\IdentifiableValueListLoad::class => IdentifiableValueListLoad::class,
 				Attribute\Transfer::class => Transfer::class,
+				Attribute\AnonymousTransfer::class => AnonymousTransfer::class,
 			],
 			'aliases' => [
 				'IdentifiableValueLoad' => Attribute\IdentifiableValueLoad::class,
@@ -34,11 +36,14 @@ class PluginManager extends PM\Factory\Simple
 				'loadByIds' => Attribute\IdentifiableValueListLoad::class,
 				'Transfer' => Attribute\Transfer::class,
 				'transfer' => Attribute\Transfer::class,
+				'TransferAnon' => Attribute\AnonymousTransfer::class,
+				'transferAnon' => Attribute\AnonymousTransfer::class,
 			],
 			'shares' => [
 				Attribute\IdentifiableValueLoad::class => true,
 				Attribute\IdentifiableValueListLoad::class => true,
 				Attribute\Transfer::class => true,
+				Attribute\AnonymousTransfer::class => true,
 			],
 		];
 

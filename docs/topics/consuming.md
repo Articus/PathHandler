@@ -19,6 +19,7 @@ To use consumer for operation in your handler you just need to annotate operatio
 ```PHP
 namespace My;
 
+use Articus\PathHandler\Middleware;
 use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,7 +30,7 @@ class Handler
     #[PHA\Consumer("*/*", "Json")]
     public function handlePost(ServerRequestInterface $request)
     {
-        $data = $request->getParsedBody(); 
+        $data = $request->getAttribute(Middleware::PARSED_BODY_ATTR_NAME)l 
     }
 }
 ```
@@ -39,6 +40,7 @@ Each operation method can have several consumers. Just specify media range to de
 ```PHP
 namespace My;
 
+use Articus\PathHandler\Middleware;
 use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -50,7 +52,7 @@ class Handler
     #[PHA\Consumer("multipart/form-data", "Internal")]
     public function handlePost(ServerRequestInterface $request)
     {
-        $data = $request->getParsedBody(); 
+        $data = $request->getAttribute(Middleware::PARSED_BODY_ATTR_NAME)l 
     }
 }
 ```
@@ -60,6 +62,7 @@ If all operations in your handler need same consumer you can just annotate handl
 ```PHP
 namespace My;
 
+use Articus\PathHandler\Middleware;
 use Articus\PathHandler\PhpAttribute as PHA;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -70,12 +73,12 @@ class Handler
     #[PHA\Post()]
     public function handlePost(ServerRequestInterface $request)
     {
-        $data = $request->getParsedBody(); 
+        $data = $request->getAttribute(Middleware::PARSED_BODY_ATTR_NAME)l 
     }
     #[PHA\Patch()]
     public function handlePatch(ServerRequestInterface $request)
     {
-        $data = $request->getParsedBody(); 
+        $data = $request->getAttribute(Middleware::PARSED_BODY_ATTR_NAME)l 
     }
 }
 ```

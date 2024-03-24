@@ -7,6 +7,7 @@ use Articus\PathHandler\Consumer;
 use Articus\PathHandler\RouteInjectionFactory;
 use Articus\PluginManager as PM;
 use Psr\Container\ContainerInterface;
+use function array_merge_recursive;
 
 class PluginManager extends PM\Factory\Simple
 {

@@ -13,7 +13,7 @@ class Internal implements ConsumerInterface
 	/**
 	 * @inheritdoc
 	 */
-	public function parse(StreamInterface $body, null|array|object $preParsedBody, string $mediaType, array $parameters): null|array|object
+	public function parse(StreamInterface $body, null|array|object $preParsedBody, string $mediaType, array $parameters): mixed
 	{
 		return $preParsedBody;
 	}
